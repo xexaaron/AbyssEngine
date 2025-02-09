@@ -1,0 +1,48 @@
+#pragma once
+#include "vk/VkCommon.h"
+#include "vk/VkDeviceManager.h"
+#include "vk/VkSurface.h"
+#include "Core/Window.h"
+#include "Core/Common.h"
+
+namespace aby::vk {
+	
+	struct Frame {
+		Frame();
+		Frame(DeviceManager& manager);
+
+		void create(DeviceManager& manager);
+		void destroy(DeviceManager& manager);
+
+		VkSemaphore     Acquire;
+		VkSemaphore     Release;
+		VkFence         QueueSubmit;
+		VkCommandBuffer CmdBuffer;
+		VkCommandPool   CmdPool;
+	};
+
+	class Swapchain {
+	public:
+		Swapchain();
+		Swapchain(Surface& surface, DeviceManager& devices, Ref<Window> window, std::vector<Frame>& frames);
+
+		void create(Surface& surface, DeviceManager& devices, Ref<Window> window, std::vector<Frame>& frames);
+		void destroy(DeviceManager& devices, std::vector<Frame>& frames);
+
+		std::vector<VkImageView>& views();
+		std::vector<VkImage>& images();
+
+		std::uint32_t width();
+		std::uint32_t height();
+		glm::u32vec2  size();
+		VkFormat format();
+		operator VkSwapchainKHR();
+	private:
+		VkSwapchainKHR m_Swapchain;
+		VkExtent2D m_Extent;
+		VkFormat m_Format;
+		std::vector<VkImage> m_Images;
+		std::vector<VkImageView>  m_Views;
+	};
+
+}
