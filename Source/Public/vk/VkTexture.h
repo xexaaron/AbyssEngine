@@ -16,8 +16,6 @@ namespace aby::vk {
         Texture(Texture&& other) noexcept;
         ~Texture();
 
-        void update(std::uint32_t w, std::uint32_t h, VkFormat format = VK_FORMAT_UNDEFINED, const std::vector<std::byte>& data = {});
-
         VkImage img();
         VkImageView view();
         VkSampler sampler();

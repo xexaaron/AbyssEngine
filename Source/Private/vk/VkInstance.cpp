@@ -59,7 +59,14 @@ namespace aby::vk {
         ai.apiVersion = VK_API_VERSION_1_3;
         VkInstanceCreateInfo ci = {};
         ci.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        ci.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+
+        if (std::find(extensions.begin(), extensions.end(), VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME) != extensions.end()) {
+            ci.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+        }
+        else {
+            ci.flags = 0;
+        }
+
         ci.pApplicationInfo = &ai;
         ci.enabledExtensionCount = extensions.size();
         ci.ppEnabledExtensionNames = extensions.data();

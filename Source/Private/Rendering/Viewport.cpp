@@ -25,19 +25,17 @@ namespace aby {
 	}
 	
 	void Viewport::on_tick(App* app, Time deltatime) {
-		Triangle tri{
-			 { {  0.5f, -0.5f }, {1.0f, 0.0f, 0.0f} },
-			 { {  0.5f,  0.5f }, {0.0f, 1.0f, 0.0f} },
-			 { { -0.5f,  0.5f }, {0.0f, 0.0f, 1.0f} }
-		};
-		Quad quad(Vertex({ 0, 0 }, { 1, 1, 1 }, texture.handle()), {200, 200});
+		float scale_factor = 200.f;  // Example scale factor, you can adjust this value
+		glm::vec2 size = { 400, 400    };
+		glm::vec3 pos  = { 200, 200, 0 };
+		glm::vec3 col  = {   1,   1, 1 };
+		Quad quad(size, pos, col, texture.handle());
 
 		m_Camera.on_tick(app, deltatime);
 		auto& ren = app->renderer();
 		ren.on_begin(m_Camera.view_projection());
-		ren.draw_triangle_3d(tri);
-		ren.draw_triangle_2d(tri);
 		ren.draw_quad_2d(quad);
+		//ren.draw_quad_3d(quad);
 		ren.on_end();
 	}
 	
@@ -47,6 +45,7 @@ namespace aby {
 
 	bool Viewport::on_resize(WindowResizeEvent& event) {
 		m_Size = { event.w(), event.h() };
+		m_Camera.set_viewport(m_Size);
 		return false;
 	}
 

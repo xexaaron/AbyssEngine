@@ -277,6 +277,11 @@ namespace aby::vk {
     {
 
     }
+    IndexBuffer::IndexBuffer(std::size_t bytes, DeviceManager& manager) :
+        Buffer(bytes, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, manager)
+    {
+
+    }
 
     void IndexBuffer::bind(VkCommandBuffer cmd) {
         vkCmdBindIndexBuffer(cmd, m_Buffer, 0, VK_INDEX_TYPE_UINT32);

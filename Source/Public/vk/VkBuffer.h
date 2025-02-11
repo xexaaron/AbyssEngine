@@ -5,7 +5,6 @@
 #include "Core/Log.h"
 namespace aby::vk {
 	
-
     class Buffer {
     public:
         Buffer(std::size_t bytes, VkBufferUsageFlags flags, DeviceManager& manager);
@@ -16,6 +15,7 @@ namespace aby::vk {
         void set_data(const std::vector<T>& data, DeviceManager& manager) {
             set_data(data.data(), data.size() * sizeof(T), manager);
         }
+     
 
         virtual void set_data(const void* data, std::size_t bytes, DeviceManager& manager);
 
@@ -25,16 +25,14 @@ namespace aby::vk {
         
         void destroy();
 
-
         VkDeviceMemory memory();
         std::size_t size() const;
 
         operator VkBuffer();
     protected:
-        void create(DeviceManager& manager);
+        void  create(DeviceManager& manager);
         void* map(std::size_t size, std::size_t offset = 0);
-        void unmap(void* mapped);
-
+        void  unmap(void* mapped);
     protected:
         VkDevice m_Logical;
         VkBuffer m_Buffer;
@@ -245,6 +243,7 @@ namespace aby::vk {
     class IndexBuffer : public Buffer {
     public:
         IndexBuffer(const void* data, size_t size, DeviceManager& manager);
+        IndexBuffer(std::size_t bytes, DeviceManager& manager);
 
         void bind(VkCommandBuffer cmd) override;
     private:

@@ -20,7 +20,7 @@ namespace aby {
         bool on_resize(WindowResizeEvent& event);
     private:
         glm::u32vec2 m_Size;
-        Camera m_Camera;
+        FreeCamera m_Camera;
     };
 
 }

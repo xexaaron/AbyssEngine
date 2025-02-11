@@ -145,6 +145,8 @@ namespace aby::vk {
         ShaderDescriptor m_Descriptor;
     };
     
+    class TextureResourceHandler;
+
     class ShaderModule {
     public:
         ShaderModule(vk::Context* ctx, const fs::path& vert, const fs::path& frag);
@@ -177,6 +179,7 @@ namespace aby::vk {
         VkBuffer m_Uniforms;
         VkDeviceMemory m_UniformMemory;
         VertexClass m_Class;
+        friend class TextureResourceHandler;
     };
 
     class ShaderCompiler {

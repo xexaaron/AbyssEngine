@@ -23,7 +23,6 @@ namespace aby::vk {
         create(inst, surface, extensions);
     }
 
-  
     DeviceManager::~DeviceManager() {
     }
 

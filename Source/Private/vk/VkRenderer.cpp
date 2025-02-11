@@ -5,20 +5,26 @@
 #include "Core/Log.h"
 #include <numeric>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/euler_angles.hpp>
+
 namespace aby::vk {
-	
+    
+
     Renderer::Renderer(Ref<vk::Context> ctx) :
         m_Ctx(ctx),
         m_Frames{},
         m_Swapchain(ctx->surface(), ctx->devices(), ctx->window(), m_Frames),
         m_2D(ctx, m_Swapchain, { 
-            App::bin() / "Shaders/Default2D.vert",
-            App::bin() / "Shaders/Default2D.frag" 
-            }, 10000),
+            App::bin() / "Shaders/Vertex.glsl",
+            App::bin() / "Shaders/Fragment.glsl" 
+        }),
         m_3D(ctx, m_Swapchain, { 
-            App::bin() / "Shaders/Default3D.vert",
-            App::bin() / "Shaders/Default3D.frag" 
-            }, 10000),
+            App::bin() / "Shaders/Vertex.glsl",
+            App::bin() / "Shaders/Fragment.glsl" 
+        }),
         m_RecycledSemaphores{},
         m_Img(0)
     {
@@ -37,71 +43,37 @@ namespace aby::vk {
     }
 
     void Renderer::draw_quad_3d(const Quad& quad) {
-        glm::vec3 tl = { quad.v.pos.x, quad.v.pos.y, quad.v.pos.z };
-        glm::vec3 tr = { quad.v.pos.x - quad.size.x, quad.v.pos.y, quad.v.pos.z };
-        glm::vec3 bl = { quad.v.pos.x, quad.v.pos.y - quad.size.y, quad.v.pos.z };
-        glm::vec3 br = { quad.v.pos.x - quad.size.x, quad.v.pos.y - quad.size.y, quad.v.pos.z };
-        draw_triangle_3d(Triangle({ tl, quad.v.col }, { tr, quad.v.col }, { br, quad.v.col }));
-        draw_triangle_3d(Triangle({ tl, quad.v.col }, { bl, quad.v.col }, { br, quad.v.col }));
+        draw_quad(m_3D, quad);
     }
 
     void Renderer::draw_quad_2d(const Quad& quad) {
-        glm::vec3 tl = { quad.v.pos.x, quad.v.pos.y, 0 };
-        glm::vec3 tr = { quad.v.pos.x - quad.size.x, quad.v.pos.y, 0 };
-        glm::vec3 bl = { quad.v.pos.x, quad.v.pos.y - quad.size.y, 0 };
-        glm::vec3 br = { quad.v.pos.x - quad.size.x, quad.v.pos.y - quad.size.y, 0 };
-        Vertex    v1 = Vertex(tl, quad.v.col, quad.v.tex);
-        Vertex    v2 = Vertex(tr, quad.v.col, quad.v.tex);
-        Vertex    v3 = Vertex(br, quad.v.col, quad.v.tex);
-        Vertex&   v4 = v1;  
-        Vertex    v5 = Vertex(bl, quad.v.col, quad.v.tex);
-        Vertex&   v6 = v3; 
-        draw_triangle_2d(Triangle(v1, v2, v3));
-        draw_triangle_2d(Triangle(v4, v5, v6));
+        draw_quad(m_2D, quad);
     }
-    void Renderer::draw_circle_3d(const Circle& circle) {
-    }
-
-    void Renderer::draw_circle_2d(const Circle& circle) {
-        constexpr float PI = 3.14159265358979323846f;
-
-        // Center vertex (assumes Vertex has a constructor that takes position & color)
-        Vertex center(circle.v.pos, circle.v.col);
-
-        // First point on the circle
-        float first_x = center.pos.x + std::cos(0) * circle.radius;
-        float first_y = center.pos.y + std::sin(0) * circle.radius;
-        Vertex first({ first_x, first_y }, circle.v.col);
-        Vertex prev = first;
-
-        // Generate and draw triangles
-        for (std::size_t i = 1; i <= circle.points; i++) {
-            float angle = (i / static_cast<float>(circle.points)) * 2.0f * PI;
-            Vertex next(
-                { center.pos.x + std::cos(angle) * circle.radius,
-                 center.pos.y + std::sin(angle) * circle.radius },
-                circle.v.col
-            );
-
-            // Create triangle using (center, prev, next)
-            Triangle tri(center, prev, next);
-            draw_triangle_2d(tri);
-
-            prev = next;  // Move to the next point
-        }
-    }
-
 
     void Renderer::draw_triangle(RenderModule& module, const Triangle& triangle) {
-        auto& acc = module.accumulator();
-        auto& verts = module.vertices();
-        flush_if(module, verts.count() + 3 > verts.size());
-        acc = triangle.v1;
-        ++acc;
-        acc = triangle.v2;
-        ++acc;
-        acc = triangle.v3;
-        ++acc;
+        flush_if(module, module.tris().should_flush(), ERenderPrimitive::TRIANGLE);
+        module.draw_triangle(triangle);
+    }
+    
+    void Renderer::draw_quad(RenderModule& module, const Quad& quad) {
+        flush_if(module, module.quads().should_flush(), ERenderPrimitive::QUAD);
+        module.draw_quad(quad);
+    }
+
+    void Renderer::start_batch(RenderModule& module) {
+        module.reset();
+    }
+
+    void Renderer::flush(RenderModule& module, ERenderPrimitive primitive) {
+        auto* cmd = m_Frames[m_Img].CmdBuffer;
+        module.flush(cmd, m_Ctx->devices());
+    }
+
+    void Renderer::flush_if(RenderModule& module, bool flush, ERenderPrimitive primitive) {
+        if (flush) {
+            this->flush(module, primitive);
+            start_batch(module);
+        }
     }
 
     void Renderer::destroy() {
@@ -117,13 +89,18 @@ namespace aby::vk {
 
     void Renderer::on_begin() {
         start_batch(m_2D);
+        auto viewport_size = m_Swapchain.size();
+        glm::mat4 ortho_view_proj = glm::ortho(0.0f, static_cast<float>(viewport_size.x), 0.0f, static_cast<float>(viewport_size.y), -1.0f, 1.0f);
+        m_2D.module()->set_uniforms(&ortho_view_proj, sizeof(ortho_view_proj));
     }
 
     void Renderer::on_begin(const glm::mat4& view_projection) {
         start_batch(m_2D);
         start_batch(m_3D);
-        m_3D.module()->set_uniforms(&view_projection, sizeof(view_projection));
-        m_2D.module()->update_descriptor_set(0, 0);
+        m_3D.set_uniforms(&view_projection, sizeof(view_projection));
+        auto viewport_size = m_Swapchain.size(); 
+        glm::mat4 ortho_view_proj = glm::ortho(0.0f, static_cast<float>(viewport_size.x), 0.0f, static_cast<float>(viewport_size.y), -1.0f, 1.0f);
+        m_2D.set_uniforms(&ortho_view_proj, sizeof(ortho_view_proj));
     }
 
     void Renderer::on_end() {
@@ -175,7 +152,7 @@ namespace aby::vk {
         );
 
         VkClearValue clear_value{
-            .color = {{0.5f, 0.5f, 0.5f, 0.5f}}
+            .color = {{0.5f, 0.5f, 0.5f, 0.5f}},
         };
 
         VkRenderingAttachmentInfo color_attachment{
@@ -221,13 +198,15 @@ namespace aby::vk {
         m_3D.pipeline().bind(cmd);
         vkCmdSetViewport(cmd, 0, 1, &vp);
         vkCmdSetScissor(cmd, 0, 1, &scissor);
-        vkCmdSetCullMode(cmd, VK_CULL_MODE_NONE);
+        vkCmdSetCullMode(cmd, VK_CULL_MODE_BACK_BIT);
         vkCmdSetFrontFace(cmd, VK_FRONT_FACE_CLOCKWISE);
         vkCmdSetPrimitiveTopology(cmd, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
-        flush(m_3D);
+        flush(m_3D, ERenderPrimitive::ALL);
        
         m_2D.pipeline().bind(cmd);
-        flush(m_2D);
+        vkCmdSetCullMode(cmd, VK_CULL_MODE_NONE);
+        vkCmdSetPrimitiveTopology(cmd, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+        flush(m_2D, ERenderPrimitive::ALL);
 
         vkCmdEndRendering(cmd);
 
@@ -264,28 +243,6 @@ namespace aby::vk {
         VK_CHECK(vkQueueSubmit(m_Ctx->devices().graphics().Queue, 1, &info, m_Frames[img].QueueSubmit));
     }
 
-    void Renderer::start_batch(RenderModule& module) {
-        module.accumulator().reset();
-    }
-
-    void Renderer::flush(RenderModule& module) {
-        auto& acc   = module.accumulator();
-        auto& verts = module.vertices();
-        auto* cmd   = m_Frames[m_Img].CmdBuffer;
-        if (acc.count()) {
-            verts.set_data(acc.data(), acc.bytes(), m_Ctx->devices());
-            verts.bind(cmd);
-            vkCmdDraw(cmd, verts.count(), 1, 0, 0);
-        }
-    }
-
-    void Renderer::flush_if(RenderModule& module, bool flush) {
-        if (flush) {
-            this->flush(module);
-            start_batch(module);
-        }
-    }
-   
     void Renderer::on_event(Event& event) {
         EventDispatcher dsp(event);
         dsp.bind(this, &Renderer::on_resize);

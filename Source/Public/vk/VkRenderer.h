@@ -8,6 +8,7 @@
 #include "Core/Log.h"
 #include "Core/Resource.h"
 #include "Rendering/Renderer.h"
+#include "Rendering/Vertex.h"
 #include <array>
 #include <glm/glm.hpp>
 
@@ -27,14 +28,13 @@ namespace aby::vk {
         void draw_triangle_2d(const Triangle& triangle) override;
         void draw_quad_3d(const Quad& quad) override;
         void draw_quad_2d(const Quad& quad) override;
-        void draw_circle_3d(const Circle& circle) override;
-        void draw_circle_2d(const Circle& circle) override;
     protected: 
         void render(std::uint32_t img);
         void start_batch(RenderModule& module);
-        void flush(RenderModule& module);
-        void flush_if(RenderModule& module, bool flush);
+        void flush(RenderModule& module, ERenderPrimitive primitive);
+        void flush_if(RenderModule& module, bool flush, ERenderPrimitive primitive);
         void draw_triangle(RenderModule& module, const Triangle& triangle);
+        void draw_quad(RenderModule& module, const Quad& quad);
     private: // Events
         bool on_resize(WindowResizeEvent& event);
         bool on_resize(std::uint32_t w, std::uint32_t h);
@@ -42,8 +42,7 @@ namespace aby::vk {
         void recreate_swapchain();
         std::pair<VkResult, std::uint32_t> acquire_next_img();
         VkResult present_img(std::uint32_t img);
-    private:
-        Ref<vk::Context> m_Ctx;
+    private:Ref<vk::Context> m_Ctx;
         std::vector<Frame> m_Frames;
         vk::Swapchain m_Swapchain;
         RenderModule m_2D;

@@ -27,8 +27,8 @@ namespace aby::vk {
             VK_KHR_SURFACE_EXTENSION_NAME,
             VK_PLATFORM_SURFACE_EXTENSION_NAME,
             VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-            VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
         };
+        //instance_extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
         std::vector<const char*> device_extensions = {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME
         };

@@ -32,6 +32,7 @@ namespace aby::vk {
         aby::Texture(path),
         m_Logical(ctx->devices().logical()),
         m_Format(VK_FORMAT_UNDEFINED),
+        m_Layout(VK_IMAGE_LAYOUT_UNDEFINED),
         m_Image(VK_NULL_HANDLE),
         m_View(VK_NULL_HANDLE),
         m_ImageMemory(VK_NULL_HANDLE),
@@ -44,6 +45,7 @@ namespace aby::vk {
         aby::Texture(other),
         m_Logical(other.m_Logical),
         m_Format(other.m_Format),
+        m_Layout(VK_IMAGE_LAYOUT_UNDEFINED),
         m_Image(other.m_Image),
         m_View(other.m_View),
         m_ImageMemory(other.m_ImageMemory),
@@ -56,6 +58,7 @@ namespace aby::vk {
         aby::Texture(std::move(other)),
         m_Logical(std::move(other.m_Logical)),
         m_Format(other.m_Format),
+        m_Layout(other.m_Layout),
         m_Image(std::move(other.m_Image)),
         m_View(std::move(other.m_View)),
         m_ImageMemory(std::move(other.m_ImageMemory)),
@@ -75,16 +78,16 @@ namespace aby::vk {
 
         switch (c) {
             case 4:
-                m_Format = VK_FORMAT_R8G8B8A8_UNORM;
+                m_Format = VK_FORMAT_R8G8B8A8_SRGB;
                 break;
             case 3:
-                m_Format = VK_FORMAT_R8G8B8_UNORM;
+                m_Format = VK_FORMAT_R8G8B8_SRGB;
                 break;
             case 2:
-                m_Format = VK_FORMAT_R8G8_UNORM;
+                m_Format = VK_FORMAT_R8G8_SRGB;
                 break;
             case 1:
-                m_Format = VK_FORMAT_R8_UNORM;
+                m_Format = VK_FORMAT_R8_SRGB;
                 break;
             default:
                 break;
@@ -142,16 +145,15 @@ namespace aby::vk {
         samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
         samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
         samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.anisotropyEnable = VK_TRUE;
-        samplerInfo.maxAnisotropy = 16;
+        samplerInfo.anisotropyEnable = VK_FALSE;
+        samplerInfo.maxAnisotropy = 1.0f;
         samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
         samplerInfo.unnormalizedCoordinates = VK_FALSE;
-        samplerInfo.compareEnable = VK_FALSE;
-        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+        samplerInfo.compareOp = VK_COMPARE_OP_NEVER;
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
         samplerInfo.mipLodBias = 0.0f;
         samplerInfo.minLod = 0.0f;
-        samplerInfo.maxLod = 0.0f; // If you have mipmaps, adjust accordingly
+        samplerInfo.maxLod = VK_LOD_CLAMP_NONE; // If you have mipmaps, adjust accordingly
 
         VK_CHECK(vkCreateSampler(m_Logical, &samplerInfo, IAllocator::get(), &m_Sampler));
         cmd_pool->destroy(m_Logical);
@@ -164,11 +166,6 @@ namespace aby::vk {
         vkDestroyImage(m_Logical, m_Image, IAllocator::get());
         vkFreeMemory(m_Logical, m_ImageMemory, IAllocator::get());
     }
-
-    void Texture::update(std::uint32_t w, std::uint32_t h, VkFormat format, const std::vector<std::byte>& data) {
-        
-    }
-
 
     VkImage Texture::img() {
         return m_Image;

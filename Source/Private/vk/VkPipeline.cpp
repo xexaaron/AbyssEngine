@@ -52,6 +52,7 @@ namespace aby::vk {
 			iads.push_back(iad);
 		}
 
+
 		VkPipelineVertexInputStateCreateInfo vertex_input{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
 			.pNext = nullptr,
@@ -82,15 +83,26 @@ namespace aby::vk {
 			VK_DYNAMIC_STATE_SCISSOR,
 			VK_DYNAMIC_STATE_CULL_MODE,
 			VK_DYNAMIC_STATE_FRONT_FACE,
-			VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY
+			VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY,
 		};
 
 		VkPipelineColorBlendAttachmentState color_blend_attach{
-			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+			.blendEnable		 = VK_TRUE,
+			.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+			.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+			.colorBlendOp		 = VK_BLEND_OP_ADD,
+			.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+			.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+			.alphaBlendOp        = VK_BLEND_OP_ADD,
+			.colorWriteMask		 = VK_COLOR_COMPONENT_R_BIT |
+								   VK_COLOR_COMPONENT_G_BIT | 
+								   VK_COLOR_COMPONENT_B_BIT | 
+								   VK_COLOR_COMPONENT_A_BIT,
 		};
 
 		VkPipelineColorBlendStateCreateInfo color_blend_state{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+			.logicOpEnable = VK_FALSE,
 			.attachmentCount = 1,
 			.pAttachments = &color_blend_attach,
 		};

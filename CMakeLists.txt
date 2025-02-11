@@ -26,9 +26,11 @@ set(STB_IMAGE_IMPL "${STB_INCLUDE_DIR}/stb_image/stb_image.cpp")
 set(PACKAGER_DIR "package")
 add_subdirectory(${PACKAGER_DIR})
 
+
 set(GLM_DIR "Vendor/glm")
 set(GLM_INCLUDE_DIR ${GLM_DIR})
 add_subdirectory(${GLM_DIR})
+target_compile_definitions(glm PRIVATE GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_FORCE_LEFT_HANDED)
 
 set(CPP_SOURCES
     Source/main.cpp
@@ -74,12 +76,14 @@ set(HEADER_FILES
     Source/Public/Core/Object.h
     Source/Public/Core/Serialize.h
     Source/Public/Core/Resource.h
+    Source/Public/Core/Number.h
     Source/Public/Rendering/Context.h
     Source/Public/Rendering/Renderer.h
     Source/Public/Rendering/Camera.h
     Source/Public/Rendering/Viewport.h
     Source/Public/Rendering/Shader.h
     Source/Public/Rendering/Texture.h
+    Source/Public/Rendering/Vertex.h
     Source/Public/vk/VkRenderer.h
     Source/Public/vk/VkBuffer.h
     Source/Public/vk/VkContext.h
@@ -100,10 +104,9 @@ set(HEADER_FILES
 )
 
 set(SHADER_SOURCES 
-    Source/Shaders/Default2D.vert
-    Source/Shaders/Default2D.frag
-    Source/Shaders/Default3D.vert
-    Source/Shaders/Default3D.frag
+    Source/Shaders/Vertex.glsl
+    Source/Shaders/Fragment.glsl
+    Source/Shaders/README.md
 )
 
 source_group("Public/Core" FILES
@@ -116,6 +119,7 @@ source_group("Public/Core" FILES
     Source/Public/Core/Serialize.h
     Source/Public/Core/Object.h
     Source/Public/Core/Resource.h
+    Source/Public/Core/Number.h
 ) 
 
 source_group("Public/Rendering" FILES
@@ -125,6 +129,7 @@ source_group("Public/Rendering" FILES
     Source/Public/Rendering/Viewport.h
     Source/Public/Rendering/Shader.h
     Source/Public/Rendering/Texture.h
+    Source/Public/Rendering/Vertex.h
 )
 
 source_group("Public/vk" FILES
@@ -194,8 +199,8 @@ source_group("Private/vk" FILES
 )
 
 add_executable(${PROJECT_NAME} ${CPP_SOURCES} ${HEADER_FILES} ${SHADER_SOURCES})
-add_dependencies(${PROJECT_NAME} Package)
-
+add_dependencies(${PROJECT_NAME} Package glfw glm)
+target_compile_definitions(${PROJECT_NAME} PRIVATE GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_FORCE_LEFT_HANDED)
 target_include_directories(${PROJECT_NAME} PUBLIC
     Source/Public
     ${VULKAN_INCLUDE_DIR} 

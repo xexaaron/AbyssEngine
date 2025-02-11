@@ -3,6 +3,8 @@
 #include "Core/Log.h"
 #include <unordered_map>
 #include <queue>
+#include <vector>
+#include <any>
 
 namespace aby {
 
@@ -67,10 +69,25 @@ namespace aby {
     };
 
     template <typename T> requires (CIsResource<T>)
+    class IResourceHandler {
+    public:
+        using Handle = typename Resource::Handle;
+    public:
+        IResourceHandler(std::any user_data) : m_UserData(user_data) {}
+
+        virtual void on_add(Handle handle, Ref<T> resource) = 0;
+        virtual void on_erase(Handle handle, Ref<T> resource) = 0;
+    protected:
+        std::any m_UserData;
+    };
+
+    template <typename T> requires (CIsResource<T>)
     class ResourceClass {
     public:
         using Handle = typename Resource::Handle;
-    
+        
+        using Handler = IResourceHandler<T>;
+
         template <typename Value>
         using Map = std::unordered_map<Handle, Value>;
 
@@ -86,8 +103,15 @@ namespace aby {
 
         Resource add(Ref<T> ptr) {
             Handle handle = get_next_handle();
+            for (auto& handler : m_Handlers) {
+                handler->on_add(handle, ptr);
+            }
             m_Resources.emplace(handle, std::move(ptr));
             return Resource(TypeToEResource<T>(), handle);
+        }
+
+        void add_handler(Unique<Handler>&& handler) {
+            m_Handlers.push_back(std::move(handler));
         }
 
         template <typename... Args> requires (std::is_constructible_v<T, Args...>)
@@ -100,6 +124,9 @@ namespace aby {
         void erase(Resource resource) {
             assert_contains(resource);
             auto handle = resource.handle();
+            for (auto& handler : m_Handlers) {
+                handler->on_erase(handle, m_Resources.at(handle));
+            }
             m_Resources.erase(handle);
             m_RecycledHandles.push(handle);
         }
@@ -147,6 +174,7 @@ namespace aby {
         Handle m_NextHandle;
         Map<Ref<T>> m_Resources;
         std::queue<Handle> m_RecycledHandles;
+        std::vector<Unique<Handler>> m_Handlers;
     };
 
 }
