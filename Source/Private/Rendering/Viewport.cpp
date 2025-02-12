@@ -35,7 +35,6 @@ namespace aby {
 		auto& ren = app->renderer();
 		ren.on_begin(m_Camera.view_projection());
 		ren.draw_quad_2d(quad);
-		//ren.draw_quad_3d(quad);
 		ren.on_end();
 	}
 	

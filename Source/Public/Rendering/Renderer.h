@@ -30,10 +30,10 @@ namespace aby {
 		virtual void on_end() = 0;
 		
 		virtual void draw_triangle_3d(const Triangle& triangle) = 0;
-		virtual void draw_quad_3d(const Quad& triangle) = 0;
+		virtual void draw_quad_3d(const Quad& quad) = 0;
 
 		virtual void draw_triangle_2d(const Triangle& triangle) = 0;
-		virtual void draw_quad_2d(const Quad& triangle) = 0;
+		virtual void draw_quad_2d(const Quad& quad) = 0;
 	protected:
 	};
 

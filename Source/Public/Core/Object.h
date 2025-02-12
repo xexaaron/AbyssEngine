@@ -56,7 +56,6 @@ namespace aby {
 			return m_ID;
 		}
 
-
 		Object& operator=(const Object& other) {
 			m_ID = other.m_ID;
 		}

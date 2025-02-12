@@ -46,6 +46,8 @@ set(CPP_SOURCES
     Source/Private/Rendering/Viewport.cpp
     Source/Private/Rendering/Shader.cpp
     Source/Private/Rendering/Texture.cpp
+    Source/Private/Rendering/UI/Canvas.cpp
+    Source/Private/Rendering/UI/Widget.cpp
     Source/Private/vk/VkRenderer.cpp
     Source/Private/vk/VkBuffer.cpp
     Source/Private/vk/VkContext.cpp
@@ -84,6 +86,8 @@ set(HEADER_FILES
     Source/Public/Rendering/Shader.h
     Source/Public/Rendering/Texture.h
     Source/Public/Rendering/Vertex.h
+    Source/Public/Rendering/UI/Canvas.h
+    Source/Public/Rendering/UI/Widget.h
     Source/Public/vk/VkRenderer.h
     Source/Public/vk/VkBuffer.h
     Source/Public/vk/VkContext.h
@@ -130,7 +134,13 @@ source_group("Public/Rendering" FILES
     Source/Public/Rendering/Shader.h
     Source/Public/Rendering/Texture.h
     Source/Public/Rendering/Vertex.h
+
 )
+
+source_group("Public/Rendering/UI" FILES
+    Source/Public/Rendering/UI/Canvas.h
+    Source/Public/Rendering/UI/Widget.h
+) 
 
 source_group("Public/vk" FILES
     Source/Public/vk/VkContext.h
@@ -177,6 +187,11 @@ source_group("Private/Rendering" FILES
     Source/Private/Rendering/Shader.cpp
     Source/Private/Rendering/Texture.cpp
 )
+
+source_group("Private/Rendering/UI" FILES
+    Source/Private/Rendering/UI/Canvas.cpp
+    Source/Private/Rendering/UI/Widget.cpp
+) 
 
 source_group("Private/vk" FILES
     Source/Private/vk/VkContext.cpp
