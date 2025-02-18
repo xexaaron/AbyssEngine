@@ -103,6 +103,7 @@ set(HEADER_FILES
     Source/Public/Rendering/Shader.h
     Source/Public/Rendering/Texture.h
     Source/Public/Rendering/Vertex.h
+    Source/Public/Rendering/UI/UI.h
     Source/Public/Rendering/UI/Widget.h
     Source/Public/Rendering/UI/UICommon.h
     Source/Public/Rendering/UI/Textbox.h
@@ -162,6 +163,7 @@ source_group("Public/Rendering" FILES
 )
 
 source_group("Public/Rendering/UI" FILES
+    Source/Public/Rendering/UI/UI.h
     Source/Public/Rendering/UI/Widget.h
     Source/Public/Rendering/UI/UICommon.h
     Source/Public/Rendering/UI/Textbox.h

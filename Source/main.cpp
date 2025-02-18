@@ -5,7 +5,7 @@
 #include "Core/Serialize.h"
 #include "Rendering/Viewport.h"
 #include "Core/Resource.h"
-#include "Rendering/UI/Widget.h"
+#include "Rendering/UI/UI.h"
 #include "Rendering/Font.h"
 #include <fstream>
 

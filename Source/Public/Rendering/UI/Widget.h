@@ -1,7 +1,6 @@
 #pragma once
 #include "Rendering/UI/UICommon.h"
 #include "Core/Object.h"
-#include "Core/Resource.h"
 #include "Core/App.h"
 
 namespace aby::ui { 
