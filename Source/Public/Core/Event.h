@@ -7,7 +7,6 @@
 
 namespace aby {
 
-
 	enum class EEventType {
 		NONE = 0,
 		WINDOW_CLOSE,
@@ -337,6 +336,11 @@ namespace aby {
 		float y() const { 
 			return m_Pos.y;
 		}
+		bool hit(const glm::vec2& pos, const glm::vec2& size) const {
+			return (m_Pos.x >= pos.x && m_Pos.x <= pos.x + size.x) &&
+				(m_Pos.y >= pos.y && m_Pos.y <= pos.y + size.y);
+		}
+
 		glm::vec2 pos() const { 
 			return m_Pos;
 		}
@@ -406,6 +410,10 @@ namespace aby {
 		virtual int category() const override {
 			return EEventCategory::MOUSE | EEventCategory::INPUT;
 		}
+		bool hit(const glm::vec2& pos, const glm::vec2& size) const {
+			return (m_Pos.x >= pos.x && m_Pos.x <= pos.x + size.x) &&
+				(m_Pos.y >= pos.y && m_Pos.y <= pos.y + size.y);
+		}
 
 		const glm::vec2& pos() const {
 			return m_Pos;
@@ -467,8 +475,8 @@ namespace aby {
 
 	class WindowResizeEvent : public Event {
 	public:
-		WindowResizeEvent(std::uint32_t w, std::uint32_t h) :
-			m_NewSize(w, h) {}
+		WindowResizeEvent(std::uint32_t w, std::uint32_t h, std::uint32_t old_w, std::uint32_t old_h) :
+			m_NewSize(w, h), m_OldSize(old_w, old_h) {}
 
 		std::uint32_t w() const {
 			return m_NewSize.x;
@@ -476,8 +484,12 @@ namespace aby {
 		std::uint32_t h() const { 
 			return m_NewSize.y;
 		}
-		glm::u32vec2 size() {
+		glm::u32vec2 size() const {
 			return m_NewSize;
+		}
+
+		glm::u32vec2 old_size() const {
+			return m_OldSize;
 		}
 
 		std::string to_string() const override {
@@ -501,6 +513,7 @@ namespace aby {
 
 	private:
 		glm::u32vec2 m_NewSize;
+		glm::u32vec2 m_OldSize;
 	};
 
 	class WindowCloseEvent : public Event {

@@ -8,6 +8,7 @@
 #include <source_location>
 #include <filesystem>
 #include <glm/glm.hpp>
+#include "Core/Common.h"
 
 #ifndef NDEBUG
     #define DBG(x) x 
@@ -126,7 +127,7 @@ namespace aby {
         inline static void Print(const std::string& context, EColor color, std::ostream& os, std::format_string<Args...> fmt, Args&&... args) {
             std::string prefix = std::format("[{}]", context);
             std::string msg    = std::format(fmt, std::forward<Args>(args)...);
-            os << "\033[" << static_cast<int>(color) << "m" << prefix << " " << msg << "\033[0m" << std::endl;
+            os << "\033[" << static_cast<int>(color) << "m" << prefix << " " << msg << "\033[0m" << '\n';
         }
     public:
         static void SetStreams(std::ostream& log_stream = std::cout, std::ostream& err_stream = std::cerr) {
@@ -197,6 +198,19 @@ namespace std {
         template <typename FmtContext>
         FmtContext::iterator format(const filesystem::path& path, FmtContext& ctx) const {
             return format_to(ctx.out(), "{}", path.string());
+        }
+    };
+
+    template <>
+    struct formatter<aby::UUID> {
+        template<class ParseContext>
+        constexpr ParseContext::iterator parse(ParseContext& ctx) {
+            return ctx.begin();
+        }
+
+        template <typename FmtContext>
+        FmtContext::iterator format(const aby::UUID& uuid, FmtContext& ctx) const {
+            return format_to(ctx.out(), "{}", uuid.operator unsigned long long());
         }
     };
 

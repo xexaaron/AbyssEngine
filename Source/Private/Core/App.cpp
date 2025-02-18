@@ -1,5 +1,6 @@
 #include "Core/App.h"
 #include "Core/Log.h"
+#include "Rendering/UI/Widget.h"
 #include "vk/VkRenderer.h"
 #ifdef _WIN32
     #include <Windows.h>
@@ -42,9 +43,10 @@ namespace aby {
 
     App::App(const AppInfo& info, glm::u32vec2 window_size) : 
         m_Window(Window::create(info.bInherit ? info.Name : "Window", window_size.x, window_size.y)),
-        m_Ctx(Context::create(info, m_Window)),
+        m_Ctx(Context::create(this, m_Window)),
         m_Renderer(Renderer::create(m_Ctx)),
         m_Info(info)
+       //  m_ResourceThread(m_Ctx.get())
     {
         m_Window->register_event(this, &App::on_event);
     }
@@ -57,12 +59,21 @@ namespace aby {
     void App::run() {
         auto last_time = std::chrono::high_resolution_clock::now();
         float delta_time = 0.0f;
-     
+        
         for (auto& object : m_Objects) {
             // TODO: Pool serialization context for object->on_deserialize()
             //       and file resource manager for objects of uuids.
             object->on_create(this, false);
         }
+
+        // m_ResourceThread.sync();
+
+        for (auto& object : m_Objects) {
+            if (auto p = std::dynamic_pointer_cast<ui::Widget>(object)) {
+                p->on_invalidate();
+            }
+        }
+
 
         while (!m_Window->is_open()) {
             auto current_time = std::chrono::high_resolution_clock::now();
@@ -145,6 +156,14 @@ namespace aby {
         for (auto& obj : m_Objects) {
             obj->on_event(this, event);
         }
+    }
+
+    // ResourceThread& App::resource_thread() {
+    //     return m_ResourceThread;
+    // }
+    
+    const AppInfo& App::info() const {
+        return m_Info;
     }
 
 

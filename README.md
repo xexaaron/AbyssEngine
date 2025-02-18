@@ -5,11 +5,12 @@
 ### Version
 - CMake 3.28.3
 - C++ 23
+- SPIR-V 1.6
+- Vulkan 1.3.250
 
 ### Dependencies
 - Most dependncies are git submodules.
-- Please refer to the dependencies section of the readme for obtaining
-  the dependencies that are not a submodule or included in the repository.
+- Please refer to the [dependencies](#dependencies) section of the readme for obtaining the dependencies that are not a submodule or not included in the repository.
 
 ## Dependencies
 

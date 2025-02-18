@@ -5,13 +5,28 @@
 
 namespace aby {
 	
+	namespace helper {
+		std::string EShader_to_string(EShader type) {
+			switch (type) {
+				case EShader::VERTEX:
+					return "Vertex";
+				case EShader::FRAGMENT:
+					return "Fragment";
+				default:
+					ABY_ASSERT(false, "EShader out of bounds");
+					break;
+			}
+			return "UNREACHABLE";
+		}
+	}
+
 	Shader::Shader(const std::vector<std::uint32_t>& data, EShader type) : 
 		m_Type(type), m_Data(data)
 	{
-
+		
 	}
 
-	Ref<Shader> Shader::create(Context* ctx, const fs::path& path, EShader type) {
+	Resource Shader::create(Context* ctx, const fs::path& path, EShader type) {
 		switch (ctx->backend()) {
 			case EBackend::VULKAN: {
 				auto shader = vk::Shader::create(
@@ -19,13 +34,12 @@ namespace aby {
 					path,
 					type
 				);
-				ctx->shaders().add(shader);
-				return shader;
+				return ctx->shaders().add(shader);
 			}
 			default:
 				ABY_ASSERT(false, "Ctx backend is invalid");
 		}
-		return nullptr;
+		return {};
 	}
 
 	EShader Shader::type() const {

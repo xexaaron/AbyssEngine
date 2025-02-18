@@ -25,8 +25,7 @@ namespace aby::vk {
 		m_Shaders  = shaders;
 		m_Pipeline = VK_NULL_HANDLE;
 
-		auto& descriptor = m_Shaders->vert().descriptor();
-		
+		auto& descriptor = m_Shaders->vertex_descriptor();
 		auto input_binding_stride = descriptor.input_binding_stride();
 
 		std::vector<VkVertexInputBindingDescription> ibds;
@@ -91,8 +90,8 @@ namespace aby::vk {
 			.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
 			.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
 			.colorBlendOp		 = VK_BLEND_OP_ADD,
-			.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
-			.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+			.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+			.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
 			.alphaBlendOp        = VK_BLEND_OP_ADD,
 			.colorWriteMask		 = VK_COLOR_COMPONENT_R_BIT |
 								   VK_COLOR_COMPONENT_G_BIT | 

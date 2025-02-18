@@ -158,10 +158,11 @@ namespace aby::vk {
         void update_descriptor_set(std::uint32_t binding, std::size_t bytes);
         void update_uniform_memory(const void* data, std::size_t bytes);
 
-        const Shader& vert() const;
-        const Shader& frag() const;
+        Resource vert() const;
+        Resource frag() const;
         const VertexClass& vertex_class() const;
-        
+        const ShaderDescriptor& vertex_descriptor() const;
+
         VkPipelineLayout layout() const;
         const std::vector<VkDescriptorSet>& descriptors() const;
         std::vector<VkDescriptorSet>& descriptors();
@@ -172,8 +173,8 @@ namespace aby::vk {
     private:
         vk::Context* m_Ctx;
         VkPipelineLayout m_Layout;
-        Shader m_Vertex;
-        Shader m_Fragment;
+        Resource m_Vertex;
+        Resource m_Fragment;
         VkDescriptorPool m_Pool;
         std::vector<VkDescriptorSet> m_Descriptors;
         VkBuffer m_Uniforms;

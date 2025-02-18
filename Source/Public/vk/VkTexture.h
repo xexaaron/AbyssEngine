@@ -12,6 +12,7 @@ namespace aby::vk {
         Texture(vk::Context* ctx); 
         Texture(vk::Context* ctx, const fs::path& path);
         Texture(vk::Context* ctx, const glm::u32vec2& size, const glm::vec4& color);
+        Texture(vk::Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, std::uint32_t channels);
         Texture(const Texture& other);
         Texture(Texture&& other) noexcept;
         ~Texture();

@@ -34,6 +34,10 @@ namespace aby::vk {
         Resource default_tex = Texture::create(m_Ctx.get(), { 1, 1 }, { 1, 1, 1, 1 });
     }
     
+    void Renderer::draw_text(const Text& text) {
+        m_2D.draw_text(text);
+    }
+
     void Renderer::draw_triangle_3d(const Triangle& triangle) {
         draw_triangle(m_3D, triangle);
     }

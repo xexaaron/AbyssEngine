@@ -24,6 +24,7 @@ namespace aby::vk {
         void on_end() override;
         void on_event(Event& event) override;
 
+        void draw_text(const Text& text) override;
         void draw_triangle_3d(const Triangle& triangle) override;
         void draw_triangle_2d(const Triangle& triangle) override;
         void draw_quad_3d(const Quad& quad) override;

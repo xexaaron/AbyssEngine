@@ -5,6 +5,7 @@
 #ifdef _WIN32
     #define GLFW_EXPOSE_NATIVE_WIN32
     #include <glfw/glfw3native.h>
+    #include <dwmapi.h>
 #elif defined(__linux__)
     #define GLFW_EXPOSE_NATIVE_X11
     #include <glfw/glfw3native.h>
@@ -45,6 +46,9 @@ namespace aby {
         glfwSetWindowUserPointer(m_Window, this);
         setup_callbacks();
         set_vsync(true);
+
+        BOOL use_dark_mode = TRUE;
+        DwmSetWindowAttribute(static_cast<HWND>(native()), DWMWA_USE_IMMERSIVE_DARK_MODE, &use_dark_mode, sizeof(use_dark_mode));
     }
 
     Ref<Window> Window::create(const std::string& title, std::uint32_t width, std::uint32_t height) {
@@ -174,9 +178,9 @@ namespace aby {
     void Window::setup_callbacks() {
         glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* win, int w, int h) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
+            WindowResizeEvent event(w, h, data.Width, data.Height);
             data.Width  = w;
             data.Height = h;
-            WindowResizeEvent event(w, h);
             data.Callback(event);
         });
         glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* win) {
@@ -259,8 +263,17 @@ namespace aby {
                 data.Flags &= ~EWindowFlags::MAXIMIZED;
             }
             else {
+                // If restored.
+                // Do not check if width/height are the same as rendering positions
+                // also need to be invalidated on size callback
                 data.Flags &= ~EWindowFlags::MAXIMIZED;
                 data.Flags &= ~EWindowFlags::MINIMIZED;
+                int width, height;
+                glfwGetWindowSize(win, &width, &height);
+                WindowResizeEvent wr_event(width, height, data.Width, data.Height);
+                data.Width = width;
+                data.Height = height;
+                data.Callback(wr_event);
             }
         });
         glfwSetWindowMaximizeCallback(m_Window, [](GLFWwindow* win, int maximized) {
@@ -273,6 +286,15 @@ namespace aby {
                 data.Flags &= ~EWindowFlags::MAXIMIZED;
                 data.Flags &= ~EWindowFlags::MINIMIZED;
             }
+            // If restored or maximized.
+            // Do not check if width/height are the same as rendering positions
+            // also need to be invalidated on size callback
+            int width, height;
+            glfwGetWindowSize(win, &width, &height);
+            WindowResizeEvent wr_event(width, height, data.Width, data.Height);
+            data.Width = width;
+            data.Height = height;
+            data.Callback(wr_event);
         });
         m_Data.Callback = [this](Event& event) -> void {
             for (auto it = m_Callbacks.rbegin(); it != m_Callbacks.rend(); ++it) {
@@ -291,5 +313,23 @@ namespace aby {
         return { static_cast<float>(x), static_cast<float>(y) };
     }
 
+    glm::fvec2 Window::dpi() const {
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        ABY_ASSERT(monitor, "Failed to get primary monitor");
+
+        float xscale, yscale;
+        glfwGetMonitorContentScale(monitor, &xscale, &yscale);
+
+        int widthMM, heightMM;
+        glfwGetMonitorPhysicalSize(monitor, &widthMM, &heightMM);
+
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        ABY_ASSERT(mode, "Failed to get video mode");
+        
+        return {
+            (mode->width  / (widthMM / 25.4f))  * xscale,
+            (mode->height / (heightMM / 25.4f)) * yscale
+        };
+    }
 
 }

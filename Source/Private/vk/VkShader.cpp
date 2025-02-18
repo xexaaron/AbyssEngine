@@ -87,9 +87,6 @@ namespace aby::vk {
         options.AddMacroDefinition("BINDLESS_TEXTURE_BINDING", std::to_string(BINDLESS_TEXTURE_BINDING));
         options.AddMacroDefinition("EXPAND_VEC4(vec)", "vec.r, vec.g, vec.b, vec.a");
         options.AddMacroDefinition("EXPAND_VEC3(vec)", "vec.x, vec.y, vec.z");
-
-    #define EXPAND_VEC4(vec) 
-    #define EXPAND_VEC3(vec) 
     #ifdef NDEBUG
         options.AddMacroDefinition("NDEBUG");
     #endif
@@ -293,6 +290,7 @@ namespace aby::vk {
         m_Layout(VK_NULL_HANDLE),
         m_Descriptor(ShaderCompiler::reflect(m_Data)) 
     {
+        Timer timer;
         // Create shader module
         VkShaderModuleCreateInfo smci = {
             .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -349,6 +347,14 @@ namespace aby::vk {
             .pBindings = bindings.data()
         };
         VK_CHECK(vkCreateDescriptorSetLayout(m_Logical, &layoutInfo, IAllocator::get(), &m_Layout));
+   
+        ABY_LOG("Loaded Shader: {}ms", timer.elapsed().milli());
+        ABY_LOG("  Path:    \"{}\"", path);
+        ABY_LOG("  Type:     {}", aby::helper::EShader_to_string(type));
+        ABY_LOG("  Inputs:   {}", m_Descriptor.inputs.size());
+        ABY_LOG("  Uniforms: {}", m_Descriptor.uniforms.size());
+        ABY_LOG("  Samplers: {}", m_Descriptor.samplers.size());
+        ABY_LOG("  Storages: {}", m_Descriptor.storages.size());
     }
 
 
@@ -409,19 +415,21 @@ namespace aby::vk {
     ShaderModule::ShaderModule(vk::Context* ctx, const fs::path& vertex, const fs::path& frag) :
         m_Ctx(ctx),
         m_Layout(VK_NULL_HANDLE),
-        m_Vertex(ctx->devices(), vertex, EShader::VERTEX),
-        m_Fragment(ctx->devices(), frag, EShader::FRAGMENT),
+        m_Vertex(aby::Shader::create(ctx, vertex, EShader::VERTEX)),
+        m_Fragment(aby::Shader::create(ctx, frag, EShader::FRAGMENT)),
         m_Pool(VK_NULL_HANDLE),
         m_Descriptors(),
         m_Uniforms(VK_NULL_HANDLE),
         m_UniformMemory(VK_NULL_HANDLE),
-        m_Class(m_Vertex.descriptor(), 10000, 0)
+        m_Class(std::static_pointer_cast<vk::Shader>(m_Ctx->shaders().at(m_Vertex))->descriptor(), 10000, 0)
     {
         m_Ctx->textures().add_handler(create_unique<TextureResourceHandler>(this));
+        auto vert_shader = std::static_pointer_cast<vk::Shader>(m_Ctx->shaders().at(m_Vertex));
+        auto frag_shader = std::static_pointer_cast<vk::Shader>(m_Ctx->shaders().at(m_Fragment));
 
         std::vector<VkDescriptorSetLayout> descriptor_set_layouts{
-           m_Vertex.layout(),
-           m_Fragment.layout()
+           vert_shader->layout(),
+           frag_shader->layout()
         };
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{
@@ -474,11 +482,11 @@ namespace aby::vk {
         VK_CHECK(vkAllocateDescriptorSets(logical, &allocInfo, m_Descriptors.data()));
         
         VK_CHECK(vkCreatePipelineLayout(logical, &pipelineLayoutInfo, IAllocator::get(), &m_Layout));
-
-       if (m_Vertex.descriptor().uniforms.empty()) {
+    
+        if (vert_shader->descriptor().uniforms.empty()) {
             create_uniform_buffer(0);
             update_descriptor_set(0, 0);
-       }
+        }
     }
 
 
@@ -542,13 +550,17 @@ namespace aby::vk {
             vkDestroyDescriptorPool(logical, m_Pool, IAllocator::get());
         }
 
-        m_Vertex.destroy();
-        m_Fragment.destroy();
+        auto vert_shader = std::static_pointer_cast<vk::Shader>(m_Ctx->shaders().at(m_Vertex));
+        auto frag_shader = std::static_pointer_cast<vk::Shader>(m_Ctx->shaders().at(m_Fragment));
+        vert_shader->destroy();
+        frag_shader->destroy();
     }
 
     void ShaderModule::set_uniforms(const void* data, std::size_t bytes, std::uint32_t binding) {
         std::size_t expected_size = 0;
-        for (auto& uniform : m_Vertex.descriptor().uniforms) {
+        auto vert_shader = std::static_pointer_cast<vk::Shader>(m_Ctx->shaders().at(m_Vertex));
+        for (auto& uniform : vert_shader->descriptor().uniforms) {
+
             expected_size += uniform.size;
         }
         ABY_ASSERT(bytes == expected_size, "Expected size {}, but got {}", expected_size, bytes);
@@ -596,11 +608,11 @@ namespace aby::vk {
         vkUpdateDescriptorSets(logical, writes.size(), writes.data(), 0, nullptr);
     }
 
-    const Shader& ShaderModule::vert() const {
+    Resource ShaderModule::vert() const {
         return m_Vertex;
     }
 
-    const Shader& ShaderModule::frag() const {
+    Resource ShaderModule::frag() const {
         return m_Fragment;
     }
         
@@ -617,11 +629,19 @@ namespace aby::vk {
     }
 
     std::vector<VkPipelineShaderStageCreateInfo> ShaderModule::stages() const {
-        return { m_Vertex.stage(), m_Fragment.stage() };
+        auto vert_shader = std::static_pointer_cast<vk::Shader>(m_Ctx->shaders().at(m_Vertex));
+        auto frag_shader = std::static_pointer_cast<vk::Shader>(m_Ctx->shaders().at(m_Fragment));
+        return { vert_shader->stage(), frag_shader->stage() };
     }
     
     const VertexClass& ShaderModule::vertex_class() const {
         return m_Class;
     }
+    
+    const ShaderDescriptor& ShaderModule::vertex_descriptor() const {
+        auto vert_shader = std::static_pointer_cast<vk::Shader>(m_Ctx->shaders().at(m_Vertex));
+        return vert_shader->descriptor();
+    }
+
 
 }

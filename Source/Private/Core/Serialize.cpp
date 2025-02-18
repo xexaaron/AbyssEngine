@@ -1,4 +1,3 @@
-#define SERIALIZER_IMPL
 #include "Core/Serialize.h"
 
 namespace aby {

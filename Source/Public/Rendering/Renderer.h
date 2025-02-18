@@ -29,6 +29,8 @@ namespace aby {
 		*/
 		virtual void on_end() = 0;
 		
+		virtual void draw_text(const Text& text) = 0;
+
 		virtual void draw_triangle_3d(const Triangle& triangle) = 0;
 		virtual void draw_quad_3d(const Quad& quad) = 0;
 

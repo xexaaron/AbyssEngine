@@ -21,16 +21,23 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build GLFW docs")
 add_subdirectory(${GLFW_DIR})
 
 set(STB_INCLUDE_DIR "Vendor/stb")
-set(STB_IMAGE_IMPL "${STB_INCLUDE_DIR}/stb_image/stb_image.cpp")
+set(STB_IMPL "${STB_INCLUDE_DIR}/stb.cpp")
 
 set(PACKAGER_DIR "package")
 add_subdirectory(${PACKAGER_DIR})
-
 
 set(GLM_DIR "Vendor/glm")
 set(GLM_INCLUDE_DIR ${GLM_DIR})
 add_subdirectory(${GLM_DIR})
 target_compile_definitions(glm PRIVATE GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_FORCE_LEFT_HANDED)
+
+set(FREETYPE_DIR "Vendor/freetype")
+set(FREETYPE_INCLUDE_DIR "${FREETYPE_DIR}/include")
+set(FREETYPE_DEVEL_DIR "${FREETYPE_DIR}/devel")
+
+set(FREETYPE_LIBRARY_DIR "${FREETYPE_DIR}/objs")
+add_subdirectory(${FREETYPE_DIR})
+target_compile_definitions(freetype PRIVATE SKIP_INSTALL_ALL)
 
 set(CPP_SOURCES
     Source/main.cpp
@@ -40,13 +47,13 @@ set(CPP_SOURCES
     Source/Private/Core/Serialize.cpp
     Source/Private/Core/Object.cpp
     Source/Private/Core/Resource.cpp
+    Source/Private/Rendering/Font.cpp
     Source/Private/Rendering/Context.cpp
     Source/Private/Rendering/Renderer.cpp
     Source/Private/Rendering/Camera.cpp
     Source/Private/Rendering/Viewport.cpp
     Source/Private/Rendering/Shader.cpp
     Source/Private/Rendering/Texture.cpp
-    Source/Private/Rendering/UI/Canvas.cpp
     Source/Private/Rendering/UI/Widget.cpp
     Source/Private/vk/VkRenderer.cpp
     Source/Private/vk/VkBuffer.cpp
@@ -65,7 +72,7 @@ set(CPP_SOURCES
     Source/Private/vk/VkPipeline.cpp
     Source/Private/vk/VkRenderModule.cpp
     Source/Private/vk/VkTexture.cpp
-    ${STB_IMAGE_IMPL}
+    ${STB_IMPL}
 )
 
 # Add header files and group them in the "Include" folder
@@ -79,6 +86,7 @@ set(HEADER_FILES
     Source/Public/Core/Serialize.h
     Source/Public/Core/Resource.h
     Source/Public/Core/Number.h
+    Source/Public/Rendering/Font.h
     Source/Public/Rendering/Context.h
     Source/Public/Rendering/Renderer.h
     Source/Public/Rendering/Camera.h
@@ -86,7 +94,6 @@ set(HEADER_FILES
     Source/Public/Rendering/Shader.h
     Source/Public/Rendering/Texture.h
     Source/Public/Rendering/Vertex.h
-    Source/Public/Rendering/UI/Canvas.h
     Source/Public/Rendering/UI/Widget.h
     Source/Public/vk/VkRenderer.h
     Source/Public/vk/VkBuffer.h
@@ -134,11 +141,10 @@ source_group("Public/Rendering" FILES
     Source/Public/Rendering/Shader.h
     Source/Public/Rendering/Texture.h
     Source/Public/Rendering/Vertex.h
-
+    Source/Public/Rendering/Font.h
 )
 
 source_group("Public/Rendering/UI" FILES
-    Source/Public/Rendering/UI/Canvas.h
     Source/Public/Rendering/UI/Widget.h
 ) 
 
@@ -167,7 +173,7 @@ source_group("Shaders" FILES ${SHADER_SOURCES})
 
 source_group("Private" FILES
     Source/main.cpp
-    ${STB_IMAGE_IMPL}
+    ${STB_IMPL}
 )
 
 source_group("Private/Core" FILES
@@ -177,6 +183,7 @@ source_group("Private/Core" FILES
     Source/Private/Core/Serialize.cpp
     Source/Private/Core/Object.cpp
     Source/Private/Core/Resource.cpp
+    Source/Private/Core/Text.cpp
 )
  
 source_group("Private/Rendering" FILES
@@ -186,10 +193,10 @@ source_group("Private/Rendering" FILES
     Source/Private/Rendering/Viewport.cpp
     Source/Private/Rendering/Shader.cpp
     Source/Private/Rendering/Texture.cpp
+    Source/Private/Rendering/Font.cpp
 )
 
 source_group("Private/Rendering/UI" FILES
-    Source/Private/Rendering/UI/Canvas.cpp
     Source/Private/Rendering/UI/Widget.cpp
 ) 
 
@@ -214,7 +221,7 @@ source_group("Private/vk" FILES
 )
 
 add_executable(${PROJECT_NAME} ${CPP_SOURCES} ${HEADER_FILES} ${SHADER_SOURCES})
-add_dependencies(${PROJECT_NAME} Package glfw glm)
+#add_dependencies(${PROJECT_NAME} Package glfw glm freetype)
 target_compile_definitions(${PROJECT_NAME} PRIVATE GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_FORCE_LEFT_HANDED)
 target_include_directories(${PROJECT_NAME} PUBLIC
     Source/Public
@@ -222,6 +229,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${GLFW_INCLUDE_DIR}
     ${STB_INCLUDE_DIR}
     ${GLM_INCLUDE_DIR}
+    ${FREETYPE_DIR}
+    ${FREETYPE_DEVEL_DIR}
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -234,13 +243,19 @@ get_filename_component(VULKAN_LIB_PATH "${VULKAN_LIBRARY_DIR}/vulkan-1.lib" ABSO
 get_filename_component(SHADER_C_LIB_PATH "${VULKAN_LIBRARY_DIR}/shaderc_shared${DEBUG_SUFFIX}.lib" ABSOLUTE)
 get_filename_component(SPIRV_CROSS_LIB_PATH "${VULKAN_LIBRARY_DIR}/spirv-cross-core${DEBUG_SUFFIX}.lib" ABSOLUTE)
 get_filename_component(SPIRV_CROSS_GLSL_LIB_PATH "${VULKAN_LIBRARY_DIR}/spirv-cross-glsl${DEBUG_SUFFIX}.lib" ABSOLUTE)
+get_filename_component(FREETYPE_LIB_PATH "${FREETYPE_LIBRARY_DIR}/freetype.lib" ABSOLUTE)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     ${VULKAN_LIB_PATH}
     ${SHADER_C_LIB_PATH}
     ${SPIRV_CROSS_LIB_PATH}
     ${SPIRV_CROSS_GLSL_LIB_PATH}
+    ${FREETYPE_LIB_PATH}
 )
+
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    target_link_libraries(${PROJECT_NAME} PRIVATE dwmapi.lib)
+endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE "${GLFW_LIB_PATH}")
 

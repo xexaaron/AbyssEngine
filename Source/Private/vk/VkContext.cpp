@@ -1,6 +1,7 @@
 #include <Windows.h>
 #include "vk/VkContext.h"
 #include "Core/Log.h"
+#include "Core/App.h"
 #include <vector>
 #include <cstring>
 
@@ -19,8 +20,8 @@
 
 namespace aby::vk {
 
-    Context::Context(const AppInfo& info, Ref<Window> window) :
-        aby::Context(info, window) 
+    Context::Context(App* app, Ref<Window> window) :
+        aby::Context(app, window) 
     {
         std::vector<const char*> instance_extensions = {
             VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
@@ -37,7 +38,7 @@ namespace aby::vk {
             "VK_LAYER_KHRONOS_validation"
         };
         
-        m_Instance.create(info, instance_extensions, validation_layers);
+        m_Instance.create(app->info(), instance_extensions, validation_layers);
         m_Debugger.create(m_Instance);
         m_Surface.create(m_Instance, window);
         m_Devices.create(m_Instance, m_Surface, device_extensions);
@@ -66,8 +67,8 @@ namespace aby::vk {
         )
     }
 
-    Ref<Context> Context::create(const AppInfo& app_info, Ref<Window> window) {
-        return create_ref<Context>(app_info, window);
+    Ref<Context> Context::create(App* app, Ref<Window> window) {
+        return create_ref<Context>(app, window);
     }
 
     void Context::destroy() {

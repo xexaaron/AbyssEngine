@@ -5,21 +5,27 @@
 #include <queue>
 #include <vector>
 #include <any>
+#include <functional>
+#include <mutex>
+#include <future>
 
 namespace aby {
 
     class Shader;
     class Texture;
+    class Font;
     class Context;
 
     enum class EResource : std::uint32_t {
         NONE    = 0,
         SHADER,
-        TEXTURE
+        TEXTURE,
+        FONT,
+        MAX_ENUM,
     };
 
     template <typename T>
-    concept CIsResource = std::is_same_v<T, Shader> || std::is_same_v<T, Texture>;
+    concept CIsResource = std::is_same_v<T, Shader> || std::is_same_v<T, Texture> || std::is_same_v<T, Font>;
 
     template <typename T> requires (CIsResource<T>)
     constexpr EResource TypeToEResource() {
@@ -28,6 +34,12 @@ namespace aby {
         }
         else if constexpr (std::is_same_v<T, Texture>) {
             return EResource::TEXTURE;
+        }
+        else if constexpr (std::is_same_v<T, Font>) {
+            return EResource::FONT;
+        }
+        else {
+            static_assert(false, "T != EResource Enumeration");
         }
         return EResource::NONE;
     }
@@ -176,5 +188,28 @@ namespace aby {
         std::queue<Handle> m_RecycledHandles;
         std::vector<Unique<Handler>> m_Handlers;
     };
+    
+    class ResourceThread {
+    public:
+        using Task = std::function<void()>;
+    public:
+        ResourceThread(Context* ctx);
+        Resource add_task(EResource type, const Task& task);
+        void sync();
+    private:
+        void executor();
+    private:
+        struct ResourceData {
+            std::queue<Task> LoadQueue;
+        };
+        bool bStopLoading = false;
+        bool bFinishUp    = false;
+        Context* m_Ctx;
+        std::thread m_LoadThread;
+        std::condition_variable m_CV;
+        std::mutex m_Mutex;
+        std::unordered_map<EResource, ResourceData> m_ResourceData;
+    };
+
 
 }

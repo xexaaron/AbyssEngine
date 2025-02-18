@@ -96,6 +96,7 @@ namespace aby {
         glm::fvec2    mouse_pos() const;
         int           refresh_rate() const;
         glm::fvec2    desktop_resolution() const;
+        glm::fvec2    dpi() const;
 
         bool is_vsync() const;
         bool is_minimized() const;

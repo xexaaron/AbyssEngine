@@ -15,6 +15,18 @@
 #undef max
 #endif
 
+#define EXPAND_VEC2(v) v.x, v.y
+#define EXPAND_VEC3(v) v.x, v.y, v.z
+#define EXPAND_VEC4(v) v.x, v.y, v.z, v.w
+#define EXPAND_COLOR(c) c.r, c.g, c.b, c.a
+#define WIN32_CHECK(x) do { \
+        HRESULT r = (x); \
+        if (FAILED(r)) { \
+            ABY_ASSERT(false, "[win32] API call failed with HRESULT: 0x{:X}", r); \
+        } \
+    } while(0)
+
+
 namespace fs = std::filesystem;
 
 namespace aby {
@@ -22,8 +34,8 @@ namespace aby {
     template <typename T>
     using Ref = std::shared_ptr<T>;
 
-    template <typename T>
-    using Unique = std::unique_ptr<T>;
+    template <typename T, typename Deleter = std::default_delete<T>>
+    using Unique = std::unique_ptr<T, Deleter>;
 
     template <typename T>
     using Weak = std::weak_ptr<T>;
@@ -32,11 +44,40 @@ namespace aby {
     Ref<T> create_ref(Args&&... args) {
         return std::make_shared<T>(std::forward<Args>(args)...);
     }
+
     template <typename T, typename... Args>
     Unique<T> create_unique(Args&&... args) {
         return std::make_unique<T>(std::forward<Args>(args)...);
     }
 
+    template <typename T, typename Deleter, typename... Args>
+    Unique<T, Deleter> create_unique_with_deleter(Deleter deleter, Args&&... args) {
+        return Unique<T, Deleter>(new T(std::forward<Args>(args)...), std::move(deleter));
+    }
+
+    /**
+    * @brief CreateRefEnabler class. 
+    *        Used to disable easy creation of objects like Fonts through their own constructors
+    *        in favor of their own static T::create(...) method. Not foolproof since anyone 
+    *        can use this.
+    * @tparam T Class with protected/private ctors.
+    */
+    template <typename T>
+    struct CreateRefEnabler : public T {
+    private:
+
+        template <typename... Args>
+        static Ref<T> create(Args&&... args) {
+            return std::make_shared<CreateRefEnabler<T>>(std::forward<Args>(args)...);
+        }
+        friend T;
+    public:
+        template <typename... Args>
+        CreateRefEnabler(Args&&... args) : T(std::forward<Args>(args)...) {}
+    };
+}
+
+namespace aby {
     struct AppVersion {
         std::uint32_t Major = 0;
         std::uint32_t Minor = 0;
@@ -69,60 +110,6 @@ namespace aby {
         }
         return result;
     }
-
-    struct ConstexprPath {
-    public:
-        template <std::size_t N>
-        constexpr ConstexprPath(const char(&data)[N]) : data(data), size(N - 1) {}
-
-        constexpr bool operator==(const ConstexprPath& other) const {
-            return other.data == data;
-        }
-        constexpr bool operator!=(const ConstexprPath& other) const {
-            return !this->operator==(other);
-        }
-
-        // Compare if the path is a subpath of another (relative comparison)
-        constexpr bool is_relative_to(const ConstexprPath& base) const {
-            if (base.size == 0 || base.size > size) {
-                return false;
-            }
-            for (std::size_t i = 0; i < base.size; ++i) {
-                if (data[i] != base.data[i]) {
-                    return false;
-                }
-            }
-            return data[base.size] == '/';
-        }
-
-        constexpr bool file_name_eq(const ConstexprPath& path) const {
-            std::size_t last_slash_pos = size;
-            while (last_slash_pos > 0 && data[last_slash_pos - 1] != '/') {
-                --last_slash_pos;
-
-            }
-
-            std::size_t file_name_size = size - last_slash_pos;
-
-            // Compare each character of the file name
-            for (std::size_t i = 0; i < file_name_size; ++i) {
-                if (data[last_slash_pos + i] != path.data[i]) {
-                    return false;  // Found a mismatch
-                }
-            }
-
-            return true;  // All characters matched
-        }
-
-        template <std::size_t N = sizeof(__FILE__)>
-        constexpr static inline bool source_filename_is(const ConstexprPath& name, const char(&file)[N] = __FILE__) {
-            ConstexprPath path(file);
-            return path.file_name_eq(name);
-        }
-
-        const char* data;
-        std::size_t size;
-    };
 
     template <typename T, T Min = std::numeric_limits<T>::min(), T Max = std::numeric_limits<T>::max()> requires std::is_arithmetic_v<T>
     class Random {
@@ -224,6 +211,36 @@ namespace aby {
     private:
         float m_Time;
     };
+
+    class Timer {
+    public:
+        Timer() {
+            reset();
+        }
+
+        ~Timer() {
+           
+        }
+
+        void reset() {
+            m_Start = std::chrono::high_resolution_clock::now();
+        }
+
+        Time elapsed() {
+            using clock = std::chrono::high_resolution_clock;
+            using ns = std::chrono::nanoseconds;
+
+            float elapsed_seconds =
+                std::chrono::duration_cast<ns>(clock::now() - m_Start).count()
+                * 0.001f * 0.001f * 0.001f;
+
+            return Time(elapsed_seconds);
+        }
+
+    private:
+        std::chrono::time_point<std::chrono::high_resolution_clock> m_Start;
+    };
+
 
 
 }

@@ -1,5 +1,6 @@
 #include "Rendering/Texture.h"
 #include "Core/Log.h"
+#include "Core/App.h"
 #include "vk/VkTexture.h"
 #include "vk/VkContext.h"
 #include <stb_image/stb_image.h>
@@ -11,11 +12,22 @@ namespace aby {
         ABY_ASSERT(ctx, "(aby::Context*)ctx is invalid!");
         switch (ctx->backend()) {
             case EBackend::VULKAN: {
-                auto tex = create_ref<vk::Texture>(static_cast<vk::Context*>(ctx), path);
-                return ctx->textures().add(tex);
+                // return ctx->app()->resource_thread().add_task(EResource::TEXTURE, [ctx = ctx, path = path]() {
+                    Timer timer;
+                    auto tex = create_ref<vk::Texture>(static_cast<vk::Context*>(ctx), path);
+                    auto elapsed = timer.elapsed();
+                    ABY_LOG("Loaded Texture: {}ms", elapsed.milli());
+                    ABY_LOG("  Path:    \"{}\"", path);
+                    ABY_LOG("  Size:     ({}, {})", EXPAND_VEC2(tex->size()));
+                    ABY_LOG("  Channels: {}", tex->channels());
+                    ABY_LOG("  Bytes:    {}", tex->bytes());
+                    return ctx->textures().add(tex);
+                // });
+                break;
             }
             default:
                 ABY_ASSERT(false, "Unsupported ctx backend");
+                break;
         }
         return {};
     }
@@ -39,11 +51,40 @@ namespace aby {
         switch (ctx->backend()) {
             case EBackend::VULKAN:
             {
+                Timer timer;
                 auto tex = create_ref<vk::Texture>(static_cast<vk::Context*>(ctx), size, color);
+                auto elapsed = timer.elapsed();
+                ABY_LOG("Loaded Texture: {}ms", elapsed.milli());
+                ABY_LOG("  Color:    ({}, {}, {}, {})", EXPAND_COLOR(color));
+                ABY_LOG("  Size:     ({}, {})", EXPAND_VEC2(tex->size()));
+                ABY_LOG("  Channels: {}", tex->channels());
+                ABY_LOG("  Bytes:    {}", tex->bytes());
                 return ctx->textures().add(tex);
             }
             default:
                 ABY_ASSERT(false, "Unsupported ctx backend");
+                break;
+
+        }
+        return {};
+    }
+    Resource Texture::create(Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, std::uint32_t channels) {
+        ABY_ASSERT(ctx, "(aby::Context*)ctx is invalid!");
+        switch (ctx->backend()) {
+            case EBackend::VULKAN:
+            {
+                Timer timer;
+                auto tex = create_ref<vk::Texture>(static_cast<vk::Context*>(ctx), size, data, channels);
+                auto elapsed = timer.elapsed();
+                ABY_LOG("Loaded Texture: {}ms", elapsed.milli());
+                ABY_LOG("  Size:     ({}, {})", EXPAND_VEC2(tex->size()));
+                ABY_LOG("  Channels: {}", tex->channels());
+                ABY_LOG("  Bytes:    {}", tex->bytes());
+                return ctx->textures().add(tex);
+            }
+            default:
+                ABY_ASSERT(false, "Unsupported ctx backend");
+                break;
         }
         return {};
     }
@@ -92,6 +133,16 @@ namespace aby {
             std::memcpy(&m_Data[i], rgba.data(), 4);
         }
     }
+    
+    Texture::Texture(const glm::u32vec2& size, const std::vector<std::byte>& data, std::uint32_t channels) :
+        m_Size(size),
+        m_Channels(channels), 
+        m_Data(data) 
+    {
+        ABY_ASSERT(data.size() % channels == 0, "Invalid texture data size");
+        ABY_ASSERT(m_Size.x * m_Size.y * channels == data.size(), "Data size does not match square image");
+    }
+
 
 
     Texture::Texture(const Texture& other) :

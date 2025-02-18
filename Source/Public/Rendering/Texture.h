@@ -13,6 +13,7 @@ namespace aby {
         static Resource create(Context* ctx);
         static Resource create(Context* ctx, const fs::path& path);
         static Resource create(Context* ctx, const glm::u32vec2& size, const glm::vec4& color);
+        static Resource create(Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, std::uint32_t channels);
 
         virtual ~Texture() = default;
         
@@ -24,6 +25,7 @@ namespace aby {
         Texture();
         Texture(const fs::path& path);
         Texture(const glm::u32vec2& size, const glm::vec4& color = glm::vec4(1.0f));
+        Texture(const glm::u32vec2& size, const std::vector<std::byte>& data, std::uint32_t channels);
         Texture(const Texture& other);
         Texture(Texture&& other) noexcept;
     private:

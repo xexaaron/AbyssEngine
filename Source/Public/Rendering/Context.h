@@ -2,32 +2,40 @@
 #include "Core/Common.h"
 #include "Core/Window.h"
 #include "Core/Resource.h"
+#include "Rendering/Font.h"
 #include "Rendering/Texture.h"
 #include "Rendering/Shader.h"
 
 namespace aby {
     
+    class App;
+
     class Context abstract {
     public:
-        static Ref<Context> create(const AppInfo& app_info, Ref<Window> window);
+        static Ref<Context> create(App* app, Ref<Window> window);
         virtual ~Context() = default;
 
         virtual void destroy() = 0; 
 
         Ref<Window> window();
+        App*        app();
         EBackend    backend() const;
 
         ResourceClass<Shader>&        shaders();
         const ResourceClass<Shader>&  shaders() const;
         ResourceClass<Texture>&       textures();
         const ResourceClass<Texture>& textures() const;
+        ResourceClass<Font>&          fonts();
+        const ResourceClass<Font>&    fonts() const;
     protected:
-        Context(const AppInfo& info, Ref<Window> window);
+        Context(App* app, Ref<Window> window);
     protected:
         EBackend m_Backend;
         Weak<Window> m_Window;
-        ResourceClass<Shader> m_Shaders;
+        App* m_App;
+        ResourceClass<Shader>  m_Shaders;
         ResourceClass<Texture> m_Textures;
+        ResourceClass<Font>    m_Fonts;
     };
 
 }

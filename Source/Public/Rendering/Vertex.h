@@ -4,22 +4,23 @@
 namespace aby {
     
     struct Vertex {
-        Vertex(const glm::vec3& pos, const glm::vec3& col, float texture = 0.f) :
-            pos(pos), col(col), texinfo(0, 0, texture) {}
-        Vertex(const glm::vec3& pos, const glm::vec3& col, const glm::vec2& texcoord, float texture) :
-            pos(pos), col(col), texinfo(texcoord, texture) {}
-        Vertex(const glm::vec3& pos, const glm::vec3& col, const glm::vec3& texinfo) :
-            pos(pos), col(col), texinfo(texinfo) {}
-        Vertex(const glm::vec2& pos, const glm::vec3& col, float texture = 0.f) :
-            pos(pos, 0), col(col), texinfo(0, 0, texture) {}
-        Vertex(const glm::vec2& pos, const glm::vec3& col, const glm::vec2& texcoord, float texture) :
-            pos(pos, 0), col(col), texinfo(texcoord, texture) {}
-        Vertex(const glm::vec2& pos, const glm::vec3& col, const glm::vec3& texinfo) :
-            pos(pos, 0), col(col), texinfo(texinfo) {}
+        Vertex(const glm::vec3& pos, const glm::vec4& col, float texture = 0.f, const glm::vec2& uvs = { 1, 1}) :
+            pos(pos), col(col), texinfo(0, 0, texture), uvs(uvs) {}
+        Vertex(const glm::vec3& pos, const glm::vec4& col, const glm::vec2& texcoord, float texture, const glm::vec2& uvs = { 1, 1 }) :
+            pos(pos), col(col), texinfo(texcoord, texture), uvs(uvs) {}
+        Vertex(const glm::vec3& pos, const glm::vec4& col, const glm::vec3& texinfo, const glm::vec2& uvs = { 1, 1 }) :
+            pos(pos), col(col), texinfo(texinfo), uvs(uvs) {}
+        Vertex(const glm::vec2& pos, const glm::vec4& col, float texture = 0.f, const glm::vec2& uvs = { 1, 1 }) :
+            pos(pos, 0), col(col), texinfo(0, 0, texture), uvs(uvs) {}
+        Vertex(const glm::vec2& pos, const glm::vec4& col, const glm::vec2& texcoord, float texture, const glm::vec2& uvs = { 1, 1 }) :
+            pos(pos, 0), col(col), texinfo(texcoord, texture), uvs(uvs) {}
+        Vertex(const glm::vec2& pos, const glm::vec4& col, const glm::vec3& texinfo, const glm::vec2& uvs = { 1, 1 }) :
+            pos(pos, 0), col(col), texinfo(texinfo), uvs(uvs) {}
 
         glm::vec3    pos;
-        glm::vec3    col;
+        glm::vec4    col;
         glm::vec3    texinfo; // xy = texcoord, z = texidx
+        glm::vec2    uvs;
     };
 
     struct Triangle {
@@ -31,11 +32,24 @@ namespace aby {
     };
 
     struct Quad {
-        Quad(const glm::vec2& size, const glm::vec3& pos, const glm::vec3& col, float texture = 0.f) : 
-            v(pos, col, texture), size(size) { }
+        Quad(const glm::vec2& size, const glm::vec2& pos, const glm::vec4& col = { 1, 1, 1, 1 }, float texture = 0.f, const glm::vec2& uvs = { 1, 1 }) :
+            v(glm::vec3(pos + (size / glm::vec2(2, 2)), 0.f), col, texture, uvs), size(size) {
+        }
+        Quad(const glm::vec2& size = {}, const glm::vec3& pos = {}, const glm::vec4& col = { 1, 1, 1, 1 }, float texture = 0.f, const glm::vec2& uvs = { 1, 1 }) :
+            v(glm::vec3(pos.x + (size.x / 2), pos.y + (size.y / 2), 0.f), col, texture, uvs), size(size) { }
 
         Vertex v;
         glm::vec2 size;
+    };
+
+    struct Text {
+        Text(const std::string& text, const glm::vec2& pos, float scale = 1.f, std::uint32_t font = 0) :
+            pos(pos, 0.f), scale(scale), font(font), text(text) {}
+
+        glm::vec3     pos;
+        float         scale;
+        std::uint32_t font;
+        std::string   text;
     };
 
 }

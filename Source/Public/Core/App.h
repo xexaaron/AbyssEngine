@@ -29,6 +29,8 @@ namespace aby {
 		const Renderer& renderer() const;
 		std::span<Ref<Object>> objects();
 		std::span<const Ref<Object>> objects() const;
+		const AppInfo& info() const;
+		// ResourceThread& resource_thread();
 
 		const std::string& name() const;
 		const AppVersion&  version() const;
@@ -43,6 +45,7 @@ namespace aby {
 		Ref<Context>  m_Ctx;
 		Ref<Renderer> m_Renderer;
 		std::vector<Ref<Object>> m_Objects;
+		// ResourceThread m_ResourceThread;
 	};
 
 

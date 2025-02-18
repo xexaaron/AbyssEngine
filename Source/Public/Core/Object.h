@@ -3,6 +3,7 @@
 #include "Core/Common.h"
 #include "Core/Serialize.h"
 #include "Core/Event.h"
+#include <set>
 
 namespace aby {
 
@@ -54,6 +55,13 @@ namespace aby {
 
 		inline UUID uuid() const { 
 			return m_ID;
+		}
+
+		template <typename T> requires (std::is_base_of_v<Object, T>)
+		T* as() {
+			auto p = dynamic_cast<T*>(this); 
+			ABY_ASSERT(p, "Object is not compatible with type '{}'", typeid(T).name());
+			return p;
 		}
 
 		Object& operator=(const Object& other) {

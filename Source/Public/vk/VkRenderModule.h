@@ -77,6 +77,7 @@ namespace aby::vk {
         void set_uniforms(const void* data, std::size_t bytes, std::size_t binding = 0);
         void draw_triangle(const Triangle& triangle);
         void draw_quad(const Quad& quad);
+        void draw_text(const Text& text);
 
         Ref<ShaderModule> module() const;
         vk::Pipeline&     pipeline();
@@ -84,6 +85,7 @@ namespace aby::vk {
         RenderPrimitive&  quads();
         RenderPrimitive&  tris();
     private:
+        vk::Context*          m_Ctx;
         Ref<ShaderModule>     m_Module;
         vk::Pipeline          m_Pipeline;
         RenderPrimitiveArray  m_Primitives;
