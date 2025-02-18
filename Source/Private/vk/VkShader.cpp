@@ -350,7 +350,7 @@ namespace aby::vk {
    
         ABY_LOG("Loaded Shader: {}ms", timer.elapsed().milli());
         ABY_LOG("  Path:    \"{}\"", path);
-        ABY_LOG("  Type:     {}", aby::helper::EShader_to_string(type));
+        ABY_LOG("  Type:     {}", std::to_string(type));
         ABY_LOG("  Inputs:   {}", m_Descriptor.inputs.size());
         ABY_LOG("  Uniforms: {}", m_Descriptor.uniforms.size());
         ABY_LOG("  Samplers: {}", m_Descriptor.samplers.size());

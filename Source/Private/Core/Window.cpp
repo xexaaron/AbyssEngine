@@ -17,11 +17,11 @@ namespace aby {
 
     Window::Window(const std::string& title, std::uint32_t width, std::uint32_t height) : 
         m_Data{
-            .Title    = title,
-            .Width    = width,
-            .Height   = height,
-            .Flags    = EWindowFlags::NONE,
-            .Callback = [](Event&){}
+            .title    = title,
+            .width    = width,
+            .height   = height,
+            .flags    = EWindowFlags::NONE,
+            .callback = [](Event&){}
         },
         m_Window(nullptr)
     {
@@ -85,15 +85,15 @@ namespace aby {
     #endif
     }
     std::uint32_t Window::width() const {
-        return m_Data.Width;
+        return m_Data.width;
     }
 
     std::uint32_t Window::height() const {
-        return m_Data.Height;
+        return m_Data.height;
     }
 
     glm::u32vec2 Window::size() const {
-        return { m_Data.Width, m_Data.Height };
+        return { m_Data.width, m_Data.height };
     }
 
     double Window::scale() const {
@@ -108,8 +108,8 @@ namespace aby {
     }
 
     void Window::set_title(const std::string& title) {
-        m_Data.Title = title;
-        glfwSetWindowTitle(m_Window, m_Data.Title.c_str());
+        m_Data.title = title;
+        glfwSetWindowTitle(m_Window, m_Data.title.c_str());
     }
 
     void Window::set_size(std::uint32_t w, std::uint32_t h) {
@@ -140,24 +140,24 @@ namespace aby {
 
     void Window::set_vsync(bool vsync) {
         if (vsync) {
-            m_Data.Flags |= EWindowFlags::VSYNC;
+            m_Data.flags |= EWindowFlags::VSYNC;
         }
         else {
-            m_Data.Flags &= ~EWindowFlags::VSYNC;
+            m_Data.flags &= ~EWindowFlags::VSYNC;
         }
         glfwSwapInterval(static_cast<int>(vsync));
     }
 
     bool Window::is_vsync() const {
-        return (m_Data.Flags & EWindowFlags::VSYNC) != EWindowFlags::NONE;
+        return (m_Data.flags & EWindowFlags::VSYNC) != EWindowFlags::NONE;
     }
     
     bool Window::is_minimized() const {
-        return (m_Data.Flags & EWindowFlags::MINIMIZED) != EWindowFlags::NONE;
+        return (m_Data.flags & EWindowFlags::MINIMIZED) != EWindowFlags::NONE;
     }
  
     bool Window::is_maximized() const {
-        return (m_Data.Flags & EWindowFlags::MAXIMIZED) != EWindowFlags::NONE;
+        return (m_Data.flags & EWindowFlags::MAXIMIZED) != EWindowFlags::NONE;
     }
 
 
@@ -178,15 +178,15 @@ namespace aby {
     void Window::setup_callbacks() {
         glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* win, int w, int h) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
-            WindowResizeEvent event(w, h, data.Width, data.Height);
-            data.Width  = w;
-            data.Height = h;
-            data.Callback(event);
+            WindowResizeEvent event(w, h, data.width, data.height);
+            data.width  = w;
+            data.height = h;
+            data.callback(event);
         });
         glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* win) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
             WindowCloseEvent wc_event;
-            data.Callback(wc_event);
+            data.callback(wc_event);
         });
         glfwSetKeyCallback(m_Window, [](GLFWwindow* win, int key, int scancode, int action, int mods) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
@@ -194,19 +194,19 @@ namespace aby {
                 case GLFW_PRESS:
                 {
                     KeyPressedEvent kp_event(static_cast<Button::EKey>(key), 0);
-                    data.Callback(kp_event);
+                    data.callback(kp_event);
                     break;
                 }
                 case GLFW_RELEASE:
                 {
                     KeyReleasedEvent kr_event(static_cast<Button::EKey>(key));
-                    data.Callback(kr_event);
+                    data.callback(kr_event);
                     break;
                 }
                 case GLFW_REPEAT:
                 {
                     KeyPressedEvent kr_event(static_cast<Button::EKey>(key), 1);
-                    data.Callback(kr_event);
+                    data.callback(kr_event);
                     break;
                 }
             }
@@ -214,7 +214,7 @@ namespace aby {
         glfwSetCharCallback(m_Window, [](GLFWwindow* win, unsigned int keycode) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
             KeyTypedEvent ev(static_cast<Button::EKey>(keycode));
-            data.Callback(ev);
+            data.callback(ev);
         });
         glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* win, int button, int action, int mods) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
@@ -228,19 +228,19 @@ namespace aby {
                 case GLFW_PRESS:
                 {
                     MousePressedEvent mp_event(static_cast<Button::EMouse>(button), pos);
-                    data.Callback(mp_event);
+                    data.callback(mp_event);
                     break;
                 }
                 case GLFW_RELEASE:
                 {
                     MouseReleasedEvent mr_event(static_cast<Button::EMouse>(button), pos);
-                    data.Callback(mr_event);
+                    data.callback(mr_event);
                     break;
                 }
                 case GLFW_REPEAT:
                 {
                     MousePressedEvent mr_event(static_cast<Button::EMouse>(button), pos);
-                    data.Callback(mr_event);
+                    data.callback(mr_event);
                     break;
                 }
             }
@@ -248,55 +248,55 @@ namespace aby {
         glfwSetScrollCallback(m_Window, [](GLFWwindow* win, double xOffset, double yOffset) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
             MouseScrolledEvent ms_event((float)xOffset, (float)yOffset);
-            data.Callback(ms_event);
+            data.callback(ms_event);
         });
 
         glfwSetCursorPosCallback(m_Window, [](GLFWwindow* win, double xPos, double yPos) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
             MouseMovedEvent ms_event((float)xPos, (float)yPos);
-            data.Callback(ms_event);
+            data.callback(ms_event);
         });
         glfwSetWindowIconifyCallback(m_Window, [](GLFWwindow* win, int iconified) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
             if (iconified == GLFW_TRUE) {
-                data.Flags |= EWindowFlags::MINIMIZED;
-                data.Flags &= ~EWindowFlags::MAXIMIZED;
+                data.flags |= EWindowFlags::MINIMIZED;
+                data.flags &= ~EWindowFlags::MAXIMIZED;
             }
             else {
                 // If restored.
                 // Do not check if width/height are the same as rendering positions
                 // also need to be invalidated on size callback
-                data.Flags &= ~EWindowFlags::MAXIMIZED;
-                data.Flags &= ~EWindowFlags::MINIMIZED;
+                data.flags &= ~EWindowFlags::MAXIMIZED;
+                data.flags &= ~EWindowFlags::MINIMIZED;
                 int width, height;
                 glfwGetWindowSize(win, &width, &height);
-                WindowResizeEvent wr_event(width, height, data.Width, data.Height);
-                data.Width = width;
-                data.Height = height;
-                data.Callback(wr_event);
+                WindowResizeEvent wr_event(width, height, data.width, data.height);
+                data.width = width;
+                data.height = height;
+                data.callback(wr_event);
             }
         });
         glfwSetWindowMaximizeCallback(m_Window, [](GLFWwindow* win, int maximized) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
             if (maximized == GLFW_TRUE) {
-                data.Flags |= EWindowFlags::MAXIMIZED;
-                data.Flags &= ~EWindowFlags::MINIMIZED;
+                data.flags |= EWindowFlags::MAXIMIZED;
+                data.flags &= ~EWindowFlags::MINIMIZED;
             }
             else {
-                data.Flags &= ~EWindowFlags::MAXIMIZED;
-                data.Flags &= ~EWindowFlags::MINIMIZED;
+                data.flags &= ~EWindowFlags::MAXIMIZED;
+                data.flags &= ~EWindowFlags::MINIMIZED;
             }
             // If restored or maximized.
             // Do not check if width/height are the same as rendering positions
             // also need to be invalidated on size callback
             int width, height;
             glfwGetWindowSize(win, &width, &height);
-            WindowResizeEvent wr_event(width, height, data.Width, data.Height);
-            data.Width = width;
-            data.Height = height;
-            data.Callback(wr_event);
+            WindowResizeEvent wr_event(width, height, data.width, data.height);
+            data.width = width;
+            data.height = height;
+            data.callback(wr_event);
         });
-        m_Data.Callback = [this](Event& event) -> void {
+        m_Data.callback = [this](Event& event) -> void {
             for (auto it = m_Callbacks.rbegin(); it != m_Callbacks.rend(); ++it) {
                 (*it)(event);
             }

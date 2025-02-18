@@ -3,23 +3,26 @@
 #include "vk/VkContext.h"
 #include "Core/Log.h"
 
+
+namespace std {
+	string to_string(aby::EShader type) {
+		switch (type) {
+			using enum aby::EShader;
+			case VERTEX:
+				return "Vertex";
+			case FRAGMENT:
+				return "Fragment";
+			default:
+				ABY_ASSERT(false, "EShader out of bounds");
+				break;
+		}
+		return "UNREACHABLE";
+	}
+}
+
+
 namespace aby {
 	
-	namespace helper {
-		std::string EShader_to_string(EShader type) {
-			switch (type) {
-				case EShader::VERTEX:
-					return "Vertex";
-				case EShader::FRAGMENT:
-					return "Fragment";
-				default:
-					ABY_ASSERT(false, "EShader out of bounds");
-					break;
-			}
-			return "UNREACHABLE";
-		}
-	}
-
 	Shader::Shader(const std::vector<std::uint32_t>& data, EShader type) : 
 		m_Type(type), m_Data(data)
 	{

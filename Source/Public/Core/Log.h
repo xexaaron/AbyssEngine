@@ -10,47 +10,6 @@
 #include <glm/glm.hpp>
 #include "Core/Common.h"
 
-#ifndef NDEBUG
-    #define DBG(x) x 
-#else 
-    #define DBG(x)
-#endif
-
-#if defined(_WIN32) || defined(_WIN64)
-    #if defined(ABY_BUILD_DLL) 
-        #define API(x) __declspec(dllexport)
-    #else
-        #define API(x) __declspec(dllimport)
-    #endif
-#elif defined(__linux__) || defined(__APPLE__)
-    #if defined(ABY_BUILD_DLL)
-        #define API(x) __attribute__((visibility("default")))
-    #else
-        #define API(x)
-    #endif
-#else
-    #define API(x)
-#endif
-
-#ifndef ABY_DBG_BREAK
-    #ifdef _MSC_VER
-        #define ABY_DBG_BREAK() __debugbreak()
-    #elif defined(__has_builtin)
-        #if __has_builtin(__builtin_debugtrap)
-            #define ABY_DBG_BREAK() __builtin_debugtrap()
-        #elif __has_builtin(__builtin_trap)
-            #define ABY_DBG_BREAK() __builtin_trap()
-        #endif
-    #elif defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-        extern "C" int raise(int sig); 
-        #define ABY_DBG_BREAK() raise(SIGTRAP)
-    #elif defined(_WIN32)
-        extern "C" __declspec(dllimport) void __stdcall DebugBreak();
-        #define ABY_DBG_BREAK() DebugBreak()
-    #else
-        #define ABY_DBG_BREAK() ((void)0)
-    #endif
-#endif
 
 #ifndef ABY_LOG
 #define ABY_LOG(...) aby::Logger::Log(__VA_ARGS__)

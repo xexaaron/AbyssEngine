@@ -47,6 +47,7 @@ set(CPP_SOURCES
     Source/Private/Core/Serialize.cpp
     Source/Private/Core/Object.cpp
     Source/Private/Core/Resource.cpp
+    Source/Private/Core/Time.cpp
     Source/Private/Rendering/Font.cpp
     Source/Private/Rendering/Context.cpp
     Source/Private/Rendering/Renderer.cpp
@@ -55,6 +56,14 @@ set(CPP_SOURCES
     Source/Private/Rendering/Shader.cpp
     Source/Private/Rendering/Texture.cpp
     Source/Private/Rendering/UI/Widget.cpp
+    Source/Private/Rendering/UI/UICommon.cpp
+    Source/Private/Rendering/UI/Textbox.cpp
+    Source/Private/Rendering/UI/ParentWidget.cpp
+    Source/Private/Rendering/UI/Panel.cpp
+    Source/Private/Rendering/UI/LayoutContainer.cpp
+    Source/Private/Rendering/UI/Image.cpp
+    Source/Private/Rendering/UI/Canvas.cpp
+    Source/Private/Rendering/UI/Button.cpp
     Source/Private/vk/VkRenderer.cpp
     Source/Private/vk/VkBuffer.cpp
     Source/Private/vk/VkContext.cpp
@@ -85,7 +94,7 @@ set(HEADER_FILES
     Source/Public/Core/Object.h
     Source/Public/Core/Serialize.h
     Source/Public/Core/Resource.h
-    Source/Public/Core/Number.h
+    Source/Public/Core/Time.h
     Source/Public/Rendering/Font.h
     Source/Public/Rendering/Context.h
     Source/Public/Rendering/Renderer.h
@@ -95,6 +104,14 @@ set(HEADER_FILES
     Source/Public/Rendering/Texture.h
     Source/Public/Rendering/Vertex.h
     Source/Public/Rendering/UI/Widget.h
+    Source/Public/Rendering/UI/UICommon.h
+    Source/Public/Rendering/UI/Textbox.h
+    Source/Public/Rendering/UI/ParentWidget.h
+    Source/Public/Rendering/UI/Panel.h
+    Source/Public/Rendering/UI/LayoutContainer.h
+    Source/Public/Rendering/UI/Image.h
+    Source/Public/Rendering/UI/Canvas.h
+    Source/Public/Rendering/UI/Button.h
     Source/Public/vk/VkRenderer.h
     Source/Public/vk/VkBuffer.h
     Source/Public/vk/VkContext.h
@@ -130,7 +147,7 @@ source_group("Public/Core" FILES
     Source/Public/Core/Serialize.h
     Source/Public/Core/Object.h
     Source/Public/Core/Resource.h
-    Source/Public/Core/Number.h
+    Source/Public/Core/Time.h
 ) 
 
 source_group("Public/Rendering" FILES
@@ -146,6 +163,14 @@ source_group("Public/Rendering" FILES
 
 source_group("Public/Rendering/UI" FILES
     Source/Public/Rendering/UI/Widget.h
+    Source/Public/Rendering/UI/UICommon.h
+    Source/Public/Rendering/UI/Textbox.h
+    Source/Public/Rendering/UI/ParentWidget.h
+    Source/Public/Rendering/UI/Panel.h
+    Source/Public/Rendering/UI/LayoutContainer.h
+    Source/Public/Rendering/UI/Image.h
+    Source/Public/Rendering/UI/Canvas.h
+    Source/Public/Rendering/UI/Button.h
 ) 
 
 source_group("Public/vk" FILES
@@ -183,7 +208,7 @@ source_group("Private/Core" FILES
     Source/Private/Core/Serialize.cpp
     Source/Private/Core/Object.cpp
     Source/Private/Core/Resource.cpp
-    Source/Private/Core/Text.cpp
+    Source/Private/Core/Time.cpp
 )
  
 source_group("Private/Rendering" FILES
@@ -198,6 +223,14 @@ source_group("Private/Rendering" FILES
 
 source_group("Private/Rendering/UI" FILES
     Source/Private/Rendering/UI/Widget.cpp
+    Source/Private/Rendering/UI/UICommon.cpp
+    Source/Private/Rendering/UI/Textbox.cpp
+    Source/Private/Rendering/UI/ParentWidget.cpp
+    Source/Private/Rendering/UI/Panel.cpp
+    Source/Private/Rendering/UI/LayoutContainer.cpp
+    Source/Private/Rendering/UI/Image.cpp
+    Source/Private/Rendering/UI/Canvas.cpp
+    Source/Private/Rendering/UI/Button.cpp
 ) 
 
 source_group("Private/vk" FILES

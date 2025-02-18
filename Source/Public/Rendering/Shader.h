@@ -12,9 +12,7 @@ namespace aby {
 		FRAGMENT = 1,
 		MAX_ENUM,
 	};
-	namespace helper {
-		std::string EShader_to_string(EShader type);
-	}
+
 	class Context;
 
 	class Shader {
@@ -29,6 +27,8 @@ namespace aby {
 		EShader m_Type = EShader::MAX_ENUM;
 		std::vector<std::uint32_t> m_Data;
 	};
+}
 
-
+namespace std {
+	std::string to_string(aby::EShader type);
 }

@@ -48,13 +48,13 @@ namespace aby::vk {
             ABY_ASSERT(false, "");
         }
 
-        auto ver = VK_MAKE_VERSION(info.Version.Major, info.Version.Minor, info.Version.Patch);
+        auto ver = VK_MAKE_VERSION(info.version.major, info.version.minor, info.version.patch);
 
         VkApplicationInfo ai = {};
         ai.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        ai.pApplicationName = info.Name.c_str();
+        ai.pApplicationName = info.name.c_str();
         ai.applicationVersion = ver;
-        ai.pEngineName = info.Name.c_str();
+        ai.pEngineName = info.name.c_str();
         ai.engineVersion = ver;
         ai.apiVersion = VK_API_VERSION_1_3;
         VkInstanceCreateInfo ci = {};

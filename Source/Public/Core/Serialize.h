@@ -6,7 +6,7 @@
 
 namespace aby {
 
-	enum ESerializeMode {
+	enum class ESerializeMode {
 		READ,
 		WRITE,
 	};

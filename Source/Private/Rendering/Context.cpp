@@ -8,14 +8,14 @@ namespace aby {
 
     Context::Context(App* app, Ref<Window> window) :
         m_App(app),
-        m_Backend(app->info().Backend),
+        m_Backend(app->info().backend),
         m_Window(window)
     {
 
     }
 
     Ref<Context> Context::create(App* app, Ref<Window> window) {
-        switch (app->info().Backend) {
+        switch (app->info().backend) {
             case EBackend::VULKAN: {
                 return create_ref<vk::Context>(app, window);
             }

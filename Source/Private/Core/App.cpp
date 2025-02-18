@@ -42,7 +42,7 @@ namespace aby {
 namespace aby {
 
     App::App(const AppInfo& info, glm::u32vec2 window_size) : 
-        m_Window(Window::create(info.bInherit ? info.Name : "Window", window_size.x, window_size.y)),
+        m_Window(Window::create(info.binherit ? info.name : "Window", window_size.x, window_size.y)),
         m_Ctx(Context::create(this, m_Window)),
         m_Renderer(Renderer::create(m_Ctx)),
         m_Info(info)
@@ -96,18 +96,18 @@ namespace aby {
     }
  
     void App::set_name(const std::string& name) {
-        m_Info.Name = name;
-        if (m_Info.bInherit) {
+        m_Info.name = name;
+        if (m_Info.binherit) {
             m_Window->set_title(name);
         }
     }
 
     const std::string& App::name() const {
-        return m_Info.Name;
+        return m_Info.name;
     }
 
     const AppVersion& App::version() const {
-        return m_Info.Version;
+        return m_Info.version;
     }
 
     Ref<Window> App::window() {

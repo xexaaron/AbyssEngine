@@ -8,11 +8,54 @@
 #include <type_traits>
 
 #define abstract
+
 #ifdef min
 #undef min
 #endif
 #ifdef max
 #undef max
+#endif
+
+#ifndef NDEBUG
+#define DBG(x) x 
+#else 
+#define DBG(x)
+#endif
+
+#if defined(_WIN32) || defined(_WIN64)
+#if defined(ABY_BUILD_DLL) 
+#define API(x) __declspec(dllexport)
+#else
+#define API(x) __declspec(dllimport)
+#endif
+#elif defined(__linux__) || defined(__APPLE__)
+#if defined(ABY_BUILD_DLL)
+#define API(x) __attribute__((visibility("default")))
+#else
+#define API(x)
+#endif
+#else
+#define API(x)
+#endif
+
+#ifndef ABY_DBG_BREAK
+#ifdef _MSC_VER
+#define ABY_DBG_BREAK() __debugbreak()
+#elif defined(__has_builtin)
+#if __has_builtin(__builtin_debugtrap)
+#define ABY_DBG_BREAK() __builtin_debugtrap()
+#elif __has_builtin(__builtin_trap)
+#define ABY_DBG_BREAK() __builtin_trap()
+#endif
+#elif defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+extern "C" int raise(int sig);
+#define ABY_DBG_BREAK() raise(SIGTRAP)
+#elif defined(_WIN32)
+extern "C" __declspec(dllimport) void __stdcall DebugBreak();
+#define ABY_DBG_BREAK() DebugBreak()
+#else
+#define ABY_DBG_BREAK() ((void)0)
+#endif
 #endif
 
 #define EXPAND_VEC2(v) v.x, v.y
@@ -25,6 +68,51 @@
             ABY_ASSERT(false, "[win32] API call failed with HRESULT: 0x{:X}", r); \
         } \
     } while(0)
+#define BIT(x) (1U << x)
+#define DECLARE_ENUM_OPS(e)                             \
+constexpr e operator|(e lhs, e rhs) {                   \
+    return static_cast<e>(                              \
+        static_cast<std::underlying_type_t<e>>(lhs) |   \
+        static_cast<std::underlying_type_t<e>>(rhs)     \
+    );                                                  \
+}                                                       \
+                                                        \
+constexpr e operator&(e lhs, e rhs) {                \
+    return static_cast<e>(                           \
+        static_cast<std::underlying_type_t<e>>(lhs) &   \
+        static_cast<std::underlying_type_t<e>>(rhs)     \
+    );                                                  \
+}                                                       \
+                                                        \
+constexpr e operator^(e lhs, e rhs) {                   \
+    return static_cast<e>(                              \
+        static_cast<std::underlying_type_t<e>>(lhs) ^   \
+        static_cast<std::underlying_type_t<e>>(rhs)     \
+    );                                                  \
+}                                                       \
+                                                        \
+constexpr e operator~(e trait) {                        \
+    return static_cast<e>(                              \
+        ~static_cast<std::underlying_type_t<e>>(trait)  \
+    );                                                  \
+}                                                       \
+constexpr e& operator|=(e& lhs, e rhs) {                \
+    lhs = lhs | rhs;                                    \
+    return lhs;                                         \
+}                                                       \
+                                                        \
+constexpr e& operator&=(e& lhs, e rhs) {                \
+    lhs = static_cast<e>(                               \
+        static_cast<std::underlying_type_t<e>>(lhs) &   \
+        static_cast<std::underlying_type_t<e>>(rhs)     \
+    );                                                  \
+    return lhs;                                         \
+}                                                       \
+                                                        \
+constexpr e& operator^=(e& lhs, e rhs) {                \
+    lhs = lhs ^ rhs;                                    \
+    return lhs;                                         \
+}                                                       
 
 
 namespace fs = std::filesystem;
@@ -79,9 +167,9 @@ namespace aby {
 
 namespace aby {
     struct AppVersion {
-        std::uint32_t Major = 0;
-        std::uint32_t Minor = 0;
-        std::uint32_t Patch = 0;
+        std::uint32_t major = 0;
+        std::uint32_t minor = 0;
+        std::uint32_t patch = 0;
     };
 
     enum class EBackend {
@@ -91,13 +179,13 @@ namespace aby {
 
     struct AppInfo {
         // App name.
-        std::string Name     = "App";
+        std::string name     = "App";
         // App version.
-        AppVersion  Version  = { 0, 0, 0 };
+        AppVersion  version  = { 0, 0, 0 };
         // Does the window inherit the name?
-        bool        bInherit = true; 
+        bool        binherit = true; 
         // Rendering backend.
-        EBackend    Backend = EBackend::DEFAULT; 
+        EBackend    backend  = EBackend::DEFAULT; 
     };
     
 
@@ -158,88 +246,6 @@ namespace aby {
         uint64_t m_Value;
     };
 
-    struct ETime {
-        enum Enum {
-            SECONDS,
-            MILLISECONDS,
-            MICROSECONDS,
-            NANOSECONDS,
-        };
-        static std::string suffix_of(Enum value) {
-            switch (value) {
-                case SECONDS:		return "s";
-                case MILLISECONDS:	return "ms";
-                #pragma warning(push, 0)
-                case MICROSECONDS:	return "μs";
-                #pragma warning(pop)
-                case NANOSECONDS:	return "ns";
-                default: return "Unknown";
-            }
-            return "";
-
-        }
-        static std::string to_string(Enum value) {
-            switch (value) {
-                case SECONDS:		return "seconds";
-                case MILLISECONDS:	return "milliseconds";
-                case MICROSECONDS:	return "microseconds";
-                case NANOSECONDS:	return "nanoseconds";
-                default: return "Unknown";
-            }
-            return "";
-        }
-    };
-
-    /* Base Unit : Seconds */
-    struct Time {
-    public:
-        Time(float time = 0.f) : m_Time(time) {}
-        Time(const Time& other) : m_Time(other.m_Time) {}
-        Time(Time&& other) noexcept : m_Time(other.m_Time) {}
-
-        operator float() const { return m_Time; }
-        Time& operator=(float other) {
-            m_Time = other;
-            return *this;
-        }
-
-        float sec()	  const { return m_Time; }
-        float milli() const { return m_Time * 1000.f; }
-        float micro() const { return m_Time * 100000000.f; }
-        float nano()  const { return m_Time * 1000000000.f; }
-
-    private:
-        float m_Time;
-    };
-
-    class Timer {
-    public:
-        Timer() {
-            reset();
-        }
-
-        ~Timer() {
-           
-        }
-
-        void reset() {
-            m_Start = std::chrono::high_resolution_clock::now();
-        }
-
-        Time elapsed() {
-            using clock = std::chrono::high_resolution_clock;
-            using ns = std::chrono::nanoseconds;
-
-            float elapsed_seconds =
-                std::chrono::duration_cast<ns>(clock::now() - m_Start).count()
-                * 0.001f * 0.001f * 0.001f;
-
-            return Time(elapsed_seconds);
-        }
-
-    private:
-        std::chrono::time_point<std::chrono::high_resolution_clock> m_Start;
-    };
 
 
 

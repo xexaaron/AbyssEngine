@@ -12,54 +12,19 @@ namespace aby {
 
     // Enum operators below
     enum class EWindowFlags {
-        NONE = 0,
-        VSYNC = (1 << 0),
-        MINIMIZED = (1 << 1),
-        MAXIMIZED = (1 << 2),
+        NONE      = 0,
+        VSYNC     = BIT(0),
+        MINIMIZED = BIT(1),
+        MAXIMIZED = BIT(2),
     };
-
-    inline constexpr EWindowFlags operator|(EWindowFlags lhs, EWindowFlags rhs) {
-        using T = std::underlying_type_t<EWindowFlags>;
-        return static_cast<EWindowFlags>(static_cast<T>(lhs) | static_cast<T>(rhs));
-    }
-
-    inline constexpr EWindowFlags operator&(EWindowFlags lhs, EWindowFlags rhs) {
-        using T = std::underlying_type_t<EWindowFlags>;
-        return static_cast<EWindowFlags>(static_cast<T>(lhs) & static_cast<T>(rhs));
-    }
-
-    inline constexpr EWindowFlags operator^(EWindowFlags lhs, EWindowFlags rhs) {
-        using T = std::underlying_type_t<EWindowFlags>;
-        return static_cast<EWindowFlags>(static_cast<T>(lhs) ^ static_cast<T>(rhs));
-    }
-
-    inline constexpr EWindowFlags operator~(EWindowFlags flag) {
-        using T = std::underlying_type_t<EWindowFlags>;
-        return static_cast<EWindowFlags>(~static_cast<T>(flag));
-    }
-
-    // Assignment operators
-    inline constexpr EWindowFlags& operator|=(EWindowFlags& lhs, EWindowFlags rhs) {
-        lhs = lhs | rhs;
-        return lhs;
-    }
-
-    inline constexpr EWindowFlags& operator&=(EWindowFlags& lhs, EWindowFlags rhs) {
-        lhs = lhs & rhs;
-        return lhs;
-    }
-
-    inline constexpr EWindowFlags& operator^=(EWindowFlags& lhs, EWindowFlags rhs) {
-        lhs = lhs ^ rhs;
-        return lhs;
-    }
+    DECLARE_ENUM_OPS(EWindowFlags);
 
     struct WindowData {
-        std::string   Title;
-        std::uint32_t Width;
-        std::uint32_t Height;
-        EWindowFlags  Flags;
-        std::function<void(Event&)> Callback;
+        std::string   title;
+        std::uint32_t width;
+        std::uint32_t height;
+        EWindowFlags  flags;
+        std::function<void(Event&)> callback;
     };
 
 }
