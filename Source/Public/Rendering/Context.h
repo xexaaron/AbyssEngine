@@ -27,6 +27,8 @@ namespace aby {
         const ResourceClass<Texture>& textures() const;
         ResourceClass<Font>&          fonts();
         const ResourceClass<Font>&    fonts() const;
+        LoadThread&                   load_thread();
+        const LoadThread&             load_thread() const;
     protected:
         Context(App* app, Ref<Window> window);
     protected:
@@ -36,6 +38,7 @@ namespace aby {
         ResourceClass<Shader>  m_Shaders;
         ResourceClass<Texture> m_Textures;
         ResourceClass<Font>    m_Fonts;
+        LoadThread             m_LoadThread;
     };
 
 }

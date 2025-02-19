@@ -45,7 +45,6 @@ namespace aby {
 		Ref<Context>  m_Ctx;
 		Ref<Renderer> m_Renderer;
 		std::vector<Ref<Object>> m_Objects;
-		// ResourceThread m_ResourceThread;
 	};
 
 

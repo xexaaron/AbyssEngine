@@ -17,8 +17,7 @@ namespace aby {
 		Object(Object&& other) noexcept : m_ID(other.m_ID) {}
 
 		/**
-		* @brief Called when the object is created by some "context" 
-		*		 ie. a manager/container (generally when a game starts).
+		* @brief Called before the application 'ticks' and polls for events every frame.
 		* @param app Pointer to the application.
 		* @param deserialized Indicates if the instance was deserialized before creation. 
 		* @remarks (Control per instance with flag if necessary for object class).

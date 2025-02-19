@@ -121,7 +121,7 @@ namespace aby {
     }
 
     static void print_usage(bool desc = false) {
-        std::cerr << "[Packager] [Usage] ./Packager <project_root_dir> [OPTIONAL]..." << std::endl;
+        std::cerr << "[Packager] [Usage] ./packager <project_root_dir> [OPTIONAL]..." << std::endl;
         std::cerr << "  Options: " << std::endl;
         std::cerr << "   <project_root_dir> : Directory containing ./Vendor ./Source/Textures, and ./Source/Shaders" << std::endl;
         std::cerr << "   --clean            : Clear the binary file cache (<bin>/Cache)" << std::endl;

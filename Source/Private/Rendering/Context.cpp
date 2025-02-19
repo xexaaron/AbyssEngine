@@ -9,7 +9,19 @@ namespace aby {
     Context::Context(App* app, Ref<Window> window) :
         m_App(app),
         m_Backend(app->info().backend),
-        m_Window(window)
+        m_Window(window),
+        m_LoadThread([this](EResource type) -> Resource::Handle {
+            switch (type) {
+                using enum EResource;
+                case SHADER:
+                    return this->shaders().size();
+                case TEXTURE:
+                    return this->textures().size();
+                case FONT:
+                    return this->fonts().size();
+            }
+            return 0;
+        })
     {
 
     }
@@ -58,6 +70,14 @@ namespace aby {
     }
     const ResourceClass<Font>& Context::fonts() const {
         return m_Fonts;
+    }
+    
+    LoadThread& Context::load_thread() {
+        return m_LoadThread;
+    }
+    
+    const LoadThread& Context::load_thread() const {
+        return m_LoadThread;
     }
 
 }

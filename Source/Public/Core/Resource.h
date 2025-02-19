@@ -8,6 +8,8 @@
 #include <functional>
 #include <mutex>
 #include <future>
+#include <thread>
+#include <shared_mutex>
 
 namespace aby {
 
@@ -189,26 +191,50 @@ namespace aby {
         std::vector<Unique<Handler>> m_Handlers;
     };
     
-    class ResourceThread {
+    class Thread {
     public:
-        using Task = std::function<void()>;
-    public:
-        ResourceThread(Context* ctx);
-        Resource add_task(EResource type, const Task& task);
-        void sync();
+        template <typename Fn>
+        Thread(Fn&& fn, const wchar_t* thread_name) : m_Thread(std::forward<Fn>(fn)) {
+            set_name(thread_name);
+        }
+
+        virtual ~Thread();
+
+        void set_name(const wchar_t* name);
+        
+        void join();
+        void detach();
+    protected:
+        std::thread m_Thread;
+    };
+
+    class LoadThread : public Thread {
     private:
-        void executor();
-    private:
-        struct ResourceData {
-            std::queue<Task> LoadQueue;
+        enum class EFinishState {
+            FINISH              = 0,
+            LOAD_THEN_FINISH    = 1,
+            CONTINUE            = 2,
         };
-        bool bStopLoading = false;
-        bool bFinishUp    = false;
-        Context* m_Ctx;
-        std::thread m_LoadThread;
-        std::condition_variable m_CV;
-        std::mutex m_Mutex;
-        std::unordered_map<EResource, ResourceData> m_ResourceData;
+    public:
+        using QueryResourceNextHandle = std::function<Resource::Handle(EResource)>;
+        using Task = std::function<void()>;
+
+        LoadThread(QueryResourceNextHandle query_next_handle);
+        ~LoadThread();
+
+        Resource add_task(EResource type, Task&& task);
+        std::size_t tasks();
+        void sync();
+        void wait();
+    private:
+        void load();
+    public:
+        QueryResourceNextHandle        m_QueryNextHandle;
+        std::multimap<EResource, Task> m_Tasks;
+        // TODO: Take a look at unique_lock
+        //       not sure if recursive_
+        std::recursive_mutex           m_Mutex;
+        std::atomic<EFinishState>      m_FinishState;
     };
 
 

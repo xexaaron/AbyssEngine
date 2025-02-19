@@ -8,10 +8,6 @@
 - SPIR-V 1.6
 - Vulkan 1.3.250
 
-### Dependencies
-- Most dependncies are git submodules.
-- Please refer to the [dependencies](#dependencies) section of the readme for obtaining the dependencies that are not a submodule or not included in the repository.
-
 ## Dependencies
 
 ### Non Third party

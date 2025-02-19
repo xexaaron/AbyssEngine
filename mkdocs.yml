@@ -1,0 +1,6 @@
+site_name: Abyss Docs
+nav:
+  - Home: "index.md"
+  - Object: "pages/Object.md"
+  - Resource: "pages/Resource.md" 
+theme: readthedocs

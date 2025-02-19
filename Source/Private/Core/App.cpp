@@ -46,7 +46,6 @@ namespace aby {
         m_Ctx(Context::create(this, m_Window)),
         m_Renderer(Renderer::create(m_Ctx)),
         m_Info(info)
-       //  m_ResourceThread(m_Ctx.get())
     {
         m_Window->register_event(this, &App::on_event);
     }
@@ -60,20 +59,18 @@ namespace aby {
         auto last_time = std::chrono::high_resolution_clock::now();
         float delta_time = 0.0f;
         
+        m_Ctx->load_thread().sync();
         for (auto& object : m_Objects) {
             // TODO: Pool serialization context for object->on_deserialize()
             //       and file resource manager for objects of uuids.
             object->on_create(this, false);
         }
 
-        // m_ResourceThread.sync();
-
         for (auto& object : m_Objects) {
             if (auto p = std::dynamic_pointer_cast<ui::Widget>(object)) {
                 p->on_invalidate();
             }
         }
-
 
         while (!m_Window->is_open()) {
             auto current_time = std::chrono::high_resolution_clock::now();
@@ -90,6 +87,7 @@ namespace aby {
         }
 
         for (auto& obj : m_Objects) {
+            
             // obj->on_serialize(Serializer());
             obj->on_destroy(this);
         }

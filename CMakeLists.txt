@@ -4,7 +4,8 @@ project(Abyss)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_BUILD_TYPE Debug)
 
-set(VULKAN_DIR "Vendor/VulkanSDK")
+set(VULKAN_DIR $ENV{VULKAN_SDK})
+
 set(VULKAN_INCLUDE_DIR "${VULKAN_DIR}/include")
 set(VULKAN_LIBRARY_DIR "${VULKAN_DIR}/lib")
 set(VULKAN_BIN_DIR "${VULKAN_DIR}/bin")
@@ -19,17 +20,29 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build GLFW examples")
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build GLFW tests")
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build GLFW docs")
 add_subdirectory(${GLFW_DIR})
+set_target_properties(glfw PROPERTIES FOLDER "Dependencies/glfw")
+set_target_properties(uninstall PROPERTIES FOLDER "Dependencies/glfw")
+set_target_properties(update_mappings PROPERTIES FOLDER "Dependencies/glfw")
+
+
 
 set(STB_INCLUDE_DIR "Vendor/stb")
 set(STB_IMPL "${STB_INCLUDE_DIR}/stb.cpp")
 
-set(PACKAGER_DIR "package")
+set(PACKAGER_DIR "packager")
 add_subdirectory(${PACKAGER_DIR})
+set_target_properties(packager PROPERTIES FOLDER "Abyss")
+
+set(LOCALIZE_DIR "localize")
+add_subdirectory(${LOCALIZE_DIR})
+set_target_properties(localize PROPERTIES FOLDER "Abyss")
 
 set(GLM_DIR "Vendor/glm")
 set(GLM_INCLUDE_DIR ${GLM_DIR})
 add_subdirectory(${GLM_DIR})
 target_compile_definitions(glm PRIVATE GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_FORCE_LEFT_HANDED)
+set_target_properties(glm PROPERTIES FOLDER "Dependencies")
+
 
 set(FREETYPE_DIR "Vendor/freetype")
 set(FREETYPE_INCLUDE_DIR "${FREETYPE_DIR}/include")
@@ -38,6 +51,8 @@ set(FREETYPE_DEVEL_DIR "${FREETYPE_DIR}/devel")
 set(FREETYPE_LIBRARY_DIR "${FREETYPE_DIR}/objs")
 add_subdirectory(${FREETYPE_DIR})
 target_compile_definitions(freetype PRIVATE SKIP_INSTALL_ALL)
+set_target_properties(freetype PROPERTIES FOLDER "Dependencies")
+
 
 set(CPP_SOURCES
     Source/main.cpp
@@ -267,7 +282,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${FREETYPE_DIR}
     ${FREETYPE_DEVEL_DIR}
 )
-
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Abyss")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(DEBUG_SUFFIX "d")
 else()

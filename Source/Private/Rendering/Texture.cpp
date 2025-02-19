@@ -12,7 +12,7 @@ namespace aby {
         ABY_ASSERT(ctx, "(aby::Context*)ctx is invalid!");
         switch (ctx->backend()) {
             case EBackend::VULKAN: {
-                // return ctx->app()->resource_thread().add_task(EResource::TEXTURE, [ctx = ctx, path = path]() {
+                return ctx->load_thread().add_task(EResource::TEXTURE, [ctx = ctx, path = path]() {
                     Timer timer;
                     auto tex = create_ref<vk::Texture>(static_cast<vk::Context*>(ctx), path);
                     auto elapsed = timer.elapsed();
@@ -22,7 +22,7 @@ namespace aby {
                     ABY_LOG("  Channels: {}", tex->channels());
                     ABY_LOG("  Bytes:    {}", tex->bytes());
                     return ctx->textures().add(tex);
-                // });
+                });
                 break;
             }
             default:
@@ -37,8 +37,10 @@ namespace aby {
         switch (ctx->backend()) {
             case EBackend::VULKAN:
             {
-                auto tex = create_ref<vk::Texture>(static_cast<vk::Context*>(ctx));
-                return ctx->textures().add(tex);
+                return ctx->load_thread().add_task(EResource::TEXTURE, [ctx]() {
+                    auto tex = create_ref<vk::Texture>(static_cast<vk::Context*>(ctx));
+                    return ctx->textures().add(tex);
+                });
             }
             default:
                 ABY_ASSERT(false, "Unsupported ctx backend");
@@ -51,15 +53,17 @@ namespace aby {
         switch (ctx->backend()) {
             case EBackend::VULKAN:
             {
-                Timer timer;
-                auto tex = create_ref<vk::Texture>(static_cast<vk::Context*>(ctx), size, color);
-                auto elapsed = timer.elapsed();
-                ABY_LOG("Loaded Texture: {}ms", elapsed.milli());
-                ABY_LOG("  Color:    ({}, {}, {}, {})", EXPAND_COLOR(color));
-                ABY_LOG("  Size:     ({}, {})", EXPAND_VEC2(tex->size()));
-                ABY_LOG("  Channels: {}", tex->channels());
-                ABY_LOG("  Bytes:    {}", tex->bytes());
-                return ctx->textures().add(tex);
+                return ctx->load_thread().add_task(EResource::TEXTURE, [ctx, size, color]() {
+                    Timer timer;
+                    auto tex = create_ref<vk::Texture>(static_cast<vk::Context*>(ctx), size, color);
+                    auto elapsed = timer.elapsed();
+                    ABY_LOG("Loaded Texture: {}ms", elapsed.milli());
+                    ABY_LOG("  Color:    ({}, {}, {}, {})", EXPAND_COLOR(color));
+                    ABY_LOG("  Size:     ({}, {})", EXPAND_VEC2(tex->size()));
+                    ABY_LOG("  Channels: {}", tex->channels());
+                    ABY_LOG("  Bytes:    {}", tex->bytes());
+                    return ctx->textures().add(tex);
+                });
             }
             default:
                 ABY_ASSERT(false, "Unsupported ctx backend");
@@ -73,14 +77,16 @@ namespace aby {
         switch (ctx->backend()) {
             case EBackend::VULKAN:
             {
-                Timer timer;
-                auto tex = create_ref<vk::Texture>(static_cast<vk::Context*>(ctx), size, data, channels);
-                auto elapsed = timer.elapsed();
-                ABY_LOG("Loaded Texture: {}ms", elapsed.milli());
-                ABY_LOG("  Size:     ({}, {})", EXPAND_VEC2(tex->size()));
-                ABY_LOG("  Channels: {}", tex->channels());
-                ABY_LOG("  Bytes:    {}", tex->bytes());
-                return ctx->textures().add(tex);
+                return ctx->load_thread().add_task(EResource::TEXTURE, [ctx, size, data, channels]() {
+                    Timer timer;
+                    auto tex = create_ref<vk::Texture>(static_cast<vk::Context*>(ctx), size, data, channels);
+                    auto elapsed = timer.elapsed();
+                    ABY_LOG("Loaded Texture: {}ms", elapsed.milli());
+                    ABY_LOG("  Size:     ({}, {})", EXPAND_VEC2(tex->size()));
+                    ABY_LOG("  Channels: {}", tex->channels());
+                    ABY_LOG("  Bytes:    {}", tex->bytes());
+                    return ctx->textures().add(tex);
+                });
             }
             default:
                 ABY_ASSERT(false, "Unsupported ctx backend");

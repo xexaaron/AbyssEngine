@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/Common.h"
 #include <iostream>
 #include <sstream>
 #include <functional>
@@ -26,11 +27,11 @@ namespace aby {
 	struct EEventCategory {
 		enum E {
 			NONE = 0,
-			INPUT = (1 << 0),
-			KEYBOARD = (1 << 1),
-			MOUSE = (1 << 2),
-			MOUSE_BUTTON = (1 << 3),
-			WINDOW = (1 << 4),
+			INPUT		 = BIT(0),
+			KEYBOARD	 = BIT(1),
+			MOUSE		 = BIT(2),
+			MOUSE_BUTTON = BIT(3),
+			WINDOW		 = BIT(4),
 		};
 	};
 

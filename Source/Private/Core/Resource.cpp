@@ -9,82 +9,94 @@
 
 namespace aby {
 
-    ResourceThread::ResourceThread(Context* ctx) :
-        bStopLoading(false),
-        bFinishUp(false),
-        m_Ctx(ctx),
-        m_LoadThread([this](){ this->ResourceThread::executor(); }),
-        m_CV(),
-        m_Mutex(),
-        m_ResourceData(static_cast<std::size_t>(EResource::MAX_ENUM)) // Reserve max_enum entries.
+    Thread::~Thread() {
+        if (m_Thread.joinable()) {
+            m_Thread.join();
+        }
+    }
+
+    void Thread::set_name(const wchar_t* name) {
+        SetThreadDescription(reinterpret_cast<HANDLE>(m_Thread.native_handle()), name);
+    }
+
+    void Thread::join() {
+        m_Thread.join();
+    }
+
+    void Thread::detach() {
+        m_Thread.detach();
+    }
+
+    LoadThread::LoadThread(QueryResourceNextHandle query_next_handle) : 
+        Thread([this]() { load(); }, L"Load Thread"),
+        m_QueryNextHandle(std::move(query_next_handle)),
+        m_FinishState(EFinishState::CONTINUE) 
     {
-    #ifdef _WIN32
-        WIN32_CHECK(SetThreadDescription(m_LoadThread.native_handle(), L"Resource Thread"));
-    #endif
     }
 
-    Resource ResourceThread::add_task(EResource type, const Task& task) {
-        // ------------------------------------------------------------------
-        // Say we have 5 or 0...4 in queue, so the next position is 5;
-        // The context has 3 or 0...2 resources of this type already so the next handle is 3. 
-        // So the next expected resource handle for this resource
-        // should be position + next_handle
-        // This way we can return a valid object 
-        // before its reference data has been loaded.
-        // 
-        // Resources are always created using T::create(...),
-        // sending a task to the resource manager if asynchronously loaded
-        // else loading the resource then adding it to the context
-        // immediately
-        // -------------------------------------------------------------------
+    LoadThread::~LoadThread() {
+        m_FinishState.store(EFinishState::LOAD_THEN_FINISH);
+    }
+
+    Resource LoadThread::add_task(EResource type, Task&& task) {
         std::lock_guard  lock_guard(m_Mutex);
-        Resource::Handle next_handle   = 0; 
-        std::size_t      next_position = m_ResourceData[type].LoadQueue.size();
-        switch (type) {
-            case EResource::SHADER:
-                next_handle = m_Ctx->shaders().size();
-                break;
-            case EResource::TEXTURE:
-                next_handle = m_Ctx->textures().size();
-                break;
-            case EResource::FONT:
-                next_handle = m_Ctx->fonts().size();
-                break;
-            default:
-                throw std::runtime_error("Invalid EResource type");
-        }
-        Resource::Handle handle = next_position + next_handle;
-        m_ResourceData[type].LoadQueue.push(task);
-        return Resource(type, handle);
+        Resource::Handle next_handle   = m_QueryNextHandle(type);
+        std::size_t      next_position = m_Tasks.count(type); 
+        Resource::Handle handle        = static_cast<Resource::Handle>(next_position + next_handle);
+        m_Tasks.emplace(type, std::move(task));
+        return Resource{ type, handle };
+    }
+        
+    std::size_t LoadThread::tasks() {
+        return m_Tasks.size();
     }
 
-    void ResourceThread::sync() {
-        if (m_LoadThread.joinable()) {
-            bFinishUp = true;
-            m_LoadThread.join();
+    void LoadThread::sync() {
+        // Finish loading resources.
+        m_FinishState.store(EFinishState::LOAD_THEN_FINISH);
+        join();
+        // Restart the thread.
+        if (!m_Thread.joinable()) {
+            m_FinishState.store(EFinishState::CONTINUE);
+            m_Thread = std::thread([this]() { load(); });
+            set_name(L"Load Thread");
         }
     }
 
-    void ResourceThread::executor() {
-        while (!bStopLoading) {  // Exit if either stop or finish up is true
-            std::unique_lock<std::mutex> lock(m_Mutex);
-
-            bool all_empty = true;
-            for (auto& [resource_type, resource_data] : m_ResourceData) {
-                if (!resource_data.LoadQueue.empty()) {
-                    Task task = std::move(resource_data.LoadQueue.front());
-                    resource_data.LoadQueue.pop();
+    void LoadThread::load() {
+        EFinishState state = state = m_FinishState.load();
+        while (state != EFinishState::FINISH) {
+            state = m_FinishState.load();
+            {
+                std::lock_guard lock(m_Mutex);
+                if (!m_Tasks.empty()) {
+                    auto it = m_Tasks.begin();
+                    Task task = std::move(it->second);
+                    m_Tasks.erase(it);
                     task();
-                    all_empty = false;
                 }
             }
-            if (bFinishUp) {
-                bStopLoading = true;
-                break;
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Prevent busy-wait
+
+            switch (state) {
+                using enum EFinishState;
+                case LOAD_THEN_FINISH:
+                    m_FinishState.store(EFinishState::FINISH);
+                    break;
+                case FINISH:
+                    if (!m_Tasks.empty()) {
+                        m_FinishState.store(EFinishState::LOAD_THEN_FINISH);
+                    }
+                    break;
+                case CONTINUE:
+                    break;
+                default:
+                    throw std::out_of_range("EFinishState");
+                    break;
             }
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Sleep if necessary
         }
-    }
 
+        std::cout << "Load Complete" << std::endl;
+    }
 }

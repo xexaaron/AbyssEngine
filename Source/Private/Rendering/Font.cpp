@@ -194,12 +194,14 @@ namespace ft {
 namespace aby {
 
     Resource Font::create(Context* ctx, const fs::path& path, std::uint32_t pt) {
-        Timer timer;
-        auto font = CreateRefEnabler<Font>::create(ctx, path, ctx->window()->dpi(), pt);
-        ABY_LOG("Loaded Font: {}ms", timer.elapsed().milli());
-        ABY_LOG("  Name: \"{}\"", font->m_Name);
-        ABY_LOG("  Size:  {}pt", font->m_SizePt);
-        return ctx->fonts().add(font);
+        return ctx->load_thread().add_task(EResource::FONT, [ctx, path, pt]() {
+            Timer timer;
+            auto font = CreateRefEnabler<Font>::create(ctx, path, ctx->window()->dpi(), pt);
+            ABY_LOG("Loaded Font: {}ms", timer.elapsed().milli());
+            ABY_LOG("  Name: \"{}\"", font->name());
+            ABY_LOG("  Size:  {}pt", font->size());
+            return ctx->fonts().add(font);
+        });
     }
 
     Font::Font(Context* ctx, const fs::path& path, const glm::vec2& dpi, std::uint32_t pt) :
