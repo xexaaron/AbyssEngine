@@ -2,7 +2,7 @@
 
 namespace aby {
     Serializer::Serializer(const SerializeOpts& opts) : m_Opts(opts), m_Offset(0) {
-        set_mode(opts.Mode);
+        set_mode(opts.mode);
     }
     
     void Serializer::reset() {
@@ -15,7 +15,7 @@ namespace aby {
         ABY_ASSERT(m_Offset < m_Data.size(), "Out of range");
     }
     void Serializer::set_mode(ESerializeMode mode) {
-        m_Opts.Mode = mode;
+        m_Opts.mode = mode;
         if (mode == ESerializeMode::READ) {
             reset();
             read_file();
@@ -29,18 +29,18 @@ namespace aby {
             ABY_WARN("Attempting to save serialized data but Serializer::m_Data is empty");
             return;
         }
-        std::ofstream ofs(m_Opts.File, std::ios::binary);
+        std::ofstream ofs(m_Opts.file, std::ios::binary);
         if (ofs.is_open()) {
             ofs.write(reinterpret_cast<const char*>(m_Data.data()), m_Data.size());
             ofs.close();
         }
         else {
-            ABY_ERR("Failed to open file for writing: {}", m_Opts.File.string());
+            ABY_ERR("Failed to open file for writing: {}", m_Opts.file);
         }
     }
 
     void Serializer::read_file() {
-        std::ifstream ifs(m_Opts.File, std::ios::binary);
+        std::ifstream ifs(m_Opts.file, std::ios::binary);
         if (ifs.is_open()) {
             ifs.seekg(0, std::ios::end);
             std::streamsize size = ifs.tellg();
@@ -50,20 +50,20 @@ namespace aby {
             ifs.close();
         }
         else {
-            ABY_ERR("Failed to open file for reading: {}", m_Opts.File.string());
+            ABY_ERR("Failed to open file for reading: {}", m_Opts.file);
         }
     }
     
     void Serializer::create_file() {
-        if (!std::filesystem::exists(m_Opts.File.parent_path())) {
-            std::filesystem::create_directories(m_Opts.File.parent_path());
+        if (!std::filesystem::exists(m_Opts.file.parent_path())) {
+            std::filesystem::create_directories(m_Opts.file.parent_path());
         }
-        std::ofstream ofs(m_Opts.File, std::ios::binary | std::ios::trunc);
+        std::ofstream ofs(m_Opts.file, std::ios::binary | std::ios::trunc);
         if (ofs.is_open()) {
             ofs.close();
         }
         else {
-            ABY_ERR("Failed to open file for writing: {}", m_Opts.File.string());
+            ABY_ERR("Failed to open file for writing: {}", m_Opts.file);
         }
     }
 

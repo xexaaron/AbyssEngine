@@ -20,7 +20,7 @@
 
 namespace aby::vk {
 
-    Context::Context(App* app, Ref<Window> window) :
+    Context::Context(App* app, Window* window) :
         aby::Context(app, window) 
     {
         std::vector<const char*> instance_extensions = {
@@ -67,7 +67,7 @@ namespace aby::vk {
         )
     }
 
-    Ref<Context> Context::create(App* app, Ref<Window> window) {
+    Ref<Context> Context::create(App* app, Window* window) {
         return create_ref<Context>(app, window);
     }
 

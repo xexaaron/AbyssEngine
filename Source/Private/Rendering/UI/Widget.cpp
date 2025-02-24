@@ -7,6 +7,7 @@ namespace aby::ui {
         m_Transform(transform),
         m_Style(style),
         bInvalid(true),
+        bVisible(true),
         m_ZIndex(0),
         m_Parent(parent) {}
 
@@ -61,6 +62,14 @@ namespace aby::ui {
         bInvalid = true;
     }
 
+    void Widget::set_visible(bool visible) {
+        bVisible = visible;
+    }
+
+    bool Widget::is_visible() const {
+        return bVisible;
+    }
+
     bool Widget::is_invalid() const {
         return bInvalid;
     }
@@ -85,6 +94,12 @@ namespace aby::ui {
         return m_Parent;
     }
 
+    void Widget::invalidate_self() {
+        bInvalid = true;
+        bInvalid = on_invalidate();
+
+    }
+
     bool Widget::on_window_resize(WindowResizeEvent& event) {
         glm::vec2 old_size = event.old_size();
         glm::vec2 new_size = event.size();
@@ -94,9 +109,9 @@ namespace aby::ui {
         }
 
         auto scale = new_size / old_size;
-        // m_Transform.size *= scale;
+        m_Transform.size.x   *= scale.x;
         m_Transform.position *= scale;
-        bInvalid = true;
+        invalidate_self();
         return false;
     }
 

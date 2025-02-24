@@ -35,6 +35,7 @@ namespace aby::vk {
     }
     
     void Renderer::draw_text(const Text& text) {
+        flush_if(m_2D, m_2D.quads().should_flush(text.text.length()), ERenderPrimitive::QUAD);
         m_2D.draw_text(text);
     }
 

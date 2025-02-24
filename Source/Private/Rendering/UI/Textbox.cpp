@@ -2,46 +2,72 @@
 #include "Core/Log.h"
 
 namespace aby::ui {
-    Ref<Textbox> Textbox::create(const Transform& transform, const Style& style, const std::string& text, float scale) {
-        return create_ref<Textbox>(transform, style, text, scale);
+    Ref<Textbox> Textbox::create(const Transform& transform, const Style& style, const TextInfo& info) {
+        return create_ref<Textbox>(transform, style, info);
     }
 
-    Textbox::Textbox(const Transform& transform, const Style& style, const std::string& text, float scale) :
+    Textbox::Textbox(const Transform& transform, const Style& style, const TextInfo& info) :
         Image(transform, style),
-        m_Text(text, transform.position + (transform.size / glm::vec2(2, 2)), scale, 0),
-        m_TextSize(0, 0)
+        m_Text(info.text, transform.position + (transform.size / glm::vec2(2.f, 2.f)), info.color, info.scale, 0),
+        m_Alignment(info.alignment),
+        m_TextSize(0.f, 0.f)
     {
+
     }
 
     void Textbox::on_create(App* app, bool deserialized) {
         Image::on_create(app, deserialized);
         m_Font = app->ctx().fonts().at(Resource{ EResource::FONT, m_Text.font });
-        on_invalidate();
+        if (auto font = m_Font.lock()) {
+            m_TextSize = font->measure(m_Text.text) * m_Text.scale;
+        }
+        invalidate_self();
     }
 
     void Textbox::on_tick(App* app, Time deltatime) {
+        if (!bVisible) return;
         Image::on_tick(app, deltatime);
         app->renderer().draw_text(m_Text);
     }
             
     bool Textbox::on_invalidate() {
-        auto result = Image::on_invalidate();
-
-        m_TextSize = m_Font->measure(m_Text.text) * m_Text.scale;
-        // if (m_TextSize.x > m_Transform.size.x || m_TextSize.y > m_Transform.size.y) {
-        //     float scaleX = m_Transform.size.x / m_TextSize.x;
-        //     float scaleY = m_Transform.size.y / m_TextSize.y;
-        //     m_Text.scale = glm::min(scaleX, scaleY);  // Shrink to fit
-        //     m_TextSize = m_Font->measure(m_Text.text) * m_Text.scale;
-        // }
+        auto result = Image::on_invalidate(); 
+        glm::vec3 pos    = glm::vec3(m_Transform.position + (m_Transform.size / 2.f), 0.f);
         glm::vec3 offset = glm::vec3(m_TextSize / 2.f, 0.f);
-        m_Text.pos = glm::vec3(m_Transform.position + (m_Transform.size / 2.f), 0.f) - offset;
+
+        switch (m_Alignment) {
+            using enum ETextAlignment;
+            case CENTER:
+            {
+                m_Text.pos = pos - offset;
+                break;
+            }
+            case LEFT:
+            {
+                m_Text.pos.x = m_Transform.position.x;
+                m_Text.pos.y = pos.y - offset.y; // No offset in the x direction
+                break;
+            }
+            case RIGHT:
+            {
+                m_Text.pos.x = m_Transform.position.x + m_Transform.size.x - m_TextSize.x;
+                m_Text.pos.y = pos.y - offset.y;
+                break;
+            }
+        }
 
         return result;
     }
+    
     void Textbox::set_text(const std::string& text, Ref<Font> font) {
         m_Text.text = text;
         m_TextSize  = font->measure(text);
+        
+    }
+
+    bool Textbox::on_window_resize(WindowResizeEvent& event) {
+        invalidate_self();
+        return false;
     }
 
 }

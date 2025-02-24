@@ -6,7 +6,7 @@
 
 namespace aby {
 
-    Context::Context(App* app, Ref<Window> window) :
+    Context::Context(App* app, Window* window) :
         m_App(app),
         m_Backend(app->info().backend),
         m_Window(window),
@@ -26,7 +26,7 @@ namespace aby {
 
     }
 
-    Ref<Context> Context::create(App* app, Ref<Window> window) {
+    Ref<Context> Context::create(App* app, Window* window) {
         switch (app->info().backend) {
             case EBackend::VULKAN: {
                 return create_ref<vk::Context>(app, window);
@@ -41,10 +41,9 @@ namespace aby {
         return m_App;
     }
 
-    Ref<Window> Context::window() {
-        auto win = m_Window.lock();
-        ABY_ASSERT(win, "vk::Context::window() invalid window attmpeting to be returned!");
-        return win;
+    Window* Context::window() {
+        ABY_ASSERT(m_Window, "vk::Context::window() invalid window attmpeting to be returned!");
+        return m_Window;
     }
 
     EBackend Context::backend() const {

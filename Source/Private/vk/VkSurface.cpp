@@ -25,7 +25,7 @@ namespace aby::vk {
     {
     }
 
-    Surface::Surface(Instance& instance, Ref<Window> window) :
+    Surface::Surface(Instance& instance, Window* window) :
         m_Surface(VK_NULL_HANDLE),
         m_Format{},
         m_Instance(VK_NULL_HANDLE)
@@ -33,7 +33,7 @@ namespace aby::vk {
 		create(instance, window);
 	}
 
-	void Surface::create(Instance& instance, Ref<Window> window) {
+	void Surface::create(Instance& instance, Window* window) {
         m_Instance = instance;
     #ifdef _WIN32
         VkWin32SurfaceCreateInfoKHR ci;

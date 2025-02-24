@@ -7,37 +7,39 @@
 #include <tuple>
 #include <source_location>
 #include <filesystem>
+#include <functional>
+#include <vector>
+#include <array>
 #include <glm/glm.hpp>
 #include "Core/Common.h"
 
-
 #ifndef ABY_LOG
-#define ABY_LOG(...) aby::Logger::Log(__VA_ARGS__)
+#define ABY_LOG(...) aby::Logger::log(__VA_ARGS__)
 #endif
 #ifndef ABY_ERR
-#define ABY_ERR(...) aby::Logger::Error(__VA_ARGS__)
+#define ABY_ERR(...) aby::Logger::error(__VA_ARGS__)
 #endif
 #ifndef ABY_WARN
-#define ABY_WARN(...) aby::Logger::Warn(__VA_ARGS__)
+#define ABY_WARN(...) aby::Logger::warn(__VA_ARGS__)
 #endif
 #ifndef NDEBUG
     #ifndef ABY_DBG
-        #define ABY_DBG(...) aby::Logger::Debug(__VA_ARGS__)
+        #define ABY_DBG(...) aby::Logger::debug(__VA_ARGS__)
     #endif
   #ifndef ABY_ASSERT
-    #define ABY_ASSERT(condition, ...)                                                  \
-        do {                                                                            \
-            if (!(condition)) {                                                         \
-                aby::Logger::Assert("{}:{} {}",                                         \
-                    std::string_view(__FILE__).substr(                                  \
-                        std::string_view(__FILE__).find_last_of("/\\") + 1),            \
-                    __LINE__,                                                           \
-                    ABY_FUNC_SIG                                                        \
-                );                                                                      \
-                aby::Logger::Assert("!({})\n{}", #condition, std::format(__VA_ARGS__)); \
-                ABY_DBG_BREAK();                                                        \
-            }                                                                           \
-        } while (0)
+#define ABY_ASSERT(condition, ...)                                                   \
+    do {                                                                             \
+        if (!(condition)) {                                                          \
+            aby::Logger::Assert("File:{}:{}\n{}",                                    \
+                std::string_view(__FILE__).substr(                                   \
+                    std::string_view(__FILE__).find_last_of("/\\") + 1),             \
+                __LINE__,                                                            \
+                ABY_FUNC_SIG                                                         \
+            );                                                                       \
+            aby::Logger::Assert("!({})\n{}", #condition, std::format(__VA_ARGS__));  \
+            ABY_DBG_BREAK();                                                         \
+        }                                                                            \
+    } while (0)
 #endif
 #else
     #ifndef ABY_DBG
@@ -53,68 +55,121 @@
 
 namespace aby {
 
+    enum class ELogColor {
+        Grey      = 232,
+        Cyan      = 36,
+        Yellow    = 33,
+        Red       = 91,
+    };
+
+    enum class ELogLevel {
+        LOG    = 232,
+        DEBUG  = 36,
+        WARN   = 33,
+        ERR    = 91,
+        ASSERT = ERR,
+    };
+
+    struct LogMsg {
+        ELogLevel   level;
+        std::string text;
+        ELogColor color() const { return static_cast<ELogColor>(level); }
+    };
+
     class Logger {
     private:
-        enum class EColor {
-            Black = 30, Red = 31, Green = 32, Yellow = 33, Blue = 34,
-            Magenta = 35, Cyan = 36, White = 37, Reset = 0,
-            
-            BrightBlack = 90, BrightRed = 91, BrightGreen = 92, BrightYellow = 93,
-            BrightBlue = 94, BrightMagenta = 95, BrightCyan = 96, BrightWhite = 97,
-            
-            Grey1 = 232, Grey2 = 233, Grey3 = 234, Grey4 = 235, Grey5 = 236,
-            Grey6 = 237, Grey7 = 238, Grey8 = 239, Grey9 = 240, Grey10 = 241,
-            Grey11 = 242, Grey12 = 243, Grey13 = 244, Grey14 = 245, Grey15 = 246,
-            Grey16 = 247, Grey17 = 248, Grey18 = 249, Grey19 = 250, Grey20 = 251,
-            Grey21 = 252, Grey22 = 253, Grey23 = 254, Grey24 = 255
-        };
         template <typename... Args>
-        inline static void Print(const std::string& context, EColor color, std::ostream& os, std::format_string<Args...> fmt, Args&&... args) {
+        inline static void print(const std::string& context, ELogColor  color, std::format_string<Args...> fmt, Args&&... args) {
             std::string prefix = std::format("[{}]", context);
             std::string msg    = std::format(fmt, std::forward<Args>(args)...);
-            os << "\033[" << static_cast<int>(color) << "m" << prefix << " " << msg << "\033[0m" << '\n';
+            std::string out    = prefix.append(" ").append(msg);
+            m_MsgBuff[m_MsgCount] = LogMsg{ .level = static_cast<ELogLevel>(color), .text = out };
+            m_MsgCount++;
+            if (m_MsgCount == m_MsgBuff.size()) {
+                flush();
+            }
+          
         }
     public:
-        static void SetStreams(std::ostream& log_stream = std::cout, std::ostream& err_stream = std::cerr) {
+        using Callback = std::function<void(LogMsg)>;
+
+        static void set_streams(std::ostream& log_stream = std::clog, std::ostream& err_stream = std::cerr) {
             m_LogStream = &log_stream;
             m_ErrStream = &err_stream;
         }
 
+        static std::size_t add_callback(Callback&& callback) {
+            std::lock_guard lock(m_StreamMutex);
+            std::size_t idx = m_Callbacks.size();
+            m_Callbacks.push_back(callback);
+            return idx;
+        }
+        static void remove_callback(std::size_t idx) {
+            m_Callbacks.erase(m_Callbacks.begin() + idx);
+        }
+        static void flush() {
+            bool unlock = m_StreamMutex.try_lock();
+            for (std::size_t i = 0; i < m_MsgCount; i++) {
+                auto& msg = m_MsgBuff[i];
+                switch (msg.level) {
+                    case ELogLevel::LOG:
+                    case ELogLevel::DEBUG:
+                    {
+                        *m_LogStream << "\033[" << static_cast<int>(msg.color()) << "m" << msg.text << "\033[0m" << '\n';
+                        break;
+                    }
+                    case ELogLevel::WARN:
+                    case ELogLevel::ERR:
+                    {
+                        *m_ErrStream << "\033[" << static_cast<int>(msg.color()) << "m" << msg.text << "\033[0m" << '\n';
+                        break;
+                    }
+                }
+                for (auto& cb : m_Callbacks) {
+                    cb(msg);
+                }
+            }
+            m_MsgCount = 0;
+            if (unlock) {
+                m_StreamMutex.unlock();
+            }
+        }
+
         template <typename... Args>
-        static void Log(std::format_string<Args...> fmt, Args&&... args) {
+        static void log(std::format_string<Args...> fmt, Args&&... args) {
             std::lock_guard<std::mutex> lock(m_StreamMutex);
-            Print("Info", EColor::Grey4, *m_LogStream, fmt, std::forward<Args>(args)...);
+            print("Info", ELogColor::Grey, fmt, std::forward<Args>(args)...);
+        }
+
+        template <typename... Args>
+        static void warn(std::format_string<Args...> fmt, Args&&... args) {
+            std::lock_guard<std::mutex> lock(m_StreamMutex);
+            print("Warn", ELogColor::Yellow, fmt, std::forward<Args>(args)...);
         }
         template <typename... Args>
-        static void Warn(std::format_string<Args...> fmt, Args&&... args) {
+        static void error(std::format_string<Args...> fmt, Args&&... args) {
             std::lock_guard<std::mutex> lock(m_StreamMutex);
-            Print("Warn", EColor::Yellow, *m_LogStream, fmt, std::forward<Args>(args)...);
-        }
-        template <typename... Args>
-        static void Error(std::format_string<Args...> fmt, Args&&... args) {
-            std::lock_guard<std::mutex> lock(m_StreamMutex);
-            Print("Error", EColor::BrightRed, *m_ErrStream, fmt, std::forward<Args>(args)...);
+            print("Error", ELogColor::Red, fmt, std::forward<Args>(args)...);
         }
         template <typename... Args>
         static void Assert(std::format_string<Args...> fmt, Args&&... args) {
             std::lock_guard<std::mutex> lock(m_StreamMutex);
-            Print("Assert", EColor::BrightRed, *m_ErrStream, fmt, std::forward<Args>(args)...);
+            print("Assert", ELogColor::Red, fmt, std::forward<Args>(args)...);
         }
-        
         template <typename... Args>
-        static void Debug(std::format_string<Args...> fmt, Args&&... args) {
+        static void debug(std::format_string<Args...> fmt, Args&&... args) {
         #ifndef NDEBUG
             std::lock_guard<std::mutex> lock(m_StreamMutex);
-            Print("Debug", EColor::Cyan, *m_LogStream, fmt, std::forward<Args>(args)...);
+            print("Debug", ELogColor::Cyan, fmt, std::forward<Args>(args)...);
         #endif
         }
-
     private:
-
-    private:
-        static inline std::ostream* m_LogStream = &std::cout;
+        static inline std::ostream* m_LogStream = &std::clog;
         static inline std::ostream* m_ErrStream = &std::cerr;
         static inline std::mutex    m_StreamMutex;
+        static inline std::vector<Callback> m_Callbacks = {};
+        static inline std::array<LogMsg, 128> m_MsgBuff = {};
+        static inline std::size_t m_MsgCount = 0;
     };
 
 } 

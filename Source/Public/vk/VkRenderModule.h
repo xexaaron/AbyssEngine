@@ -28,6 +28,7 @@ namespace aby::vk {
         void set_index_data(const std::uint32_t* indices, DeviceManager& manager);
 
         bool should_flush() const;
+        bool should_flush(std::size_t requested_primitives) const;
         bool empty() const;
         std::uint32_t index_count() const;
         std::uint32_t vertex_count() const;

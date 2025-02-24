@@ -14,9 +14,9 @@ namespace aby::vk {
 
     class Context : public aby::Context {
     public:
-        Context(App* app, Ref<Window> window);
+        Context(App* app, Window* window);
 
-        static Ref<Context> create(App* app, Ref<Window> window);
+        static Ref<Context> create(App* app, Window* window);
         void destroy() override;
 
         Instance&      inst();

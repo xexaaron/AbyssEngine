@@ -49,8 +49,14 @@ namespace aby::vk {
     }
 
     bool RenderPrimitive::should_flush() const {
-        return m_VertexAccumulator.count() + m_Descriptor.VerticesPer > m_VertexBuffer.size();
+        return m_VertexAccumulator.count() + m_Descriptor.VerticesPer >= m_VertexBuffer.size();
     }
+
+    bool RenderPrimitive::should_flush(std::size_t requested_primitives) const {
+        bool should = m_VertexAccumulator.count() + (m_Descriptor.VerticesPer * requested_primitives) >= m_VertexBuffer.size();
+        return should;
+    }
+
 
     void RenderPrimitive::bind(VkCommandBuffer cmd, DeviceManager& manager) {
         m_VertexBuffer.set_data(m_VertexAccumulator.data(), m_VertexAccumulator.bytes(), manager);
@@ -206,7 +212,7 @@ namespace aby::vk {
         glm::vec2 text_size = font_obj->measure(text.text) * text.scale;
         glm::vec2 bmp_size = tex_obj->size();
         glm::vec3 current_position = { text.pos.x, text.pos.y, 0.f }; 
-        glm::vec4 color = { 1, 1, 1, 1 };
+        glm::vec4 color = text.color;
 
         for (char32_t c : text.text) {
             const auto& g = glyphs.at(c);  

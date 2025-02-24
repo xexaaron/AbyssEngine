@@ -5,24 +5,30 @@ namespace aby::ui {
 
     class Button : public Textbox {
     public:
-        static Ref<Button> create(const Transform& transform, const ButtonStyle& style, const std::string& text);
+        static Ref<Button> create(const Transform& transform, const ButtonStyle& style, const TextInfo& text_info, bool text_copyable = false);
         
-        Button(const Transform& transform, const ButtonStyle& style, const std::string& text);
+        Button(const Transform& transform, const ButtonStyle& style, const TextInfo& text_info, bool text_copyable = false);
 
+        void on_create(App* app, bool deserialized) override;
         void on_tick(App* app, Time deltatime) override;
         bool on_invalidate() override;
         void on_event(App* app, Event& event) override;
 
         virtual void on_pressed();
         virtual void on_released();
-    private:
-        bool on_mouse_moved(MouseMovedEvent& event);
-        bool on_mouse_pressed(MousePressedEvent& event);
-        bool on_mouse_released(MouseReleasedEvent& event);
+        virtual void on_hovered();
+        virtual void on_unhovered();
+    protected:
+        virtual bool on_mouse_moved(MouseMovedEvent& event);
+        virtual bool on_mouse_pressed(MousePressedEvent& event);
+        virtual bool on_mouse_released(MouseReleasedEvent& event);
     private:
         Background   m_Default;
         Background   m_Hovered;
         Background   m_Pressed;
+    protected:
+        Window*      m_Window;
+        bool         bTextCopyable;
         EButtonState m_State;
     };
 

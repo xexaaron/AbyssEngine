@@ -12,7 +12,7 @@ namespace aby::vk {
 	{
 	}
 
-	Pipeline::Pipeline(Ref<Window> window, DeviceManager& manager, Ref<ShaderModule> shaders, Swapchain& swapchain) : 
+	Pipeline::Pipeline(Window* window, DeviceManager& manager, Ref<ShaderModule> shaders, Swapchain& swapchain) : 
 		m_Device(VK_NULL_HANDLE),
 		m_Shaders(nullptr),
 		m_Pipeline(VK_NULL_HANDLE)
@@ -20,7 +20,7 @@ namespace aby::vk {
 		create(window, manager, shaders, swapchain);
 	}
 
-	void Pipeline::create(Ref<Window> window, DeviceManager& manager, Ref<ShaderModule> shaders, Swapchain& swapchain) {
+	void Pipeline::create(Window* window, DeviceManager& manager, Ref<ShaderModule> shaders, Swapchain& swapchain) {
 		m_Device   = manager.logical();
 		m_Shaders  = shaders;
 		m_Pipeline = VK_NULL_HANDLE;

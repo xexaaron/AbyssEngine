@@ -7,7 +7,6 @@ object.
 This documentation will be referring to the actual object and the type/handle structure 
 interchangeably.
 
-
 ## Creation
 
 Resources each have their own create method as shown below.

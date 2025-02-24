@@ -12,8 +12,8 @@ namespace aby {
 	};
 
 	struct SerializeOpts {
-		fs::path  	   File;
-		ESerializeMode Mode;
+		fs::path  	   file;
+		ESerializeMode mode;
 	};
 
 	class Serializer {
@@ -28,7 +28,7 @@ namespace aby {
 
 		template <typename T>
 		void write(const T& data) {
-			ABY_ASSERT(m_Opts.Mode == ESerializeMode::WRITE, "Cannot write when mode is set to read");
+			ABY_ASSERT(m_Opts.mode == ESerializeMode::WRITE, "Cannot write when mode is set to read");
 			if constexpr (std::is_same_v<T, std::string>) {
 				size_t length = data.size();
 				const std::byte* length_bytes = reinterpret_cast<const std::byte*>(&length);
@@ -49,7 +49,7 @@ namespace aby {
 
 		template <typename T>
 		T& read(T& buffer) {
-			ABY_ASSERT(m_Opts.Mode == ESerializeMode::READ, "Cannot read when mode is set to write");
+			ABY_ASSERT(m_Opts.mode == ESerializeMode::READ, "Cannot read when mode is set to write");
 			if constexpr (std::is_same_v<T, std::string>) {
 				size_t length = 0;
 				std::memcpy(&length, &m_Data[m_Offset], sizeof(length));

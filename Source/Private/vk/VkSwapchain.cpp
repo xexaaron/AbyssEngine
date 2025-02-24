@@ -15,7 +15,7 @@ namespace aby::vk {
 
 	}
 
-    Swapchain::Swapchain(Surface& surface, DeviceManager& devices, Ref<Window> window, std::vector<Frame>& frames) :
+    Swapchain::Swapchain(Surface& surface, DeviceManager& devices, Window* window, std::vector<Frame>& frames) :
         m_Swapchain(VK_NULL_HANDLE),
         m_Extent{ 0, 0 },
         m_Format(VK_FORMAT_UNDEFINED),
@@ -65,7 +65,7 @@ namespace aby::vk {
         return m_Format;
     }
 
-	void Swapchain::create(Surface& surface, DeviceManager& devices, Ref<Window> window, std::vector<Frame>& frames) {
+	void Swapchain::create(Surface& surface, DeviceManager& devices, Window* window, std::vector<Frame>& frames) {
         auto logical  = devices.logical();
         auto format   = surface.format(devices);
         m_Format      = format.format;

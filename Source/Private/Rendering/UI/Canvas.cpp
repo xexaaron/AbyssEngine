@@ -17,6 +17,7 @@ namespace aby::ui {
     }
 
     void Canvas::on_tick(App* app, Time deltatime) {
+        if (!bVisible) return;
         on_invalidate();
         app->renderer().on_begin();
         Panel::on_tick(app, deltatime);
@@ -30,7 +31,7 @@ namespace aby::ui {
 
     bool Canvas::on_window_resize(WindowResizeEvent& event) {
         this->set_size(event.size());
-        on_invalidate();
+        invalidate_self();
         return false;
     }
 

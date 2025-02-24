@@ -13,6 +13,7 @@ namespace aby::ui {
     }
 
     void Image::on_tick(App* app, Time deltatime) {
+        if (!bVisible) return;
         for (std::size_t i = 0; i < m_BorderCt; i++) {
             app->renderer().draw_quad_2d(m_Border[i]);
         }
@@ -64,47 +65,50 @@ namespace aby::ui {
             m_Style.background.color,
             static_cast<float>(m_Style.background.texture.handle())
         );
-        if (m_Style.background.color.a <= 0.f) {
-            m_Border[0] = Quad(
-                glm::vec2(m_Transform.size.x, m_Style.border.width),
-                m_Transform.position,
-                m_Style.border.color,
-                0.f
-            );
-            // Bottom border
-            m_Border[1] = Quad(
-                glm::vec2(m_Transform.size.x, m_Style.border.width),
-                m_Transform.position + glm::vec2(0.f, m_Transform.size.y - m_Style.border.width),
-                m_Style.border.color,
-                0.f
-            );
-            // Left border
-            m_Border[2] = Quad(
-                glm::vec2(m_Style.border.width, m_Transform.size.y),
-                m_Transform.position,
-                m_Style.border.color,
-                0.f
-            );
-            // Right border
-            m_Border[3] = Quad(
-                glm::vec2(m_Style.border.width, m_Transform.size.y),
-                m_Transform.position + glm::vec2(m_Transform.size.x - m_Style.border.width, 0.f),
-                m_Style.border.color,
-                0.f
-            );
-            m_BorderCt = 4;
-        }
-        else {
-            m_Border[0] = Quad(
-                m_Transform.size,
-                m_Transform.position,
-                m_Style.border.color,
-                0.f
-            );
-            m_BorderCt = 1;
+        
+        if (m_Style.border.width > 0.f) {
+            if (m_Style.background.color.a <= 0.f) {
+                m_Border[0] = Quad(
+                    glm::vec2(m_Transform.size.x, m_Style.border.width),
+                    m_Transform.position,
+                    m_Style.border.color,
+                    0.f
+                );
+                // Bottom border
+                m_Border[1] = Quad(
+                    glm::vec2(m_Transform.size.x, m_Style.border.width),
+                    m_Transform.position + glm::vec2(0.f, m_Transform.size.y - m_Style.border.width),
+                    m_Style.border.color,
+                    0.f
+                );
+                // Left border
+                m_Border[2] = Quad(
+                    glm::vec2(m_Style.border.width, m_Transform.size.y),
+                    m_Transform.position,
+                    m_Style.border.color,
+                    0.f
+                );
+                // Right border
+                m_Border[3] = Quad(
+                    glm::vec2(m_Style.border.width, m_Transform.size.y),
+                    m_Transform.position + glm::vec2(m_Transform.size.x - m_Style.border.width, 0.f),
+                    m_Style.border.color,
+                    0.f
+                );
+                m_BorderCt = 4;
+            }
+            else {
+                m_Border[0] = Quad(
+                    m_Transform.size,
+                    m_Transform.position,
+                    m_Style.border.color,
+                    0.f
+                );
+                m_BorderCt = 1;
 
+            }
         }
-
+       
         return false;
     }
 }

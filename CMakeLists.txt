@@ -1,9 +1,17 @@
 cmake_minimum_required(VERSION 3.28.3)
 project(Abyss)
 
+set(CMAKE_DISABLE_PREDEFINED_TARGETS TRUE)
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_BUILD_TYPE Debug)
-
+set(ENGINE ${PROJECT_NAME}Engine)
+set(EDITOR ${PROJECT_NAME}Editor)
+set(CMAKE_BUILD_TYPE "Debug")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(DEBUG_SUFFIX "d")
+else()
+    set(DEBUG_SUFFIX "")
+endif()
+   
 set(VULKAN_DIR $ENV{VULKAN_SDK})
 
 set(VULKAN_INCLUDE_DIR "${VULKAN_DIR}/include")
@@ -14,7 +22,6 @@ set(SHADER_C_INCLUDE_DIR "${VULKAN_INCLUDE_DIR}/shaderc")
 set(GLFW_DIR "Vendor/glfw")
 set(GLFW_INCLUDE_DIR "${GLFW_DIR}/include")
 set(GLFW_LIBRARY_DIR "${CMAKE_BINARY_DIR}/Vendor/glfw/src/${CMAKE_BUILD_TYPE}")
-get_filename_component(GLFW_LIB_PATH "${GLFW_LIBRARY_DIR}/glfw3.lib" ABSOLUTE)
 
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build GLFW examples")
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build GLFW tests")
@@ -24,18 +31,8 @@ set_target_properties(glfw PROPERTIES FOLDER "Dependencies/glfw")
 set_target_properties(uninstall PROPERTIES FOLDER "Dependencies/glfw")
 set_target_properties(update_mappings PROPERTIES FOLDER "Dependencies/glfw")
 
-
-
 set(STB_INCLUDE_DIR "Vendor/stb")
 set(STB_IMPL "${STB_INCLUDE_DIR}/stb.cpp")
-
-set(PACKAGER_DIR "packager")
-add_subdirectory(${PACKAGER_DIR})
-set_target_properties(packager PROPERTIES FOLDER "Abyss")
-
-set(LOCALIZE_DIR "localize")
-add_subdirectory(${LOCALIZE_DIR})
-set_target_properties(localize PROPERTIES FOLDER "Abyss")
 
 set(GLM_DIR "Vendor/glm")
 set(GLM_INCLUDE_DIR ${GLM_DIR})
@@ -43,19 +40,29 @@ add_subdirectory(${GLM_DIR})
 target_compile_definitions(glm PRIVATE GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_FORCE_LEFT_HANDED)
 set_target_properties(glm PROPERTIES FOLDER "Dependencies")
 
-
 set(FREETYPE_DIR "Vendor/freetype")
 set(FREETYPE_INCLUDE_DIR "${FREETYPE_DIR}/include")
 set(FREETYPE_DEVEL_DIR "${FREETYPE_DIR}/devel")
 
+set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries" FORCE)
 set(FREETYPE_LIBRARY_DIR "${FREETYPE_DIR}/objs")
 add_subdirectory(${FREETYPE_DIR})
-target_compile_definitions(freetype PRIVATE SKIP_INSTALL_ALL)
 set_target_properties(freetype PROPERTIES FOLDER "Dependencies")
+target_compile_definitions(freetype PRIVATE SKIP_INSTALL_ALL)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
 
+function(add_subproject name)
+    string(TOUPPER ${name} UPPER_NAME)
+    set(${UPPER_NAME}_DIR ${name} PARENT_SCOPE)
+    add_subdirectory(${name})
+    set_target_properties(${name} PROPERTIES FOLDER ${PROJECT_NAME})
+endfunction()
+
+add_subproject("packager")
+add_subproject("localize")
+add_subproject("tests")
 
 set(CPP_SOURCES
-    Source/main.cpp
     Source/Private/Core/App.cpp
     Source/Private/Core/Window.cpp
     Source/Private/Core/Event.cpp
@@ -63,6 +70,7 @@ set(CPP_SOURCES
     Source/Private/Core/Object.cpp
     Source/Private/Core/Resource.cpp
     Source/Private/Core/Time.cpp
+    Source/Private/Core/Thread.cpp
     Source/Private/Rendering/Font.cpp
     Source/Private/Rendering/Context.cpp
     Source/Private/Rendering/Renderer.cpp
@@ -79,6 +87,8 @@ set(CPP_SOURCES
     Source/Private/Rendering/UI/Image.cpp
     Source/Private/Rendering/UI/Canvas.cpp
     Source/Private/Rendering/UI/Button.cpp
+    Source/Private/Rendering/UI/InputTextbox.cpp
+    Source/Private/Rendering/UI/Console.cpp
     Source/Private/vk/VkRenderer.cpp
     Source/Private/vk/VkBuffer.cpp
     Source/Private/vk/VkContext.cpp
@@ -96,6 +106,10 @@ set(CPP_SOURCES
     Source/Private/vk/VkPipeline.cpp
     Source/Private/vk/VkRenderModule.cpp
     Source/Private/vk/VkTexture.cpp
+    Source/Private/Platform/Platform.cpp
+    Source/Private/Platform/win32/PlatformWin32.cpp
+    Source/Private/Platform/posix/PlatformPosix.cpp
+    Source/Private/Platform/Platform.cpp
     ${STB_IMPL}
 )
 
@@ -110,6 +124,7 @@ set(HEADER_FILES
     Source/Public/Core/Serialize.h
     Source/Public/Core/Resource.h
     Source/Public/Core/Time.h
+    Source/Public/Core/Thread.h
     Source/Public/Rendering/Font.h
     Source/Public/Rendering/Context.h
     Source/Public/Rendering/Renderer.h
@@ -128,6 +143,8 @@ set(HEADER_FILES
     Source/Public/Rendering/UI/Image.h
     Source/Public/Rendering/UI/Canvas.h
     Source/Public/Rendering/UI/Button.h
+    Source/Public/Rendering/UI/InputTextbox.h
+    Source/Public/Rendering/UI/Console.h
     Source/Public/vk/VkRenderer.h
     Source/Public/vk/VkBuffer.h
     Source/Public/vk/VkContext.h
@@ -145,135 +162,82 @@ set(HEADER_FILES
     Source/Public/vk/VkPipeline.h
     Source/Public/vk/VkRenderModule.h
     Source/Public/vk/VkTexture.h
+    Source/Public/Platform/win32/PlatformWin32.h
+    Source/Public/Platform/posix/PlatformPosix.h
+    Source/Public/Platform/Platform.h
+
 )
 
-set(SHADER_SOURCES 
-    Source/Shaders/Vertex.glsl
-    Source/Shaders/Fragment.glsl
-    Source/Shaders/README.md
+file(GLOB CORE_HEADERS "Source/Public/Core/*.h")
+source_group("Public/Core" FILES ${CORE_HEADERS}) 
+
+file(GLOB RENDERING_HEADERS "Source/Public/Rendering/*.h")
+source_group("Public/Rendering" FILES ${RENDERING_HEADERS})
+
+file(GLOB UI_HEADERS "Source/Public/Rendering/UI/*.h")
+source_group("Public/Rendering/UI" FILES ${UI_HEADERS}) 
+
+file(GLOB VK_HEADERS "Source/Public/vk/*.h")
+source_group("Public/vk" FILES ${VK_HEADERS})
+
+file(GLOB WIN32_HEADERS "Source/Public/Platform/win32/*.h")
+source_group("Public/Platform/win32" FILES ${WIN32_HEADERS}) 
+
+file(GLOB POSIX_HEADERS "Source/Public/Platform/posix/*.h")
+source_group("Public/Platform/posix" FILES ${POSIX_HEADERS}) 
+
+file(GLOB PLATFORM_HEADERS "Source/Public/Platform/*.h")
+source_group("Public/Platform" FILES ${PLATFORM_HEADERS}) 
+
+file(GLOB_RECURSE SHADER_SOURCES "Source/Shaders/*.*")
+source_group("Resources/Shaders" FILES ${SHADER_SOURCES})
+
+file(GLOB_RECURSE TEXTURE_SOURCES "Source/Textures/*.*")
+source_group("Resources/Textures" FILES ${TEXTURE_SOURCES})
+
+file(GLOB_RECURSE FONT_SOURCES "Source/Fonts/*.*")
+source_group("Resources/Fonts" FILES ${FONT_SOURCES})
+
+source_group("Private" FILES ${STB_IMPL} "Source/main.cpp")
+
+file(GLOB CORE_SOURCES "Source/Private/Core/*.cpp")
+source_group("Private/Core" FILES ${CORE_SOURCES}) 
+
+file(GLOB RENDERING_SOURCES "Source/Private/Rendering/*.cpp")
+source_group("Private/Rendering" FILES ${RENDERING_SOURCES})
+
+file(GLOB UI_SOURCES "Source/Private/Rendering/UI/*.cpp")
+source_group("Private/Rendering/UI" FILES ${UI_SOURCES}) 
+
+file(GLOB WIN32_SOURCES "Source/Private/Platform/win32/*.cpp")
+source_group("Private/Platform/win32" FILES ${WIN32_SOURCES}) 
+
+file(GLOB PLATFORM_SOURCES "Source/Private/Platform/*.cpp")
+source_group("Private/Platform" FILES ${PLATFORM_SOURCES}) 
+
+
+file(GLOB POSIX_SOURCES "Source/Private/Platform/posix/*.cpp")
+source_group("Private/Platform/posix" FILES ${POSIX_SOURCES}) 
+
+file(GLOB VK_SOURCES "Source/Private/vk/*.cpp")
+source_group("Private/vk" FILES ${VK_SOURCES})
+
+set(RESOURCES ${SHADER_SOURCES} ${TEXTURE_SOURCES} ${FONT_SOURCES})
+add_library(${ENGINE} ${CPP_SOURCES} ${HEADER_FILES} ${RESOURCES})
+add_executable(${EDITOR} Source/main.cpp ${RESOURCES})
+
+target_compile_definitions(${ENGINE} PRIVATE 
+    GLM_FORCE_RADIANS 
+    GLM_FORCE_DEPTH_ZERO_TO_ONE 
+    GLM_FORCE_LEFT_HANDED
+)
+target_compile_definitions(${EDITOR} PRIVATE
+    GLM_FORCE_RADIANS 
+    GLM_FORCE_DEPTH_ZERO_TO_ONE 
+    GLM_FORCE_LEFT_HANDED
 )
 
-source_group("Public/Core" FILES
-    Source/Public/Core/App.h
-    Source/Public/Core/Common.h
-    Source/Public/Core/Log.h
-    Source/Public/Core/Renderer.h
-    Source/Public/Core/Window.h
-    Source/Public/Core/Event.h
-    Source/Public/Core/Serialize.h
-    Source/Public/Core/Object.h
-    Source/Public/Core/Resource.h
-    Source/Public/Core/Time.h
-) 
-
-source_group("Public/Rendering" FILES
-    Source/Public/Rendering/Context.h
-    Source/Public/Rendering/Renderer.h
-    Source/Public/Rendering/Camera.h
-    Source/Public/Rendering/Viewport.h
-    Source/Public/Rendering/Shader.h
-    Source/Public/Rendering/Texture.h
-    Source/Public/Rendering/Vertex.h
-    Source/Public/Rendering/Font.h
-)
-
-source_group("Public/Rendering/UI" FILES
-    Source/Public/Rendering/UI/UI.h
-    Source/Public/Rendering/UI/Widget.h
-    Source/Public/Rendering/UI/UICommon.h
-    Source/Public/Rendering/UI/Textbox.h
-    Source/Public/Rendering/UI/ParentWidget.h
-    Source/Public/Rendering/UI/Panel.h
-    Source/Public/Rendering/UI/LayoutContainer.h
-    Source/Public/Rendering/UI/Image.h
-    Source/Public/Rendering/UI/Canvas.h
-    Source/Public/Rendering/UI/Button.h
-) 
-
-source_group("Public/vk" FILES
-    Source/Public/vk/VkContext.h
-    Source/Public/vk/VkCommon.h
-    Source/Public/vk/VkCmdPool.h
-    Source/Public/vk/VkCmdBuff.h
-    Source/Public/vk/VkDeviceManager.h
-    Source/Public/vk/VkInstance.h
-    Source/Public/vk/VkDebugger.h
-    Source/Public/vk/VkSurface.h
-    Source/Public/vk/VkSwapchain.h
-    Source/Public/vk/VkAllocator.h
-    Source/Public/vk/VkRenderer.h
-    Source/Public/vk/VkBuffer.h
-    Source/Public/vk/VkShader.h
-    Source/Public/vk/VkDescriptorPool.h
-    Source/Public/vk/VkPipeline.h
-    Source/Public/vk/VkRenderModule.h
-    Source/Public/vk/VkTexture.h
-)
-
-source_group("Shaders" FILES ${SHADER_SOURCES})
-
-
-source_group("Private" FILES
-    Source/main.cpp
-    ${STB_IMPL}
-)
-
-source_group("Private/Core" FILES
-    Source/Private/Core/App.cpp
-    Source/Private/Core/Window.cpp
-    Source/Private/Core/Event.cpp
-    Source/Private/Core/Serialize.cpp
-    Source/Private/Core/Object.cpp
-    Source/Private/Core/Resource.cpp
-    Source/Private/Core/Time.cpp
-)
- 
-source_group("Private/Rendering" FILES
-    Source/Private/Rendering/Context.cpp
-    Source/Private/Rendering/Renderer.cpp
-    Source/Private/Rendering/Camera.cpp
-    Source/Private/Rendering/Viewport.cpp
-    Source/Private/Rendering/Shader.cpp
-    Source/Private/Rendering/Texture.cpp
-    Source/Private/Rendering/Font.cpp
-)
-
-source_group("Private/Rendering/UI" FILES
-    Source/Private/Rendering/UI/Widget.cpp
-    Source/Private/Rendering/UI/UICommon.cpp
-    Source/Private/Rendering/UI/Textbox.cpp
-    Source/Private/Rendering/UI/ParentWidget.cpp
-    Source/Private/Rendering/UI/Panel.cpp
-    Source/Private/Rendering/UI/LayoutContainer.cpp
-    Source/Private/Rendering/UI/Image.cpp
-    Source/Private/Rendering/UI/Canvas.cpp
-    Source/Private/Rendering/UI/Button.cpp
-) 
-
-source_group("Private/vk" FILES
-    Source/Private/vk/VkContext.cpp
-    Source/Private/vk/VkCommon.cpp
-    Source/Private/vk/VkCmdPool.cpp
-    Source/Private/vk/VkCmdBuff.cpp
-    Source/Private/vk/VkDeviceManager.cpp
-    Source/Private/vk/VkInstance.cpp
-    Source/Private/vk/VkDebugger.cpp
-    Source/Private/vk/VkSurface.cpp
-    Source/Private/vk/VkSwapchain.cpp
-    Source/Private/vk/VkAllocator.cpp
-    Source/Private/vk/VkRenderer.cpp
-    Source/Private/vk/VkBuffer.cpp
-    Source/Private/vk/VkShader.cpp
-    Source/Private/vk/VkDescriptorPool.cpp
-    Source/Private/vk/VkPipeline.cpp
-    Source/Private/vk/VkRenderModule.cpp
-    Source/Private/vk/VkTexture.cpp
-)
-
-add_executable(${PROJECT_NAME} ${CPP_SOURCES} ${HEADER_FILES} ${SHADER_SOURCES})
-#add_dependencies(${PROJECT_NAME} Package glfw glm freetype)
-target_compile_definitions(${PROJECT_NAME} PRIVATE GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_FORCE_LEFT_HANDED)
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${ENGINE} PUBLIC
     Source/Public
     ${VULKAN_INCLUDE_DIR} 
     ${GLFW_INCLUDE_DIR}
@@ -282,30 +246,36 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${FREETYPE_DIR}
     ${FREETYPE_DEVEL_DIR}
 )
-set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Abyss")
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(DEBUG_SUFFIX "d")
-else()
-    set(DEBUG_SUFFIX "")
-endif()
-   
+
+target_include_directories(${EDITOR} PUBLIC
+    Source/Public
+    ${GLFW_INCLUDE_DIR}
+    ${STB_INCLUDE_DIR}
+    ${GLM_INCLUDE_DIR}
+)
+
+set_target_properties(${ENGINE} PROPERTIES FOLDER "Abyss")
+set_target_properties(${EDITOR} PROPERTIES FOLDER "Abyss")
+
 get_filename_component(VULKAN_LIB_PATH "${VULKAN_LIBRARY_DIR}/vulkan-1.lib" ABSOLUTE)
 get_filename_component(SHADER_C_LIB_PATH "${VULKAN_LIBRARY_DIR}/shaderc_shared${DEBUG_SUFFIX}.lib" ABSOLUTE)
 get_filename_component(SPIRV_CROSS_LIB_PATH "${VULKAN_LIBRARY_DIR}/spirv-cross-core${DEBUG_SUFFIX}.lib" ABSOLUTE)
 get_filename_component(SPIRV_CROSS_GLSL_LIB_PATH "${VULKAN_LIBRARY_DIR}/spirv-cross-glsl${DEBUG_SUFFIX}.lib" ABSOLUTE)
 get_filename_component(FREETYPE_LIB_PATH "${FREETYPE_LIBRARY_DIR}/freetype.lib" ABSOLUTE)
+get_filename_component(GLFW_LIB_PATH "${GLFW_LIBRARY_DIR}/glfw3.lib" ABSOLUTE)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE 
+target_link_libraries(${ENGINE} PRIVATE
     ${VULKAN_LIB_PATH}
     ${SHADER_C_LIB_PATH}
     ${SPIRV_CROSS_LIB_PATH}
     ${SPIRV_CROSS_GLSL_LIB_PATH}
-    ${FREETYPE_LIB_PATH}
+    freetype
+    glfw
 )
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    target_link_libraries(${PROJECT_NAME} PRIVATE dwmapi.lib)
+    target_link_libraries(${ENGINE} PRIVATE dwmapi.lib)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE "${GLFW_LIB_PATH}")
-
+target_link_libraries(${EDITOR} PRIVATE ${ENGINE})
+add_dependencies(${EDITOR} ${ENGINE})

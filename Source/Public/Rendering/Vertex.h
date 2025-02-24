@@ -43,11 +43,12 @@ namespace aby {
     };
 
     struct Text {
-        Text(const std::string& text, const glm::vec2& pos, float scale = 1.f, std::uint32_t font = 0) :
-            pos(pos, 0.f), scale(scale), font(font), text(text) {}
+        Text(const std::string& text, const glm::vec2& pos, const glm::vec4& color = { 1, 1, 1, 1 }, float scale = 1.f, std::uint32_t font = 0) :
+            pos(pos, 0.f), scale(scale), color(color), font(font), text(text) {}
 
         glm::vec3     pos;
         float         scale;
+        glm::vec4     color;
         std::uint32_t font;
         std::string   text;
     };

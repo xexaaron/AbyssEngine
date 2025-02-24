@@ -9,9 +9,9 @@ namespace aby::vk {
 	class Surface {
 	public:
 		Surface();
-		Surface(Instance& instance, Ref<Window> window);
+		Surface(Instance& instance, Window* window);
 
-		void create(Instance& instance, Ref<Window> window);
+		void create(Instance& instance, Window* window);
 		void destroy();
 
 		VkSurfaceFormatKHR format(DeviceManager& devices) const;

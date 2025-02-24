@@ -12,13 +12,13 @@ namespace aby::ui {
         Image(transform, style) {}
 
     void Panel::on_create(App* app, bool deserialized) {
-        m_Transform.size = app->window()->size();
         Image::on_create(app, deserialized);
-        bInvalid = Image::on_invalidate();
         ParentWidget::on_create(app, deserialized);
+        invalidate_self();
     }
 
     void Panel::on_tick(App* app, Time deltatime) {
+        if (!bVisible) return;
         Image::on_tick(app, deltatime);
         ParentWidget::on_tick(app, deltatime);
     }

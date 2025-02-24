@@ -27,20 +27,38 @@ namespace aby {
         std::function<void(Event&)> callback;
     };
 
+    struct WindowInfo {
+        glm::u32vec2 size = { 800, 600 };
+        EWindowFlags flags = EWindowFlags::NONE;
+        std::string  title = "Window"; // if inheriting app name then leave this blank
+    };
+
+
 }
 
 namespace aby {
 
+
+
     class Window {
     public:
-        Window(const std::string& title, std::uint32_t width, std::uint32_t height);
+        Window(const WindowInfo& info);
         ~Window();
 
-        static Ref<Window> create(const std::string& title, std::uint32_t width, std::uint32_t height);
+        static Unique<Window> create(const WindowInfo& info);
 
+        /**
+        * @brief Initalize the window based on flags provided in ctor.
+        *        Allows time to setup callbacks through register_event
+        *        If the window starts maximized, that event might
+        *        need to be recieved still. Also sends an inital window
+        *        resize event regardless of the flags.
+        */
+        void initalize();
         void poll_events() const;
         void swap_buffers() const;
 
+        void set_cursor(ECursor cursor);
         void set_title(const std::string& title);
         void set_size(std::uint32_t w, std::uint32_t h);
         void set_position(std::uint32_t x, std::uint32_t y);

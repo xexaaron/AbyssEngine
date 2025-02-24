@@ -74,16 +74,17 @@ extern "C" __declspec(dllimport) void __stdcall DebugBreak();
 #endif // __GNUC__
 #endif
 
+#ifndef _WIN32
+#if defined(__unix__) || defined(__linux__) || defined(__APPLE__)
+#define POSIX 
+#endif
+#endif
+
 #define EXPAND_VEC2(v) v.x, v.y
 #define EXPAND_VEC3(v) v.x, v.y, v.z
 #define EXPAND_VEC4(v) v.x, v.y, v.z, v.w
 #define EXPAND_COLOR(c) c.r, c.g, c.b, c.a
-#define WIN32_CHECK(x) do { \
-        HRESULT r = (x); \
-        if (FAILED(r)) { \
-            ABY_ASSERT(false, "[win32] API call failed with HRESULT: 0x{:X}", r); \
-        } \
-    } while(0)
+
 #define BIT(x) (1U << x)
 #define DECLARE_ENUM_OPS(e)                             \
 constexpr e operator|(e lhs, e rhs) {                   \
@@ -204,6 +205,14 @@ namespace aby {
         EBackend    backend  = EBackend::DEFAULT; 
     };
     
+    enum class ECursor {
+        ARROW,
+        IBEAM,
+        CROSSHAIR,
+        HAND,
+        HRESIZE,
+        VRESIZE,
+    };
 
     template <typename Value, typename Fn>
     auto map_vector(const std::vector<Value>& vec, Fn&& get_key) {
@@ -215,12 +224,21 @@ namespace aby {
         return result;
     }
 
-    template <typename T, T Min = std::numeric_limits<T>::min(), T Max = std::numeric_limits<T>::max()> requires std::is_arithmetic_v<T>
+    template <typename T, T Seed = 0, T Min = std::numeric_limits<T>::min(), T Max = std::numeric_limits<T>::max()> requires (std::is_arithmetic_v<T>)
     class Random {
     public:
-        static T Gen() noexcept {
-            static std::random_device rand_device;
-            static std::mt19937_64 generator(rand_device());
+        static T gen() noexcept {
+            static std::mt19937_64 generator;
+            static std::once_flag flag;
+
+            std::call_once(flag, [&]() {
+                if constexpr (Seed != 0) {
+                    generator.seed(Seed);
+                }
+                else {
+                    generator.seed(std::random_device{}());
+                }
+                });
 
             if constexpr (std::is_floating_point_v<T>) {
                 std::uniform_real_distribution<T> distribution(Min, Max);
@@ -233,13 +251,13 @@ namespace aby {
         }
 
         operator T() const noexcept {
-            return Random<T, Min, Max>::Gen();
+            return Random<T, Min, Max, Seed>::gen();
         }
     };
 
     class UUID {
     public:
-        UUID() : m_Value(Random<uint64_t>::Gen()) {}
+        UUID() : m_Value(Random<uint64_t, 2083231>::gen()) {}
         UUID(const UUID& other) : m_Value(other.m_Value) {}
         UUID(UUID&& other) noexcept : m_Value(other.m_Value) {}
 

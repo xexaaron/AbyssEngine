@@ -11,9 +11,9 @@ namespace aby::vk {
 	class Pipeline {
 	public:
 		Pipeline();
-		Pipeline(Ref<Window> window, DeviceManager& manager, Ref<ShaderModule> shaders, Swapchain& swapchain);
+		Pipeline(Window* window, DeviceManager& manager, Ref<ShaderModule> shaders, Swapchain& swapchain);
 		
-		void create(Ref<Window> window, DeviceManager& manager, Ref<ShaderModule> shaders, Swapchain& swapchain);
+		void create(Window* window, DeviceManager& manager, Ref<ShaderModule> shaders, Swapchain& swapchain);
 		void destroy();
 
 		void bind(VkCommandBuffer buffer);

@@ -132,7 +132,8 @@ namespace aby::vk {
 
         template <typename T>
         VertexAccumulator& operator=(const T& data) {
-            ABY_ASSERT(sizeof(T) == m_VertexSize, "sizeof({}) == {} incompatible with vertex size {}", typeid(T).name(), sizeof(T), m_VertexSize);
+            ABY_ASSERT(sizeof(T) == m_VertexSize, "incompatible vertex size", typeid(T).name(), sizeof(T), m_VertexSize);
+            ABY_ASSERT(m_Count < m_Capacity, "VertexAccumulator requires flushing!");
             std::memcpy(static_cast<char*>(m_Base) + offset(), &data, m_VertexSize);
             return *this;
         }

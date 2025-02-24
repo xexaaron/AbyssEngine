@@ -24,9 +24,9 @@ namespace aby::vk {
 	class Swapchain {
 	public:
 		Swapchain();
-		Swapchain(Surface& surface, DeviceManager& devices, Ref<Window> window, std::vector<Frame>& frames);
+		Swapchain(Surface& surface, DeviceManager& devices, Window* window, std::vector<Frame>& frames);
 
-		void create(Surface& surface, DeviceManager& devices, Ref<Window> window, std::vector<Frame>& frames);
+		void create(Surface& surface, DeviceManager& devices, Window* window, std::vector<Frame>& frames);
 		void destroy(DeviceManager& devices, std::vector<Frame>& frames);
 
 		std::vector<VkImageView>& views();

@@ -2,33 +2,12 @@
 #include "Core/Log.h"
 #include "Rendering/UI/Widget.h"
 #include "vk/VkRenderer.h"
-#ifdef _WIN32
-    #include <Windows.h>
-#else
-    #include <unistd.h>
-#endif
+#include "Platform/Platform.h"
 
 // Static data
 namespace aby {
     
-    fs::path get_exe_path() {
-    #ifdef _WIN32
-        char path_buff[MAX_PATH];
-        ABY_ASSERT(GetModuleFileName(NULL, path_buff, MAX_PATH) != 0, "");
-        return fs::path(path_buff);
-    #else
-        char path_buff[PATH_MAX];
-        ssize_t count = readlink("/proc/self/exe", path_buff, PATH_MAX);
-        if (count == -1) {
-            perror("readlink");
-            return "";
-        }
-        return fs::path(std::string(path_buff, count));
-    #endif
-    }
-
-    fs::path App::s_Path = get_exe_path();
-
+    fs::path App::s_Path = sys::get_exec_path();
 
     fs::path App::bin() {
         return s_Path.parent_path();
@@ -37,17 +16,29 @@ namespace aby {
     const fs::path& App::exe() {
         return s_Path;
     }
+
+    fs::path App::cache() {
+        return bin() / "Cache";
+    }
 }
 
 namespace aby {
 
-    App::App(const AppInfo& info, glm::u32vec2 window_size) : 
-        m_Window(Window::create(info.binherit ? info.name : "Window", window_size.x, window_size.y)),
-        m_Ctx(Context::create(this, m_Window)),
+    App::App(const AppInfo& app_info, const WindowInfo& window_info) : 
+        m_Window(Window::create(WindowInfo{
+            .size  = window_info.size,
+            .flags = window_info.flags,
+            .title = (app_info.binherit ? app_info.name : window_info.title)
+        })),
+        m_Ctx(Context::create(this, m_Window.get())),
         m_Renderer(Renderer::create(m_Ctx)),
-        m_Info(info)
+        m_Info(app_info)
     {
         m_Window->register_event(this, &App::on_event);
+        fs::path object_cache = cache() / "Objects";
+        if (!std::filesystem::exists(object_cache)) {
+            std::filesystem::create_directories(object_cache);
+        }
     }
 
     App::~App() {
@@ -56,15 +47,30 @@ namespace aby {
     }
 
     void App::run() {
-        auto last_time = std::chrono::high_resolution_clock::now();
-        float delta_time = 0.0f;
-        
         m_Ctx->load_thread().sync();
-        for (auto& object : m_Objects) {
-            // TODO: Pool serialization context for object->on_deserialize()
-            //       and file resource manager for objects of uuids.
-            object->on_create(this, false);
+        while (m_Ctx->load_thread().tasks() > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
+        m_Ctx->load_thread().sync();
+
+        auto object_cache = cache() / "Objects";
+        for (auto& obj : m_Objects) {
+            auto file = object_cache / std::to_string(obj->uuid()) / ".bin";
+            if (std::filesystem::exists(file)) {
+                SerializeOpts opts{
+                  .file = file,
+                  .mode = ESerializeMode::READ
+                };
+                Serializer serializer(opts);
+                bool deserialized = obj->on_deserialize(serializer);
+                obj->on_create(this, deserialized);
+            }
+            else {
+                obj->on_create(this, false);
+            }
+        }
+
+        m_Window->initalize();
 
         for (auto& object : m_Objects) {
             if (auto p = std::dynamic_pointer_cast<ui::Widget>(object)) {
@@ -72,6 +78,8 @@ namespace aby {
             }
         }
 
+        auto last_time = std::chrono::high_resolution_clock::now();
+        float delta_time = 0.0f;
         while (!m_Window->is_open()) {
             auto current_time = std::chrono::high_resolution_clock::now();
             delta_time = std::chrono::duration<float>(current_time - last_time).count();
@@ -83,12 +91,17 @@ namespace aby {
                 m_Window->swap_buffers();
                 m_Window->poll_events();
             }
-           
+            Logger::flush();
         }
 
         for (auto& obj : m_Objects) {
-            
-            // obj->on_serialize(Serializer());
+            SerializeOpts opts{
+                .file = object_cache / std::to_string(obj->uuid()) / ".bin",
+                .mode = ESerializeMode::WRITE
+            };
+            Serializer serializer(opts);
+            obj->on_serialize(serializer);
+            serializer.save();
             obj->on_destroy(this);
         }
     }
@@ -108,11 +121,11 @@ namespace aby {
         return m_Info.version;
     }
 
-    Ref<Window> App::window() {
-        return m_Window;
+    Window* App::window() {
+        return m_Window.get();
     }
-    Ref<Window> App::window() const {
-        return m_Window;
+    Window* App::window() const {
+        return m_Window.get();
     }
 
     Context& App::ctx() {
@@ -149,20 +162,19 @@ namespace aby {
             m_Objects.erase(it, m_Objects.end());
         }
     }
-
     void App::on_event(Event& event) {
+    #if 0
+        ABY_LOG("{}", event.to_string());
+    #endif
         for (auto& obj : m_Objects) {
             obj->on_event(this, event);
         }
     }
 
-    // ResourceThread& App::resource_thread() {
-    //     return m_ResourceThread;
-    // }
-    
     const AppInfo& App::info() const {
         return m_Info;
     }
+ 
 
 
 }

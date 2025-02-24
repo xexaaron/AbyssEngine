@@ -28,11 +28,25 @@ namespace aby::ui {
         VERTICAL   = 1, // y
     };
 
+    enum class ELayout {
+        AUTO = 0, // If horizontal then left to right, else vertical, then top to bottom.
+        LEFT_TO_RIGHT,
+        TOP_TO_BOTTOM,
+        RIGHT_TO_LEFT,
+        BOTTOM_TO_TOP
+    };
+
     enum class EButtonState {
-        DEFAULT = 0,
-        HOVERED = 1,
-        PRESSED = 2,
+        DEFAULT  = 0,
+        HOVERED  = 1,
+        PRESSED  = 2,
         RELEASED = DEFAULT,
+    };
+
+    enum class ETextAlignment {
+        CENTER = 0,
+        LEFT,
+        RIGHT,
     };
 }
 
@@ -73,4 +87,16 @@ namespace aby::ui {
         static ButtonStyle light_mode();  // Default light mode style.
     };
 
+    struct TextInfo {
+        std::string    text      = "";
+        glm::vec4      color     = { 1, 1, 1, 1 };
+        float          scale     = 1.f;
+        ETextAlignment alignment = ETextAlignment::CENTER;
+    };
+
+    struct InputTextOptions {
+        std::size_t prefix       = 0;     // How much of the text is a prefix and therefore should not be deletable.
+        bool submit_clears_focus = false; // Does pressing enter/submitting make the input text box lose focus.
+        bool submit_clears_text  = true;  // Does pressing enter/submitting clear the text (not including prefix).
+    };
 }

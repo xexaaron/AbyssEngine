@@ -3,54 +3,85 @@
 
 namespace aby::ui {
     
-    Ref<Button> Button::create(const Transform& transform, const ButtonStyle& style, const std::string& text) {
-        return create_ref<Button>(transform, style, text);
+    Ref<Button> Button::create(const Transform& transform, const ButtonStyle& style, const TextInfo& text_info, bool text_copyable) {
+        return create_ref<Button>(transform, style, text_info, text_copyable);
     }
 
-    Button::Button(const Transform& transform, const ButtonStyle& style, const std::string& text) :
-        Textbox(transform, { style.released, style.border }, text, 1.f),
+    Button::Button(const Transform& transform, const ButtonStyle& style, const TextInfo& text_info, bool text_copyable) :
+        Textbox(transform, Style{ style.released, style.border }, text_info),
         m_Default(style.released),
         m_Hovered(style.hovered),
         m_Pressed(style.pressed),
-        m_State(EButtonState::DEFAULT)
+        m_State(EButtonState::DEFAULT),
+        m_Window(nullptr),
+        bTextCopyable(text_copyable)
     {
 
     }
 
+    void Button::on_create(App* app, bool deserialized) {
+        Textbox::on_create(app, deserialized);
+        m_Window = app->window();
+    }
+
     void Button::on_tick(App* app, Time deltatime) {
+        if (!bVisible) return;
         Textbox::on_tick(app, deltatime);
     }
 
     void Button::on_event(App* app, Event& event) {
         Widget::on_event(app, event);
         EventDispatcher dsp(event);
-        dsp.bind(this, &Button::on_mouse_moved);
-        dsp.bind(this, &Button::on_mouse_pressed);
-        dsp.bind(this, &Button::on_mouse_released);
-
+        dsp.bind<MouseMovedEvent>([this](MouseMovedEvent& event){ 
+            return on_mouse_moved(event);
+        });
+        dsp.bind<MousePressedEvent>([this](MousePressedEvent& event){
+            return on_mouse_pressed(event);
+        });
+        dsp.bind<MouseReleasedEvent>([this](MouseReleasedEvent& event){ 
+            return on_mouse_released(event);
+        });
     }
 
     void Button::on_pressed() {
-        ABY_LOG("Button '{}' pressed", this->uuid());
+    
     }
     
     void Button::on_released() {
-        ABY_LOG("Button '{}' released", this->uuid());
     }
         
+    void Button::on_hovered() {
+    }
+
+    void Button::on_unhovered() {
+    }
+
+
     bool Button::on_mouse_moved(MouseMovedEvent& event) {
         bool hit = event.hit(m_Transform.position, m_Transform.size);
-        if (hit) {
-            if (m_State == EButtonState::DEFAULT) {
-                m_State = EButtonState::HOVERED;
+        if (!hit) {
+            if (m_State == EButtonState::HOVERED) {
+                m_Window->set_cursor(ECursor::ARROW);
+                on_unhovered();
             }
-            bInvalid = true;
-        }
-        else {
             if (m_State != EButtonState::DEFAULT) {
                 m_State = EButtonState::DEFAULT;
-                bInvalid = true;
+                invalidate_self();
             }
+           
+        }
+        else {
+            if (bTextCopyable && event.hit(m_Text.pos, m_TextSize)) {
+                m_Window->set_cursor(ECursor::IBEAM);
+            }
+            else {
+                if (m_State == EButtonState::DEFAULT) {
+                    m_State = EButtonState::HOVERED;
+                }
+                m_Window->set_cursor(ECursor::HAND);
+            }
+            on_hovered();
+            invalidate_self();
         }
         return false;
     }
@@ -60,7 +91,7 @@ namespace aby::ui {
         if (hit) {
             m_State = EButtonState::PRESSED;
             on_pressed();
-            bInvalid = true;
+            invalidate_self();
         }
         return hit; // Stop propogating if we intercepted the hit.
     }
@@ -77,7 +108,7 @@ namespace aby::ui {
             else {
                 m_State = EButtonState::DEFAULT;
             }
-            bInvalid = true;
+            invalidate_self();
         }
 
         return hit; // Stop propagation if released inside
@@ -97,8 +128,7 @@ namespace aby::ui {
                     break;
             }
 
-            bool result = Textbox::on_invalidate();
-            return result;
+            return Textbox::on_invalidate();
         }
         return false;
     }

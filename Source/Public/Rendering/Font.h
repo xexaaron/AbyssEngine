@@ -25,17 +25,19 @@ namespace aby {
         using Glyphs = std::unordered_map<char32_t, Glyph>;
     public:
         static Resource create(Context* ctx, const fs::path& path, std::uint32_t pt = 14);
-        ~Font() = default;
+        ~Font();
 
         Resource      texture() const;
         std::string   name() const;
         float         size() const;
         const Glyphs& glyphs() const;
         glm::vec2     measure(const std::string& text) const;
+        float         text_height() const;
     protected:
         Font(Context* ctx, const fs::path& path, const glm::vec2& dpi, std::uint32_t pt = 14);
     private:
         std::uint32_t m_SizePt;
+        float         m_TextHeight;
         Resource      m_Texture;
         std::string   m_Name;
         Glyphs        m_Glyphs;

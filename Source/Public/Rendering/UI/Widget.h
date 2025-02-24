@@ -12,7 +12,7 @@ namespace aby::ui {
 
         void on_create(App* app, bool deserialized) override {}
         void on_event(App* app, Event& event) override;
-        void on_tick(App* app, Time deltatime) override {}
+        void on_tick(App* app, Time deltatime) override { /*if (!bVisible) return;*/ }
         void on_destroy(App* app) override {}
         /**
         * @brief Property setters should invalidate the object.
@@ -20,6 +20,7 @@ namespace aby::ui {
         * @return False: The object is valid again.
         */
         virtual bool on_invalidate() { return false; }
+        virtual bool on_window_resize(WindowResizeEvent& event);
 
         void set_transform(const Transform& transform);
         void set_size(const glm::vec2& size);
@@ -29,7 +30,9 @@ namespace aby::ui {
         void set_anchor(Anchor anchor);
         void set_invalid(bool invalid);
         void set_zindex(std::int32_t zindex);
+        void set_visible(bool visible);
 
+        bool is_visible() const;
         bool is_invalid() const;
 
         const Transform& transform() const;
@@ -38,12 +41,13 @@ namespace aby::ui {
         Weak<Object> parent() const;
         Weak<Object> parent();
     protected:
-        virtual bool on_window_resize(WindowResizeEvent& event);
+        void invalidate_self();
         friend class Canvas;
     protected:
         Transform m_Transform;
         Style m_Style;
         bool bInvalid;
+        bool bVisible;
         std::int32_t m_ZIndex;
         Weak<Object> m_Parent;
     };

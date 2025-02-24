@@ -15,12 +15,12 @@
 
 namespace aby {
 
-    Window::Window(const std::string& title, std::uint32_t width, std::uint32_t height) : 
+    Window::Window(const WindowInfo& info) :
         m_Data{
-            .title    = title,
-            .width    = width,
-            .height   = height,
-            .flags    = EWindowFlags::NONE,
+            .title    = info.title,
+            .width    = info.size.x,
+            .height   = info.size.y,
+            .flags    = info.flags,
             .callback = [](Event&){}
         },
         m_Window(nullptr)
@@ -36,7 +36,7 @@ namespace aby {
             ABY_ERR("[GLFW] ({}): {}", code, description);
         });
 
-        m_Window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+        m_Window = glfwCreateWindow(info.size.x, info.size.y, info.title.c_str(), nullptr, nullptr);
         if (!m_Window) {
             glfwTerminate();
             ABY_ASSERT(Window::m_Window, "Failed to create GLFW window");
@@ -45,14 +45,15 @@ namespace aby {
         glfwMakeContextCurrent(m_Window);
         glfwSetWindowUserPointer(m_Window, this);
         setup_callbacks();
-        set_vsync(true);
 
+    #ifdef _WIN32
         BOOL use_dark_mode = TRUE;
         DwmSetWindowAttribute(static_cast<HWND>(native()), DWMWA_USE_IMMERSIVE_DARK_MODE, &use_dark_mode, sizeof(use_dark_mode));
+    #endif
     }
 
-    Ref<Window> Window::create(const std::string& title, std::uint32_t width, std::uint32_t height) {
-        return create_ref<Window>(title, width, height);
+    Unique<Window> Window::create(const WindowInfo& info) {
+        return create_unique<Window>(info);
     }
 
     Window::~Window() {
@@ -64,6 +65,27 @@ namespace aby {
 
     bool Window::is_open() const {
         return glfwWindowShouldClose(m_Window);
+    }
+
+    void Window::initalize() {
+        if ((m_Data.flags & EWindowFlags::VSYNC) != EWindowFlags::NONE) {
+            set_vsync(true);
+        }
+        bool maximize = (m_Data.flags & EWindowFlags::MAXIMIZED) != EWindowFlags::NONE;
+        bool minimize = (m_Data.flags & EWindowFlags::MINIMIZED) != EWindowFlags::NONE;
+        ABY_ASSERT(!(maximize && minimize), "Invalid usage of EWindowFlags");
+        if (maximize) {
+            set_maximized(true);
+        }
+        else if (minimize) {
+            set_minimized(true);
+        }
+        int width, height;
+        glfwGetWindowSize(m_Window, &width, &height);
+        WindowResizeEvent wr_event(width, height, m_Data.width, m_Data.height);
+        m_Data.width = width;
+        m_Data.height = height;
+        m_Data.callback(wr_event);
     }
 
     void Window::poll_events() const {
@@ -209,6 +231,7 @@ namespace aby {
                     data.callback(kr_event);
                     break;
                 }
+
             }
         });
         glfwSetCharCallback(m_Window, [](GLFWwindow* win, unsigned int keycode) {
@@ -263,19 +286,22 @@ namespace aby {
                 data.flags &= ~EWindowFlags::MAXIMIZED;
             }
             else {
-                // If restored.
-                // Do not check if width/height are the same as rendering positions
-                // also need to be invalidated on size callback
                 data.flags &= ~EWindowFlags::MAXIMIZED;
                 data.flags &= ~EWindowFlags::MINIMIZED;
-                int width, height;
-                glfwGetWindowSize(win, &width, &height);
-                WindowResizeEvent wr_event(width, height, data.width, data.height);
-                data.width = width;
-                data.height = height;
-                data.callback(wr_event);
             }
-        });
+
+            // Force size synchronization
+            int width, height;
+            glfwGetWindowSize(win, &width, &height);
+            int fbWidth, fbHeight;
+            glfwGetFramebufferSize(win, &fbWidth, &fbHeight);  // Ensure rendering size is updated
+
+            WindowResizeEvent wr_event(width, height, data.width, data.height);
+            data.width = width;
+            data.height = height;
+            data.callback(wr_event);
+            });
+
         glfwSetWindowMaximizeCallback(m_Window, [](GLFWwindow* win, int maximized) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
             if (maximized == GLFW_TRUE) {
@@ -286,16 +312,18 @@ namespace aby {
                 data.flags &= ~EWindowFlags::MAXIMIZED;
                 data.flags &= ~EWindowFlags::MINIMIZED;
             }
-            // If restored or maximized.
-            // Do not check if width/height are the same as rendering positions
-            // also need to be invalidated on size callback
+
+            // Force size synchronization
             int width, height;
             glfwGetWindowSize(win, &width, &height);
+            int fbWidth, fbHeight;
+            glfwGetFramebufferSize(win, &fbWidth, &fbHeight);  // Ensure rendering size is updated
+
             WindowResizeEvent wr_event(width, height, data.width, data.height);
             data.width = width;
             data.height = height;
             data.callback(wr_event);
-        });
+            });
         m_Data.callback = [this](Event& event) -> void {
             for (auto it = m_Callbacks.rbegin(); it != m_Callbacks.rend(); ++it) {
                 (*it)(event);
@@ -330,6 +358,39 @@ namespace aby {
             (mode->width  / (widthMM / 25.4f))  * xscale,
             (mode->height / (heightMM / 25.4f)) * yscale
         };
+
     }
 
+    void Window::set_cursor(ECursor cursor) {
+        GLFWcursor* gcursor = nullptr;
+        switch (cursor) {
+            case ECursor::ARROW:
+                gcursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+                break;
+            case ECursor::IBEAM:
+                gcursor = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+                break;
+            case ECursor::CROSSHAIR:
+                gcursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
+                break;
+            case ECursor::HAND:
+                gcursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+                break;
+            case ECursor::HRESIZE:
+                gcursor = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
+                break;
+            case ECursor::VRESIZE:
+                gcursor = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
+                break;
+            default:
+                gcursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+                break;
+        }
+        if (gcursor) {
+            glfwSetCursor(m_Window, gcursor);
+        }
+    }
+
+
 }
+

@@ -32,24 +32,32 @@ namespace ft {
             ::FT_Done_Face(face);
         }
 
-        std::unordered_map<char32_t, aby::Font::Glyph> load_glyph_range(char32_t start, char32_t end, const std::filesystem::path& path, const std::string& name, std::uint32_t pt, const glm::vec2& dpi, const std::filesystem::path& cache) {
+        std::unordered_map<char32_t, aby::Font::Glyph> load_glyph_range(char32_t start, char32_t end, const std::filesystem::path& path, const std::string& name, std::uint32_t pt, const glm::vec2& dpi, const std::filesystem::path& cache, float& text_height) {
             std::unordered_map<char32_t, aby::Font::Glyph> out;
             if (std::filesystem::exists(cache)) {
                 auto glyph_file = cache_path(start, end, name, pt, ".bin");
                 if (!std::filesystem::exists(glyph_file)) {
                     FT_Face face = create_face(path, pt, dpi);
+                    float max_ascent = static_cast<float>(face->size->metrics.ascender) / 64.0f;
+                    float max_descent = static_cast<float>(face->size->metrics.descender) / 64.0f;
+                    text_height = max_ascent - max_descent;  // Descent is negative in FreeType
+                    text_height *= 0.5f;
                     out = load_glyph_range_ttf(start, end, face, cache);
-                    cache_glyphs(start, end, name, pt, out);
+                    cache_glyphs(start, end, name, pt, out, text_height);
                     destroy_face(face);
                 }
                 else {
-                    out = load_glyph_range_bin(start, end, glyph_file);
+                    out = load_glyph_range_bin(start, end, glyph_file, text_height);
                 }
             }
             else {
                 FT_Face face = create_face(path, pt, dpi);
+                float max_ascent = static_cast<float>(face->size->metrics.ascender) / 64.0f;
+                float max_descent = static_cast<float>(face->size->metrics.descender) / 64.0f;
+                text_height = max_ascent - max_descent;  // Descent is negative in FreeType
+                text_height *= 0.5f;
                 out = load_glyph_range_ttf(start, end, face, cache);
-                cache_glyphs(start, end, name, pt, out);
+                cache_glyphs(start, end, name, pt, out, text_height);
                 destroy_face(face);
             }
             return out;
@@ -135,10 +143,11 @@ namespace ft {
         //      }...
         // 
         //
-        std::unordered_map<char32_t, aby::Font::Glyph> load_glyph_range_bin(char32_t start, char32_t end, const std::filesystem::path& cache) {
-            aby::Serializer serializer(aby::SerializeOpts{ .File = cache, .Mode = aby::ESerializeMode::READ });
+        std::unordered_map<char32_t, aby::Font::Glyph> load_glyph_range_bin(char32_t start, char32_t end, const std::filesystem::path& cache, float& text_height) {
+            aby::Serializer serializer(aby::SerializeOpts{ .file = cache, .mode = aby::ESerializeMode::READ });
             std::size_t glyph_count = 0;
             serializer.read(glyph_count);
+            serializer.read(text_height);
             std::unordered_map<char32_t, aby::Font::Glyph> out;
             out.reserve(glyph_count);
             for (std::size_t i = 0; i < glyph_count; i++) {
@@ -152,7 +161,7 @@ namespace ft {
         }
 
         std::filesystem::path cache_path(char32_t start, char32_t end, const std::string& name, std::uint32_t pt, const std::filesystem::path& ext) {
-            auto dir = aby::App::bin() / "Cache/Fonts";
+            auto dir = aby::App::cache() / "Fonts";
             if (!std::filesystem::exists(dir)) {
                 std::filesystem::create_directories(dir);
             }
@@ -162,10 +171,11 @@ namespace ft {
             return dir / path;
         }
 
-        void cache_glyphs(char32_t start, char32_t end, const std::string& name, std::uint32_t pt, const std::unordered_map<char32_t, aby::Font::Glyph>& glyphs) {
+        void cache_glyphs(char32_t start, char32_t end, const std::string& name, std::uint32_t pt, const std::unordered_map<char32_t, aby::Font::Glyph>& glyphs, float text_height) {
             std::filesystem::path bin_cache_path = cache_path(start, end, name, pt, ".bin");
-            aby::Serializer serializer(aby::SerializeOpts{ .File = bin_cache_path, .Mode = aby::ESerializeMode::WRITE });
+            aby::Serializer serializer(aby::SerializeOpts{ .file = bin_cache_path, .mode = aby::ESerializeMode::WRITE });
             serializer.write(glyphs.size());
+            serializer.write(text_height);
             for (const auto& [character, glyph] : glyphs) {
                 serializer.write(character);
                 serializer.write(glyph);
@@ -207,13 +217,19 @@ namespace aby {
     Font::Font(Context* ctx, const fs::path& path, const glm::vec2& dpi, std::uint32_t pt) :
         m_SizePt(pt),
         m_Texture{},
-        m_Name(path.filename().string())
+        m_Name(path.filename().string()),
+        m_Glyphs{},
+        m_TextHeight(0)
     {
         std::pair<char32_t, char32_t> ascii{ 32, 128 };
         auto png  = ft::Library::get().cache_path(ascii.first, ascii.second, m_Name, pt, ".png");
-        m_Glyphs  = ft::Library::get().load_glyph_range(ascii.first, ascii.second, path, m_Name, pt, dpi, png);
+        m_Glyphs  = ft::Library::get().load_glyph_range(ascii.first, ascii.second, path, m_Name, pt, dpi, png, m_TextHeight);
         m_Texture = Texture::create(ctx, png);
     }
+
+    Font::~Font() {
+    }
+
 
     float Font::size() const {
         return m_SizePt;
@@ -232,14 +248,20 @@ namespace aby {
     }
     
     glm::vec2 Font::measure(const std::string& text) const {
-        glm::vec2 size(0, 0);
+        glm::vec2 size(0, m_TextHeight);
         for (std::size_t i = 0; i < text.size(); i++) {
             char32_t c = text[i];
-            const Glyph& g = m_Glyphs.at(c);
-            size.x += g.advance;
-            size.y =  std::max(size.y, g.size.y);
+            if (auto it = m_Glyphs.find(c); it != m_Glyphs.end()) {
+                const auto& g = it->second;
+                size.x += g.advance;
+                // size.y = std::max(size.y, g.size.y);
+            }
         }
         return size;
+    }
+
+    float Font::text_height() const {
+        return m_TextHeight;
     }
 
 

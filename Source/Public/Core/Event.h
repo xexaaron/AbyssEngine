@@ -188,16 +188,10 @@ namespace aby {
 		virtual int category() const = 0;
 		virtual std::string to_string() const = 0;
 
-		bool is_handled() const { 
-			return bHandled;
-		}
-		bool is_in_category(EEventCategory::E cat) const {
-			return category() & cat;
-		}
+		bool is_handled() const;
+		bool is_in_category(EEventCategory::E cat) const;
 
-		friend std::ostream& operator<<(std::ostream& os, const Event& ev) {
-			return os << ev.to_string();
-		}
+		friend std::ostream& operator<<(std::ostream& os, const Event& ev);
 	private:
 		friend class EventDispatcher;
 		bool bHandled = false;
@@ -237,192 +231,95 @@ namespace aby {
 
 	class KeyEvent : public Event {
 	public:
-		int code() const { 
-			return m_KeyCode;
-		}
-
+		int code() const;
 		virtual EEventType type() const override = 0;
-
-		virtual int category() const override {
-			return EEventCategory::KEYBOARD | EEventCategory::INPUT;
-		};
+		virtual int category() const override;;
 	protected:
-		KeyEvent(Button::EKey key_code) : 
-			m_KeyCode(key_code) {}
+		KeyEvent(Button::EKey key_code);
 		Button::EKey m_KeyCode;
 	};
 	
 	class KeyPressedEvent : public KeyEvent {
 	public:
-		KeyPressedEvent(Button::EKey key_code, int repeat_count) :
-			KeyEvent(key_code),
-			m_RepeatCount(repeat_count)
-		{
-		}
+		KeyPressedEvent(Button::EKey key_code, int repeat_count);
 
-		int repeat_count() const { 
-			return m_RepeatCount;
-		}
-		std::string to_string() const override {
-			std::stringstream ss;
-			ss << "Key Pressed Event : " << m_KeyCode << "(Occurences : " << m_RepeatCount << ")";
-			return ss.str();
-		}
-		constexpr static EEventType static_type() { 
-			return EEventType::KEY_PRESSED;
-		}
-		virtual EEventType type() const override { 
-			return static_type();
-		}
-		virtual const char* name() const override { 
-			return "KEY_PRESSED";
-		}
+		int repeat_count() const;
+		std::string to_string() const override;
+		virtual EEventType type() const override;
+		virtual const char* name() const override;
+		constexpr static EEventType static_type() { return EEventType::KEY_PRESSED; }
 	private:
 		int m_RepeatCount;
 	};
 
 	class KeyReleasedEvent : public KeyEvent {
 	public:
-		KeyReleasedEvent(Button::EKey key_code) :
-			KeyEvent(key_code) {}
+		KeyReleasedEvent(Button::EKey key_code);
 
-		std::string to_string() const override {
-			std::stringstream ss;
-			ss << "Key Released Event : " << m_KeyCode;
-			return ss.str();
-		}
-
-		constexpr static EEventType static_type() {
-			return EEventType::KEY_RELEASED;
-		}
-		virtual EEventType type() const override {
-			return static_type();
-		}
-		virtual const char* name() const override {
-			return "KEY_RELEASED";
-		}
+		std::string to_string() const override;
+		virtual EEventType type() const override;
+		virtual const char* name() const override;
+		constexpr static EEventType static_type() { return EEventType::KEY_RELEASED; }
 	private:
 	};
 
 	class KeyTypedEvent : public KeyEvent {
 	public:
-		KeyTypedEvent(Button::EKey key_code) :
-			KeyEvent(key_code) {}
+		KeyTypedEvent(Button::EKey key_code);
 
-		std::string to_string() const override {
-			std::stringstream ss;
-			ss << "Key Typed Event : " << m_KeyCode;
-			return ss.str();
-		}
+		std::string to_string() const override;
+		virtual EEventType type() const override;
+		virtual const char* name() const override;
 
-		constexpr static EEventType static_type() {
-			return EEventType::KEY_TYPED;
-		}
-		virtual EEventType type() const override {
-			return static_type();
-		}
-		virtual const char* name() const override {
-			return "KEY_TYPED";
-		}
+		constexpr static EEventType static_type() { return EEventType::KEY_TYPED; }
 	};
 
 	class MouseMovedEvent : public Event {
 	public:
-		MouseMovedEvent(float x, float y) : 
-			m_Pos(x, y) {}
+		MouseMovedEvent(float x, float y);
 
-		float x() const { 
-			return m_Pos.x;
-		}
-		float y() const { 
-			return m_Pos.y;
-		}
-		bool hit(const glm::vec2& pos, const glm::vec2& size) const {
-			return (m_Pos.x >= pos.x && m_Pos.x <= pos.x + size.x) &&
-				(m_Pos.y >= pos.y && m_Pos.y <= pos.y + size.y);
-		}
+		float x() const;
+		float y() const;
+		bool hit(const glm::vec2& pos, const glm::vec2& size) const;
 
-		glm::vec2 pos() const { 
-			return m_Pos;
-		}
-		std::string to_string() const override {
-			std::stringstream ss;
-			ss << "Mouse Moved Event : Position(x : " << m_Pos.x << ", y : " << m_Pos.y << ")";
-			return ss.str();
-		}
-		constexpr static EEventType static_type() {
-			return EEventType::MOUSE_MOVE;
-		}
-		virtual EEventType type() const override {
-			return static_type();
-		}
-		virtual const char* name() const override {
-			return "MOUSE_MOVED";
-		}
-		virtual int category() const override {
-			return EEventCategory::MOUSE | EEventCategory::INPUT;
-		}
+		glm::vec2 pos() const;
+		std::string to_string() const override;
+	
+		virtual EEventType type() const override;
+		virtual const char* name() const override;
+		virtual int category() const override;
+
+		constexpr static EEventType static_type() { return EEventType::MOUSE_MOVE; }
 	private:
 		glm::vec2 m_Pos;
 	};
 
 	class MouseScrolledEvent : public Event {
 	public:
-		MouseScrolledEvent(float offset_x, float offset_y) : 
-			m_Offset(offset_x, offset_y) {}
+		MouseScrolledEvent(float offset_x, float offset_y);
 
-		float offset_x() const { 
-			return m_Offset.x;
-		}
-		float offset_y() const { 
-			return m_Offset.y;
-		}
-		glm::vec2 offset() const { 
-			return m_Offset;
-		}
-		std::string to_string() const override {
-			std::stringstream ss;
-			ss << "Mouse Scrolled Event : " << "Offset(y: " << m_Offset.x << ", x : " << m_Offset.y << ")";
-			return ss.str();
-		}
-
-		constexpr static EEventType static_type() {
-			return EEventType::MOUSE_SCROLLED;
-		}
-		virtual EEventType type() const override {
-			return static_type();
-		}
-		virtual const char* name() const override {
-			return "MOUSE_SCROLLED";
-		}
-		virtual int category() const override {
-			return EEventCategory::MOUSE | EEventCategory::INPUT;
-		}
+		float offset_x() const;
+		float offset_y() const;
+		glm::vec2 offset() const;
+		std::string to_string() const override;
+	
+		virtual EEventType type() const override;
+		virtual const char* name() const override;
+		virtual int category() const override;
+		constexpr static EEventType static_type() { return EEventType::MOUSE_SCROLLED; }
 	private:
 		glm::vec2 m_Offset;
 	};
 
 	class MouseButtonEvent : public Event {
 	public:
-		inline int code() const { 
-			return m_MouseButton;
-		}
+		int code() const;
 		virtual EEventType type() const override = 0;
-		virtual int category() const override {
-			return EEventCategory::MOUSE | EEventCategory::INPUT;
-		}
-		bool hit(const glm::vec2& pos, const glm::vec2& size) const {
-			return (m_Pos.x >= pos.x && m_Pos.x <= pos.x + size.x) &&
-				(m_Pos.y >= pos.y && m_Pos.y <= pos.y + size.y);
-		}
-
-		const glm::vec2& pos() const {
-			return m_Pos;
-		}
+		virtual int category() const override;
+		bool hit(const glm::vec2& pos, const glm::vec2& size) const;
+		const glm::vec2& pos() const;
 	protected:
-		MouseButtonEvent(Button::EMouse button, const glm::vec2& pos) :
-			m_MouseButton(button),
-			m_Pos(pos) {}
+		MouseButtonEvent(Button::EMouse button, const glm::vec2& pos);
 
 		Button::EMouse m_MouseButton;
 		glm::vec2 m_Pos;
@@ -430,88 +327,41 @@ namespace aby {
 
 	class MousePressedEvent : public MouseButtonEvent {
 	public:
-		MousePressedEvent(Button::EMouse button, const glm::vec2& pos) :
-			MouseButtonEvent(button, pos) {}
+		MousePressedEvent(Button::EMouse button, const glm::vec2& pos);
 
-		std::string to_string() const override {
-			std::stringstream ss;
-			ss << "Mouse Pressed Event : Button : " << m_MouseButton;
-			return ss.str();
-		}
-		constexpr static EEventType static_type() {
-			return EEventType::MOUSE_PRESSED;
-		}
-		virtual EEventType type() const override {
-			return static_type();
-		}
-		virtual const char* name() const override {
-			return "MOUSE_PRESSED";
-		}
+		std::string to_string() const override;
+
+		virtual EEventType type() const override;
+		virtual const char* name() const override;
+
+		constexpr static EEventType static_type() { return EEventType::MOUSE_PRESSED; }
 	private:
 	};
 
 	class MouseReleasedEvent : public MouseButtonEvent {
 	public:
-		MouseReleasedEvent(Button::EMouse button, const glm::vec2& pos) :
-			MouseButtonEvent(button, pos) {}
+		MouseReleasedEvent(Button::EMouse button, const glm::vec2& pos);
 
-		std::string to_string() const override {
-			std::stringstream ss;
-			ss << "Mouse Released Event : Button : " << m_MouseButton;
-			return ss.str();
-		}
-
-		constexpr static EEventType static_type() {
-			return EEventType::MOUSE_RELEASED;
-		}
-		virtual EEventType type() const override {
-			return static_type();
-		}
-		virtual const char* name() const override {
-			return "MOUSE_RELEASED";
-		}
-
+		std::string to_string() const override;
+		virtual EEventType type() const override;
+		virtual const char* name() const override;
+		constexpr static EEventType static_type() { return EEventType::MOUSE_RELEASED; }
 	private:
 	};
 
 	class WindowResizeEvent : public Event {
 	public:
-		WindowResizeEvent(std::uint32_t w, std::uint32_t h, std::uint32_t old_w, std::uint32_t old_h) :
-			m_NewSize(w, h), m_OldSize(old_w, old_h) {}
+		WindowResizeEvent(std::uint32_t w, std::uint32_t h, std::uint32_t old_w, std::uint32_t old_h);
 
-		std::uint32_t w() const {
-			return m_NewSize.x;
-		}
-		std::uint32_t h() const { 
-			return m_NewSize.y;
-		}
-		glm::u32vec2 size() const {
-			return m_NewSize;
-		}
-
-		glm::u32vec2 old_size() const {
-			return m_OldSize;
-		}
-
-		std::string to_string() const override {
-			std::stringstream ss;
-			ss << "Window Resize Event : (w : " << m_NewSize.x << ", h: " << m_NewSize.y << ")";
-			return ss.str();
-		}
-
-		constexpr static EEventType static_type() {
-			return EEventType::WINDOW_RESIZE;
-		}
-		virtual EEventType type() const override {
-			return static_type();
-		}
-		virtual const char* name() const override {
-			return "WINDOW_RESIZE";
-		}
-		virtual int category() const override {
-			return EEventCategory::WINDOW;
-		}
-
+		std::uint32_t w() const;
+		std::uint32_t h() const;
+		glm::u32vec2 size() const;
+		glm::u32vec2 old_size() const;
+		std::string to_string() const override;
+		virtual EEventType type() const override;
+		virtual const char* name() const override;
+		virtual int category() const override;
+		constexpr static EEventType static_type() { return EEventType::WINDOW_RESIZE; }
 	private:
 		glm::u32vec2 m_NewSize;
 		glm::u32vec2 m_OldSize;
@@ -521,23 +371,10 @@ namespace aby {
 	public:
 		WindowCloseEvent() = default;
 
-		std::string to_string() const override {
-			std::stringstream ss;
-			ss << "Window Close Event";
-			return ss.str();
-		}
-
-		constexpr static EEventType static_type() {
-			return EEventType::WINDOW_CLOSE;
-		}
-		virtual EEventType type() const override {
-			return static_type();
-		}
-		virtual const char* name() const override {
-			return "WINDOW_CLOSE";
-		}
-		virtual int category() const override {
-			return EEventCategory::WINDOW;
-		}
+		std::string to_string() const override;
+		virtual EEventType type() const override;
+		virtual const char* name() const override;
+		virtual int category() const override;
+		constexpr static EEventType static_type() { return EEventType::WINDOW_CLOSE; }
 	};
 }
