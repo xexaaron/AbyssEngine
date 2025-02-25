@@ -2,7 +2,9 @@
 
 #include "Rendering/UI/LayoutContainer.h"
 #include "Rendering/UI/InputTextbox.h"
+#include "Platform/Process.h"
 #include <deque>
+
 namespace aby::ui {
 
 	class Console;
@@ -15,7 +17,6 @@ namespace aby::ui {
 	private:
 		Console* m_Console;
 	};
-
 
 	class Console : public LayoutContainer {
 	public:
@@ -32,7 +33,12 @@ namespace aby::ui {
 
 		void add_msg(const LogMsg& msg);
 		void for_each(for_each_fn&& fn) override;
+
+		void scroll_to_bottom();
+		void exec_aby_cmd(const std::string& cmd);
+		void exec_sys_cmd(const std::string& cmd);
 	protected:
+		bool on_key_pressed(KeyPressedEvent& event);
 		bool on_window_resize(WindowResizeEvent& event) override;
 		bool on_mouse_scrolled(MouseScrolledEvent& event);
 	protected:
@@ -52,7 +58,8 @@ namespace aby::ui {
 		App*					  m_App;
 		Ref<ConsoleInputTextbox>  m_Input;
 		Ref<LayoutContainer>	  m_MenuBar;
-		std::uint32_t			  m_ScrollPosition;
+		std::uint32_t			    m_ScrollPosition;
+		Unique<sys::Process> m_ActiveChannel;
 	private:
 		friend class ConsoleInputTextbox;
 	};

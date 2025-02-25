@@ -15,6 +15,7 @@
 #else
     #error "Unsupported platform"
 #endif
+#include <cstdio>
 
 namespace aby::sys {
     
@@ -42,6 +43,10 @@ namespace aby::sys {
 
     auto set_cursor(ECursor cursor) -> bool {
         return PLATFORM_NAMESPACE::set_cursor(cursor);
+    }
+
+    auto get_pid() -> int {
+        return PLATFORM_NAMESPACE::get_pid();
     }
 
 }

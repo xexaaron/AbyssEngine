@@ -76,8 +76,9 @@ namespace aby::vk {
 
     void Renderer::flush_if(RenderModule& module, bool flush, ERenderPrimitive primitive) {
         if (flush) {
-            this->flush(module, primitive);
+            this->on_end();
             start_batch(module);
+            this->on_begin();
         }
     }
 

@@ -16,6 +16,8 @@ namespace aby {
 		~App();
 
 		void run();
+		void quit();
+		void restart();
 
 		void set_name(const std::string& name);
 		void add_object(Ref<Object> obj);

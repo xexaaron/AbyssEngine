@@ -45,6 +45,15 @@ namespace aby::ui {
 
 	bool InputTextbox::on_key_typed(KeyTypedEvent& event) {
 		if (bFocused){
+			switch (event.code()) {
+				using enum aby::Button::EKey;
+				case KEY_APOSTROPHE:
+				case KEY_BACKSLASH:
+					m_Text.text.append(1, '\\');
+					break;
+				default:
+					break;
+			}
 			m_Text.text.append(1, static_cast<char>(event.code()));
 			bInvalid = true;
 			return true;

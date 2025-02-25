@@ -10,9 +10,9 @@ namespace aby {
 
     Thread::~Thread() {
         if (m_Thread.joinable()) {
-            m_Thread.join();
+           m_Thread.join();
         }
-    }
+    }   
 
     void Thread::set_name(const std::string& name) {
         if (!sys::set_thread_name(m_Thread, name)) {
@@ -21,7 +21,9 @@ namespace aby {
     }
 
     void Thread::join() {
-        m_Thread.join();
+        if (m_Thread.joinable()) {
+            m_Thread.join();
+        }
     }
 
     void Thread::detach() {
@@ -31,12 +33,14 @@ namespace aby {
     LoadThread::LoadThread(QueryResourceNextHandle query_next_handle) :
         Thread([this]() { load(); }, "Load Thread"),
         m_QueryNextHandle(std::move(query_next_handle)),
-        m_FinishState(EFinishState::CONTINUE) {
+        m_FinishState(EFinishState::CONTINUE) 
+    {
+
     }
 
     LoadThread::~LoadThread() {
-        m_FinishState.store(EFinishState::LOAD_THEN_FINISH, std::memory_order_release);
-        // ~Thread will join it.
+        m_FinishState.store(EFinishState::FINISH, std::memory_order_release);
+        m_Thread.detach();
     }
 
     Resource LoadThread::add_task(EResource type, Task&& task) {
@@ -50,47 +54,38 @@ namespace aby {
     }
 
     std::size_t LoadThread::tasks() {
-        std::lock_guard lock(m_Mutex);
         return m_Tasks.size();
     }
 
     void LoadThread::sync() {
-        // Finish loading resources.
-        m_FinishState.store(EFinishState::LOAD_THEN_FINISH, std::memory_order_release);
-        join();
-        // Restart the thread.
-        if (!m_Thread.joinable()) {
-            m_FinishState.store(EFinishState::CONTINUE, std::memory_order_release);
-            m_Thread = std::thread([this]() { load(); });
-            set_name("Load Thread");
+        if (m_Tasks.empty() || m_FinishState.load(std::memory_order_acquire) == EFinishState::FINISH) return; 
+        std::lock_guard lock(m_Mutex);
+        while (!m_Tasks.empty()) {
+            auto it = m_Tasks.begin();
+            Task task = it->second;
+            m_Tasks.erase(it);
+            task();
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
+        m_FinishState.store(EFinishState::FINISH, std::memory_order_release);
+        m_Tasks.clear();
     }
 
     void LoadThread::load() {
-        EFinishState state = state = m_FinishState.load(std::memory_order_acquire);
-        while (state != EFinishState::FINISH) {
-            state = m_FinishState.load();
-            {
-                std::lock_guard lock(m_Mutex);
-                if (!m_Tasks.empty()) {
-                    auto it = m_Tasks.begin();
-                    Task task = std::move(it->second);
-                    m_Tasks.erase(it);
-                    task();
-                }
+        while (m_FinishState.load(std::memory_order_acquire) != EFinishState::FINISH) {
+            std::lock_guard lock(m_Mutex);
+            if (!m_Tasks.empty()) {
+                auto it = m_Tasks.begin();
+                Task task = std::move(it->second);
+                m_Tasks.erase(it);
+                task();
             }
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Prevent busy-wait
-
-            switch (state) {
+            switch (m_FinishState.load(std::memory_order_acquire)) {
                 using enum EFinishState;
-                case LOAD_THEN_FINISH:
-                    m_FinishState.store(EFinishState::FINISH, std::memory_order_release);
-                    break;
-                case FINISH:
+                case FINISH: 
                     return;
                 case CONTINUE:
-                    break;
+                    continue;
                 default:
                     ABY_WARN("Load Thread was left an invalid state.");
                     m_FinishState.store(EFinishState::CONTINUE, std::memory_order_release);

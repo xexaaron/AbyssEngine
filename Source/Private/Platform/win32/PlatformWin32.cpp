@@ -29,7 +29,7 @@ namespace aby::sys::win32 {
         std::wstring wstring(size_needed - 1, L'\0'); // Remove null terminator
         MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, &wstring[0], size_needed);
         return wstring;
-}
+    }
 
     auto is_terminal(std::FILE* stream) -> bool  {
     #ifdef _MSVC_VER
@@ -93,6 +93,11 @@ namespace aby::sys::win32 {
         }
 
         return false;
+    }
+
+
+    auto get_pid() -> int {
+        return GetCurrentProcessId();
     }
 
 }

@@ -7,6 +7,3 @@
 [submodule "Vendor/freetype"]
 	path = Vendor/freetype
 	url = https://github.com/freetype/freetype
-[submodule "Vendor/cpp-subprocess"]
-	path = Vendor/cpp-subprocess
-	url = https://github.com/arun11299/cpp-subprocess.git

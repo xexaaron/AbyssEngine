@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
+#include <unordered_set>
 
 namespace aby::vk {
 
@@ -49,11 +50,11 @@ namespace aby::vk {
     }
 
     bool RenderPrimitive::should_flush() const {
-        return m_VertexAccumulator.count() + m_Descriptor.VerticesPer >= m_VertexBuffer.size();
+        return m_VertexAccumulator.count() + m_Descriptor.VerticesPer >= m_VertexAccumulator.capacity();
     }
 
     bool RenderPrimitive::should_flush(std::size_t requested_primitives) const {
-        bool should = m_VertexAccumulator.count() + (m_Descriptor.VerticesPer * requested_primitives) >= m_VertexBuffer.size();
+        bool should = m_VertexAccumulator.count() + (m_Descriptor.VerticesPer * requested_primitives) >= m_VertexAccumulator.capacity();
         return should;
     }
 
@@ -214,27 +215,44 @@ namespace aby::vk {
         glm::vec3 current_position = { text.pos.x, text.pos.y, 0.f }; 
         glm::vec4 color = text.color;
 
+        static const std::unordered_set<char32_t> escape_chars = {
+            0x27, 0x22, 0x3f, 0x5c, 0x07, 0x08,
+            0x0c, 0x0a, 0x0d, 0x09, 0x0b,
+        };
+
         for (char32_t c : text.text) {
-            const auto& g = glyphs.at(c);  
-            glm::vec3 size = { 
-                g.size.x * text.scale,
-                g.size.y * text.scale,
-                0.f
-            };
-            glm::vec3 pos  = { 
+            // Skip escape characters
+            if (escape_chars.contains(c)) {
+                if (c == U'\t') {
+                    current_position.x += (glyphs.at(U' ').advance * text.scale * 4);
+                }
+                continue;
+            }
+
+            // Ensure glyph exists
+            auto it = glyphs.find(c);
+            if (it == glyphs.end()) continue;
+            const auto& g = it->second;
+
+            // Compute size and position
+            glm::vec3 size = { g.size.x * text.scale, g.size.y * text.scale, 0.f };
+            glm::vec3 pos = {
                 (current_position.x + g.bearing.x * text.scale) + (size.x / 2),
                 (current_position.y + (text_size.y - g.bearing.y) * text.scale) + (size.y / 2),
-                0.f 
+                0.f
             };
 
+            // Apply transformations
             glm::mat4 transform = glm::translate(UNIT_MATRIX, pos) * glm::scale(UNIT_MATRIX, size);
+
+            // Vertex processing
             for (std::size_t i = 0; i < 4; i++) {
                 glm::vec3 position(transform * VERTEX_POSITIONS[i]);
                 glm::vec3 texinfo(g.texcoords[i], texture);
-                Vertex vertex(position, color, texinfo);
-                acc = vertex;
+                acc = Vertex(position, color, texinfo);
                 ++acc;
             }
+
             current_position.x += g.advance * text.scale;
         }
     }

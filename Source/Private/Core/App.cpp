@@ -48,10 +48,6 @@ namespace aby {
 
     void App::run() {
         m_Ctx->load_thread().sync();
-        while (m_Ctx->load_thread().tasks() > 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-        m_Ctx->load_thread().sync();
 
         auto object_cache = cache() / "Objects";
         for (auto& obj : m_Objects) {
@@ -175,6 +171,32 @@ namespace aby {
         return m_Info;
     }
  
+    void App::quit() {
+        m_Window->close();
+    }
+    
+    void App::restart() {
+    #ifdef _WIN32
+        std::string ext = ".exe";
+    #else
+        std::string ext = "";
+    #endif
+    #ifndef NDEBUG
+        auto watchdog = App::bin() / ("../tools/watchdog/Debug/watchdog" + ext);
+    #else
+        auto watchdog = App::bin() / ("../tools/watchdog/Release/watchdog" + ext);
+    #endif
+        std::stringstream ss;
+        ss << watchdog.string() << " "
+           << App::exe().filename().replace_extension("").string() << " "
+           << App::exe().string();
+        Thread restart([cmd = ss.str()]() {
+            std::system(cmd.c_str());
+        });
+        restart.set_name("Restart Thread");
+        restart.detach();
+        this->quit();
+    }
 
 
 }

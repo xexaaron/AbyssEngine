@@ -86,6 +86,7 @@ namespace aby {
         m_Data.width = width;
         m_Data.height = height;
         m_Data.callback(wr_event);
+
     }
 
     void Window::poll_events() const {
@@ -94,6 +95,10 @@ namespace aby {
 
     void Window::swap_buffers() const {
         glfwSwapBuffers(m_Window);
+    }
+
+    void Window::close() {
+        glfwSetWindowShouldClose(m_Window, GLFW_TRUE);
     }
     
     GLFWwindow* Window::glfw() const {
@@ -215,7 +220,8 @@ namespace aby {
             switch (action) {
                 case GLFW_PRESS:
                 {
-                    KeyPressedEvent kp_event(static_cast<Button::EKey>(key), 0);
+                    KeyPressedEvent kp_event(static_cast<Button::EKey>(key), 0, static_cast<Button::EMod>(mods));
+                    GLFW_MOD_SHIFT;
                     data.callback(kp_event);
                     break;
                 }
@@ -227,7 +233,7 @@ namespace aby {
                 }
                 case GLFW_REPEAT:
                 {
-                    KeyPressedEvent kr_event(static_cast<Button::EKey>(key), 1);
+                    KeyPressedEvent kr_event(static_cast<Button::EKey>(key), 1, static_cast<Button::EMod>(mods));
                     data.callback(kr_event);
                     break;
                 }

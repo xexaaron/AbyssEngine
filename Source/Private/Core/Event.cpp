@@ -19,9 +19,11 @@ namespace aby {
 	KeyEvent::KeyEvent(Button::EKey key_code) :
 		m_KeyCode(key_code) {
 	}
-	KeyPressedEvent::KeyPressedEvent(Button::EKey key_code, int repeat_count) :
+	KeyPressedEvent::KeyPressedEvent(Button::EKey key_code, int repeat_count, Button::EMod mods) :
 		KeyEvent(key_code),
-		m_RepeatCount(repeat_count) {
+		m_RepeatCount(repeat_count),
+		m_Mods(mods)
+	{
 	}
 	int KeyPressedEvent::repeat_count() const {
 		return m_RepeatCount;
@@ -215,4 +217,9 @@ namespace aby {
 	int MouseScrolledEvent::category() const {
 		return EEventCategory::MOUSE | EEventCategory::INPUT;
 	}
+
+	Button::EMod KeyPressedEvent::mods() const {
+		return m_Mods;
+	}
+
 }

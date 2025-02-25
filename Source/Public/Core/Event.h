@@ -178,7 +178,18 @@ namespace aby {
 			MOUSE_RIGHT = MOUSE_2,
 			MOUSE_MIDDLE = MOUSE_3,
 		};
+	
+		enum class EMod {
+			NONE  = 0,
+			SHIFT = BIT(0),
+			CTRL  = BIT(1),
+			ALT	  = BIT(2),
+			SUPER = BIT(3),
+			CAPS  = BIT(4),
+			NUML  = BIT(5)
+		};
 	};
+	DECLARE_ENUM_OPS(Button::EMod);
 
 	class Event {
 	public:
@@ -241,15 +252,17 @@ namespace aby {
 	
 	class KeyPressedEvent : public KeyEvent {
 	public:
-		KeyPressedEvent(Button::EKey key_code, int repeat_count);
+		KeyPressedEvent(Button::EKey key_code, int repeat_count, Button::EMod mods);
 
 		int repeat_count() const;
+		Button::EMod mods() const;
 		std::string to_string() const override;
 		virtual EEventType type() const override;
 		virtual const char* name() const override;
 		constexpr static EEventType static_type() { return EEventType::KEY_PRESSED; }
 	private:
 		int m_RepeatCount;
+		Button::EMod m_Mods;
 	};
 
 	class KeyReleasedEvent : public KeyEvent {

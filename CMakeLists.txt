@@ -54,15 +54,17 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
 function(add_subproject name)
     string(TOUPPER ${name} UPPER_NAME)
     set(${UPPER_NAME}_DIR ${name} PARENT_SCOPE)
-    add_subdirectory(${name})
-    set_target_properties(${name} PROPERTIES FOLDER ${PROJECT_NAME})
+    add_subdirectory("Tools/${name}")
+    set_target_properties(${name} PROPERTIES FOLDER "${PROJECT_NAME}/Tools")
 endfunction()
 
 add_subproject("packager")
 add_subproject("localize")
 add_subproject("tests")
+add_subproject("watchdog")
 
 set(CPP_SOURCES
+    Source/Private/Core/Log.cpp
     Source/Private/Core/App.cpp
     Source/Private/Core/Window.cpp
     Source/Private/Core/Event.cpp
@@ -89,6 +91,7 @@ set(CPP_SOURCES
     Source/Private/Rendering/UI/Button.cpp
     Source/Private/Rendering/UI/InputTextbox.cpp
     Source/Private/Rendering/UI/Console.cpp
+    Source/Private/Rendering/UI/Dropdown.cpp
     Source/Private/vk/VkRenderer.cpp
     Source/Private/vk/VkBuffer.cpp
     Source/Private/vk/VkContext.cpp
@@ -110,6 +113,9 @@ set(CPP_SOURCES
     Source/Private/Platform/win32/PlatformWin32.cpp
     Source/Private/Platform/posix/PlatformPosix.cpp
     Source/Private/Platform/Platform.cpp
+    Source/Private/Platform/win32/ProcessWin32.cpp
+    Source/Private/Platform/posix/ProcessPosix.cpp
+    Source/Private/Platform/Process.cpp
     ${STB_IMPL}
 )
 
@@ -145,6 +151,7 @@ set(HEADER_FILES
     Source/Public/Rendering/UI/Button.h
     Source/Public/Rendering/UI/InputTextbox.h
     Source/Public/Rendering/UI/Console.h
+    Source/Public/Rendering/UI/Dropdown.h
     Source/Public/vk/VkRenderer.h
     Source/Public/vk/VkBuffer.h
     Source/Public/vk/VkContext.h
@@ -165,6 +172,9 @@ set(HEADER_FILES
     Source/Public/Platform/win32/PlatformWin32.h
     Source/Public/Platform/posix/PlatformPosix.h
     Source/Public/Platform/Platform.h
+    Source/Public/Platform/win32/ProcessWin32.h
+    Source/Public/Platform/posix/ProcessPosix.h
+    Source/Public/Platform/Process.h
 
 )
 

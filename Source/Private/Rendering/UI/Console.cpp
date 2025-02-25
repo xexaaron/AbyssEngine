@@ -1,5 +1,15 @@
 #include "Rendering/UI/Console.h"
 
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+#ifdef open
+#undef open
+#endif
+
 namespace aby::ui::helper {
 
 	glm::vec4 log_color_to_vec4(ELogColor color) {
@@ -26,15 +36,16 @@ namespace aby::ui {
 	Console::Console(const Style& style) :
 		LayoutContainer({ .anchor = {.position = EAnchor::BOTTOM_LEFT, .offset = {}} }, style, EDirection::VERTICAL, ELayout::BOTTOM_TO_TOP),
 		m_Constraints{
-			.max_items = 0,
+			.max_items	 = 0,
 			.item_height = 20,
-			.max_logs = 100,
+			.max_logs	 = 300,
 		},
 		m_Callback(SIZE_MAX),
 		m_App(nullptr),
 		m_Input(ConsoleInputTextbox::create(this, style)),
 		m_MenuBar(LayoutContainer::create({}, style, EDirection::HORIZONTAL, ELayout::AUTO, 2.f)),
-		m_ScrollPosition(0)
+		m_ScrollPosition(0),
+		m_ActiveChannel(nullptr)
 	{
 		
 	}
@@ -47,13 +58,23 @@ namespace aby::ui {
 		m_Input->on_create(app, false);
 		m_MenuBar->set_position(m_Transform.position);
 		m_MenuBar->set_size({ app->window()->size().x, m_Constraints.item_height + 4 });
+		auto button_style = ButtonStyle::dark_mode();
+		button_style.border = {};
 		m_MenuBar->add_child(Button::create(
-			Transform{ .anchor = {}, .position = { 0, 0 }, .size = { 100, m_Constraints.item_height } },
-			ButtonStyle::dark_mode(),
+			Transform{ 
+				.anchor   = {},
+				.position = { 0, 0 },
+				.size	  = { 100, m_Constraints.item_height } },
+			ButtonStyle{
+				.hovered  = { m_Style.background.color * 1.1f, Resource{} },
+				.pressed  = m_Style.background,
+				.released = m_Style.background,
+				.border   = {}
+			},
 			TextInfo{
-				.text = "Options",
-				.color = { 1, 1, 1, 1 },
-				.scale = 1.f,
+				.text      = "Options",
+				.color     = { 1, 1, 1, 1 },
+				.scale     = 1.f,
 				.alignment = ETextAlignment::CENTER
 			},
 			false
@@ -65,6 +86,7 @@ namespace aby::ui {
 		invalidate_self();
 		m_Callback = Logger::add_callback([this](LogMsg msg) {
 			this->add_msg(msg);
+			this->scroll_to_bottom();
 		});
 	}
 
@@ -146,6 +168,7 @@ namespace aby::ui {
 		if (!bVisible) return;
 		EventDispatcher dsp(event);
 		dsp.bind(this, &Console::on_mouse_scrolled);
+		dsp.bind(this, &Console::on_key_pressed);
 		m_Input->on_event(app, event);
 		m_MenuBar->on_event(app, event);
 		LayoutContainer::on_event(app, event);
@@ -155,8 +178,26 @@ namespace aby::ui {
 		LayoutContainer::on_destroy(app);
 		m_Input->on_destroy(app);
 		m_MenuBar->on_destroy(app);
+		if (m_ActiveChannel && m_ActiveChannel->is_open()) {
+			m_ActiveChannel->close();
+		}
 		Logger::remove_callback(m_Callback);
 	}
+
+	bool Console::on_key_pressed(KeyPressedEvent& event) {
+		if ((event.mods() & aby::Button::EMod::CTRL) != aby::Button::EMod::NONE &&
+			event.code() == aby::Button::KEY_C) 
+		{
+			if (m_ActiveChannel) {
+				m_ActiveChannel->kill();
+				m_ActiveChannel.reset();
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 
 	glm::vec2 Console::calc_item_pos(std::size_t item) {
 		glm::vec2 pos = {
@@ -178,6 +219,9 @@ namespace aby::ui {
 	}
 
 	void Console::add_msg(const LogMsg& msg) {
+		if (msg.text.starts_with("[Info] >>>")) {
+			return;
+		}
 		try_pop();
 		auto textbox = create_msg(msg);
 		textbox->on_create(m_App, false);
@@ -209,7 +253,7 @@ namespace aby::ui {
 		};
 
 		TextInfo info{
-			.text = "Child: (" + std::to_string(m_Children.size()) + ") " + msg.text,
+			.text  = msg.text,
 			.color = helper::log_color_to_vec4(msg.color()),
 			.scale = 1.f,
 			.alignment = ETextAlignment::LEFT
@@ -222,6 +266,34 @@ namespace aby::ui {
 
 		return Textbox::create(transform, style, info);
 	}
+
+	void Console::exec_aby_cmd(const std::string& cmd) {
+		if (cmd == "quit") {
+			m_App->quit();
+		}
+		else if (cmd == "restart") {
+			m_App->restart();
+		}
+	}
+
+	void Console::exec_sys_cmd(const std::string& cmd) {
+		if (m_ActiveChannel && m_ActiveChannel->is_open()) {
+			m_ActiveChannel->write(cmd); // Send command
+		}
+		else {
+			m_ActiveChannel = sys::Process::create([](const std::string& msg) {
+				ABY_LOG("{}", msg);
+			});
+			m_ActiveChannel->open(cmd);
+		}
+	}
+
+	void Console::scroll_to_bottom() {
+		if (m_Children.size() > m_Constraints.max_items) {
+			m_ScrollPosition = m_Children.size() - m_Constraints.max_items + 1;
+		}
+	}
+
 }
 
 namespace aby::ui {
@@ -251,7 +323,14 @@ namespace aby::ui {
 	}
 
 	void ConsoleInputTextbox::on_submit(const std::string& msg) {
+		if (msg.starts_with("app:")) {
+			m_Console->exec_aby_cmd(msg.substr(4));
+		}
+		else {
+			m_Console->exec_sys_cmd(msg);
+		}
+		m_Console->scroll_to_bottom();
 		ABY_LOG("{}", msg);
-		m_Console->m_ScrollPosition = m_Console->children().size() - m_Console->m_Constraints.max_items + 1;
+		//m_Console->add_msg(LogMsg{ .level = ELogLevel::LOG, .text = "[Cmd] " + msg });
 	}
 }

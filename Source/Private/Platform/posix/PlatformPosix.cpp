@@ -27,6 +27,10 @@ namespace aby::sys::posix {
 		return fs::path(std::string(path_buff, count));
 	}
 
+	auto get_pid() -> int {
+		return getpid();
+	}
+
 
 }
 

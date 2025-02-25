@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Resource.h"
+#include "Core/Log.h"
 #include <mutex>
 #include <thread>
 #include <shared_mutex>
@@ -12,6 +13,7 @@ namespace aby {
         template <typename Fn>
         explicit Thread(Fn&& fn, const std::string& thread_name = "") : m_Thread(std::forward<Fn>(fn)) {
             set_name(thread_name);
+            ABY_LOG("Created Thread: {}", thread_name);
         }
 
         virtual ~Thread();
@@ -54,5 +56,7 @@ namespace aby {
         // creation.
         std::recursive_mutex           m_Mutex;
         std::atomic<EFinishState>      m_FinishState;
+        std::condition_variable m_CondVar;
+        std::mutex m_CondMutex;
     };
 }

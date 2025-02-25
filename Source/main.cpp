@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
         ui::ELayout::AUTO,
         2.0f
     );
-    auto font = Font::create(&app.ctx(), App::bin() / "Fonts/IBM_Plex_Mono/IBMPlexMono-Regular.ttf", 14);
+    auto font = Font::create(&app.ctx(), App::bin() / "C:/Windows/Fonts/arialbd.ttf", 14);
     auto console_style = ui::Style::dark_mode();
     console_style.background.color *= 0.9;
     auto console = ui::Console::create(console_style);

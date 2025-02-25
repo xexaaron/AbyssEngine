@@ -57,6 +57,7 @@ namespace aby {
         void initalize();
         void poll_events() const;
         void swap_buffers() const;
+        void close(); 
 
         void set_cursor(ECursor cursor);
         void set_title(const std::string& title);
