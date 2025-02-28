@@ -18,6 +18,8 @@ namespace aby::ui {
         virtual void on_released();
         virtual void on_hovered();
         virtual void on_unhovered();
+    
+        ButtonStyle button_style();
     protected:
         virtual bool on_mouse_moved(MouseMovedEvent& event);
         virtual bool on_mouse_pressed(MousePressedEvent& event);

@@ -25,6 +25,7 @@ namespace aby::ui {
 
     void Panel::on_event(App* app, Event& event) {
         Image::on_event(app, event);
+        if (!bVisible) return;
         ParentWidget::on_event(app, event);
     }
 

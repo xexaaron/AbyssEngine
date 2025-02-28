@@ -13,8 +13,10 @@ namespace aby::ui {
         void on_tick(App* app, Time deltatime) override;
         bool on_invalidate() override;
 
-        void set_text(const std::string& text, Ref<Font> font);
+
+        void set_text(const std::string& text, Ref<Font> font = nullptr);
         bool on_window_resize(WindowResizeEvent& event) override;
+        glm::vec2 text_size();
     protected:
         Text m_Text;
         ETextAlignment m_Alignment;

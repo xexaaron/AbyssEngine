@@ -10,7 +10,6 @@ class GLFWwindow;
 
 namespace aby {
 
-    // Enum operators below
     enum class EWindowFlags {
         NONE      = 0,
         VSYNC     = BIT(0),
@@ -50,9 +49,7 @@ namespace aby {
         /**
         * @brief Initalize the window based on flags provided in ctor.
         *        Allows time to setup callbacks through register_event
-        *        If the window starts maximized, that event might
-        *        need to be recieved still. Also sends an inital window
-        *        resize event regardless of the flags.
+
         */
         void initalize();
         void poll_events() const;

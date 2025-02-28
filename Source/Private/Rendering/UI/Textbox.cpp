@@ -60,14 +60,23 @@ namespace aby::ui {
     }
     
     void Textbox::set_text(const std::string& text, Ref<Font> font) {
+        if (auto my_font = m_Font.lock(); my_font && font) {
+            if (font != my_font) {
+                m_Font = font;
+            }
+        }
         m_Text.text = text;
-        m_TextSize  = font->measure(text);
-        
+        m_TextSize  = m_Font.lock()->measure(text);
     }
 
     bool Textbox::on_window_resize(WindowResizeEvent& event) {
         invalidate_self();
         return false;
     }
+
+    glm::vec2 Textbox::text_size() {
+        return m_TextSize;
+    }
+
 
 }

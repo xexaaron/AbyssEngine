@@ -46,4 +46,16 @@ namespace aby {
             m_StreamMutex.unlock();
         }
     }
+
+    std::string Logger::time_date_now() {
+        auto now = std::chrono::system_clock::now();
+        return std::format("{0:%F} {0:%T}", std::chrono::floor<std::chrono::seconds>(now));
+    }
+
+    std::string Logger::time_date_now_header() {
+        auto now = std::chrono::system_clock::now();
+        return std::format("[{0:%F}][{0:%T}]", std::chrono::floor<std::chrono::seconds>(now));
+    }
+
+
 }

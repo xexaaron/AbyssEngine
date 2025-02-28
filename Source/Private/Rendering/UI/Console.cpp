@@ -36,50 +36,76 @@ namespace aby::ui {
 	Console::Console(const Style& style) :
 		LayoutContainer({ .anchor = {.position = EAnchor::BOTTOM_LEFT, .offset = {}} }, style, EDirection::VERTICAL, ELayout::BOTTOM_TO_TOP),
 		m_Constraints{
-			.max_items	 = 0,
+			.max_items = 0,
 			.item_height = 20,
-			.max_logs	 = 300,
+			.max_logs = 300,
 		},
 		m_Callback(SIZE_MAX),
 		m_App(nullptr),
-		m_Input(ConsoleInputTextbox::create(this, style)),
-		m_MenuBar(LayoutContainer::create({}, style, EDirection::HORIZONTAL, ELayout::AUTO, 2.f)),
+		m_Objs{
+			.input = ConsoleInputTextbox::create(this, style),
+			.menu  = LayoutContainer::create({}, style, EDirection::HORIZONTAL, ELayout::AUTO, 2.f),
+			.date_time = nullptr,
+			.fps = nullptr,
+			.opts = Dropdown::create(
+				Transform{ {}, {}, {100, m_Constraints.item_height}},
+				ButtonStyle{
+					.hovered  = { m_Style.background.color * 1.1f, Resource{} },
+					.pressed  = m_Style.background,
+					.released = m_Style.background,
+					.border   = {}
+				},
+				TextInfo{ "Options", { 1, 1, 1, 1 }, 1.f, ETextAlignment::CENTER },
+				{ 100, 100 }
+			)
+		},
 		m_ScrollPosition(0),
 		m_ActiveChannel(nullptr)
 	{
-		
+		Transform t{
+			.anchor = {},
+			.position = { 0, 0 },
+			.size = { 150, m_Constraints.item_height }
+		};
+		Style s{
+			.background = Style::dark_mode().background,
+			.border = {}
+		};
+		TextInfo ti{
+			.text  = Logger::time_date_now(),
+			.color = { 0.759, 0.761, 0.754, 1 },
+			.scale = 1.f,
+			.alignment = ETextAlignment::CENTER
+		};
+		m_Objs.date_time = Textbox::create(t, s, ti);
+		t.size.x = 80;
+		ti.text = "60 FPS";
+		m_Objs.fps = Textbox::create(t, s, ti);
 	}
 
 	void Console::on_create(App* app, bool deserialzied) {
 		m_Transform.size.x = app->window()->size().x;
 		m_Transform.size.y = (app->window()->size().y / 2.5) - m_Constraints.item_height;
-		m_Input->set_position({ 0, app->window()->size().y - m_Constraints.item_height });
-		m_Input->set_size({ app->window()->size().x, m_Constraints.item_height });
-		m_Input->on_create(app, false);
-		m_MenuBar->set_position(m_Transform.position);
-		m_MenuBar->set_size({ app->window()->size().x, m_Constraints.item_height + 4 });
-		auto button_style = ButtonStyle::dark_mode();
-		button_style.border = {};
-		m_MenuBar->add_child(Button::create(
-			Transform{ 
-				.anchor   = {},
-				.position = { 0, 0 },
-				.size	  = { 100, m_Constraints.item_height } },
-			ButtonStyle{
-				.hovered  = { m_Style.background.color * 1.1f, Resource{} },
-				.pressed  = m_Style.background,
-				.released = m_Style.background,
-				.border   = {}
-			},
+		m_Objs.input->set_position({ 0, app->window()->size().y - m_Constraints.item_height });
+		m_Objs.input->set_size({ app->window()->size().x, m_Constraints.item_height });
+		m_Objs.input->on_create(app, false);
+		m_Objs.opts->add_child(Button::create(
+			Transform{ {}, {}, { m_Objs.opts->transform().size.x, m_Constraints.item_height } },
+			m_Objs.opts->button_style(),
 			TextInfo{
-				.text      = "Options",
-				.color     = { 1, 1, 1, 1 },
-				.scale     = 1.f,
-				.alignment = ETextAlignment::CENTER
+				.text = "Checkmark",
+				.color = { 1, 1, 1, 1 },
+				.scale = 1.f,
+				.alignment = ETextAlignment::LEFT
 			},
 			false
 		));
-		m_MenuBar->on_create(app, false);
+		m_Objs.menu->set_position(m_Transform.position);
+		m_Objs.menu->set_size({ app->window()->size().x, m_Constraints.item_height + 4 });
+		m_Objs.menu->add_child(m_Objs.date_time);
+		m_Objs.menu->add_child(m_Objs.fps);
+		m_Objs.menu->add_child(m_Objs.opts);
+		m_Objs.menu->on_create(app, false);
 		m_Constraints.max_items = calc_max_items();
 		m_App = app;
 		LayoutContainer::on_create(app, deserialzied);
@@ -93,16 +119,17 @@ namespace aby::ui {
 	bool Console::on_window_resize(WindowResizeEvent& event) {
 		m_Transform.size.x	   = event.size().x;
 		m_Transform.size.y     = (event.size().y / 2.5) - m_Constraints.item_height;
-		m_Input->set_position({ 0, event.size().y - m_Constraints.item_height });
-		m_Input->set_size({ event.size().x, m_Constraints.item_height });
-		m_MenuBar->set_position(m_Transform.position);
-		m_MenuBar->set_size({ event.size().x, m_Constraints.item_height + 4 });
+		m_Constraints.max_items = calc_max_items();
+		m_Objs.input->set_position({ 0, event.size().y - m_Constraints.item_height });
+		m_Objs.input->set_size({ event.size().x, m_Constraints.item_height });
+		m_Objs.menu->set_position(m_Transform.position);
+		m_Objs.menu->set_size({ event.size().x, m_Constraints.item_height + 4 });
 		invalidate_self();
 		return false;
 	}
 
 	std::uint32_t Console::calc_max_items() {
-		return std::max(0, static_cast<int>(std::floorf((m_Transform.size.y - (m_Constraints.item_height * 2)) / m_Constraints.item_height)));
+		return std::max(0, static_cast<int>((m_Transform.size.y - (m_Constraints.item_height * 2)) / m_Constraints.item_height));
 	}
 
 	void Console::for_each(for_each_fn&& fn) {
@@ -121,10 +148,16 @@ namespace aby::ui {
 	}
 
 	bool Console::on_mouse_scrolled(MouseScrolledEvent& event) {
+		constexpr auto scroll_amt = 3;
 		if (m_Children.size() > m_Constraints.max_items) {
 			if (event.offset_y() > 0) { // Scroll up
-				if (m_ScrollPosition > 0) {
-					m_ScrollPosition--;
+				for (std::size_t i = 0; i < scroll_amt; i++) {
+					if (m_ScrollPosition > 0) {
+						m_ScrollPosition--;
+					}
+					else {
+						break;
+					}
 				}
 				LayoutContainer::for_each([this](Ref<Widget> widget, std::size_t i) {
 					widget->set_position(calc_item_pos(i));
@@ -132,8 +165,13 @@ namespace aby::ui {
 				});
 			}
 			else if (event.offset_y() < 0) { // Scroll down
-				if (m_ScrollPosition < static_cast<int>(m_Children.size()) - m_Constraints.max_items) {
-					m_ScrollPosition++;
+				for (std::size_t i = 0; i < scroll_amt; i++) {
+					if (m_ScrollPosition < static_cast<int>(m_Children.size()) - m_Constraints.max_items) {
+						m_ScrollPosition++;
+					}
+					else {
+						break;
+					}
 				}
 				LayoutContainer::for_each([this](Ref<Widget> widget, std::size_t i) {
 					widget->set_position(calc_item_pos(i));
@@ -147,11 +185,10 @@ namespace aby::ui {
 	}
 
 	bool Console::on_invalidate() {
-		m_Constraints.max_items = calc_max_items();
-		m_Input->on_invalidate();
-		m_MenuBar->set_invalid(true);
-		m_MenuBar->on_invalidate();
-		for (auto& child : m_MenuBar->children()) {
+		m_Objs.input->on_invalidate();
+		m_Objs.menu->set_invalid(true);
+		m_Objs.menu->on_invalidate();
+		for (auto& child : m_Objs.menu->children()) {
 			child->on_invalidate();
 		}
 		return LayoutContainer::on_invalidate();
@@ -159,9 +196,19 @@ namespace aby::ui {
 
 	void Console::on_tick(App* app, Time time) {
 		if (!bVisible) return;
+
 		LayoutContainer::on_tick(app, time);
-		m_Input->on_tick(app, time);
-		m_MenuBar->on_tick(app, time);
+		m_Objs.input->on_tick(app, time);
+		m_Objs.menu->on_tick(app, time);
+
+		static float elapsed = 0.f;
+		elapsed += time.sec();
+		if (elapsed >= 1.f) {
+			int fps = (time.sec() > 0.0f) ? (1.f / time.sec()) : 0.0f;
+			m_Objs.fps->set_text(std::format("{} FPS", fps));
+			m_Objs.date_time->set_text(Logger::time_date_now());
+			elapsed -= 1.f; 
+		}
 	}
 
 	void Console::on_event(App* app, Event& event) {
@@ -169,15 +216,15 @@ namespace aby::ui {
 		EventDispatcher dsp(event);
 		dsp.bind(this, &Console::on_mouse_scrolled);
 		dsp.bind(this, &Console::on_key_pressed);
-		m_Input->on_event(app, event);
-		m_MenuBar->on_event(app, event);
+		m_Objs.input->on_event(app, event);
+		m_Objs.menu->on_event(app, event);
 		LayoutContainer::on_event(app, event);
 	}
 
 	void Console::on_destroy(App* app)  {
 		LayoutContainer::on_destroy(app);
-		m_Input->on_destroy(app);
-		m_MenuBar->on_destroy(app);
+		m_Objs.input->on_destroy(app);
+		m_Objs.menu->on_destroy(app);
 		if (m_ActiveChannel && m_ActiveChannel->is_open()) {
 			m_ActiveChannel->close();
 		}
@@ -267,6 +314,17 @@ namespace aby::ui {
 		return Textbox::create(transform, style, info);
 	}
 
+	void Console::exec_cmd(const std::string& cmd) {
+		if (cmd.starts_with("app:")) {
+			exec_aby_cmd(cmd.substr(4));
+		}
+		else {
+			exec_sys_cmd(cmd);
+		}
+		ABY_LOG("{}", cmd);
+	}
+
+
 	void Console::exec_aby_cmd(const std::string& cmd) {
 		if (cmd == "quit") {
 			m_App->quit();
@@ -307,7 +365,7 @@ namespace aby::ui {
 			style,
 			TextInfo{
 				.text = ">>> ",
-				.color = { 1, 1, 1, 1 },
+				.color = { 0.759, 0.761, 0.754, 1 },
 				.scale = 1.f,
 				.alignment = ETextAlignment::LEFT,
 			},
@@ -323,14 +381,7 @@ namespace aby::ui {
 	}
 
 	void ConsoleInputTextbox::on_submit(const std::string& msg) {
-		if (msg.starts_with("app:")) {
-			m_Console->exec_aby_cmd(msg.substr(4));
-		}
-		else {
-			m_Console->exec_sys_cmd(msg);
-		}
+		m_Console->exec_cmd(msg);
 		m_Console->scroll_to_bottom();
-		ABY_LOG("{}", msg);
-		//m_Console->add_msg(LogMsg{ .level = ELogLevel::LOG, .text = "[Cmd] " + msg });
 	}
 }

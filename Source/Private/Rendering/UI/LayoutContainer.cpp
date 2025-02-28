@@ -53,6 +53,8 @@ namespace aby::ui {
     }
 
     void LayoutContainer::align() {
+        if (m_Children.empty()) return;
+
         auto vector_idx = static_cast<std::size_t>(m_Direction);
 
         auto widget_pos = m_Transform.position[vector_idx] + m_Padding;

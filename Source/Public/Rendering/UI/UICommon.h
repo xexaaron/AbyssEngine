@@ -48,6 +48,15 @@ namespace aby::ui {
         LEFT,
         RIGHT,
     };
+
+    enum class EResize {
+        NONE = 0,
+        N    = BIT(0),
+        E    = BIT(1),
+        S    = BIT(2),
+        W    = BIT(3),
+    };
+    DECLARE_ENUM_OPS(EResize);
 }
 
 namespace aby::ui {

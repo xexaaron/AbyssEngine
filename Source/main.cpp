@@ -35,13 +35,12 @@ namespace editor {
 
 int main(int argc, char* argv[]) {
     using namespace aby;
-    
     auto app          = editor::create_app();
+    auto font = Font::create(&app.ctx(), App::bin() / "C:/Windows/Fonts/arialbd.ttf", 12);
     auto canvas_style = ui::Style::dark_mode();
     auto button_style = ui::ButtonStyle::dark_mode();
-    button_style.border.width = 0.f;
     auto canvas       = ui::Canvas::create(canvas_style);
-
+    
     aby::ui::TextInfo opts_info{
         .text  = "Options",
         .color = { 1, 1, 1, 1 },
@@ -50,6 +49,7 @@ int main(int argc, char* argv[]) {
     };
     aby::ui::TextInfo other_info = opts_info;
     other_info.text = "Other";
+    button_style.border.width = 0.f;
 
     auto button       = ui::Button::create(ui::Transform{ .position = { 0, 0 }, .size = { 100, 30 } }, button_style, opts_info);
     auto button1      = ui::Button::create(ui::Transform{ .position = { 0, 0 }, .size = { 100, 30 } }, button_style, other_info);
@@ -67,9 +67,8 @@ int main(int argc, char* argv[]) {
         ui::ELayout::AUTO,
         2.0f
     );
-    auto font = Font::create(&app.ctx(), App::bin() / "C:/Windows/Fonts/arialbd.ttf", 14);
     auto console_style = ui::Style::dark_mode();
-    console_style.background.color *= 0.9;
+    reinterpret_cast<glm::vec3&>(console_style.background.color) *= 0.9;
     auto console = ui::Console::create(console_style);
     container->add_child(button);
     container->add_child(button1);

@@ -82,14 +82,9 @@ namespace aby {
     private:
         template <typename... Args>
         inline static void print(const std::string& context, ELogColor  color, std::format_string<Args...> fmt, Args&&... args) {
-        #if 1
-            auto now = std::chrono::system_clock::now();
-            std::string prefix = std::format("[{0:%F}][{0:%T}] [{1}]", std::chrono::floor<std::chrono::seconds>(now), context);
-        #else
-            std::string prefix = std::format("[{}]", context);
-        #endif
+            std::string prefix = std::format("{}[{}]", time_date_now_header(), context);
             std::string msg = std::format(fmt, std::forward<Args>(args)...);
-            std::string out = prefix + " " + msg;
+            std::string out = prefix + "   " + msg;
             m_MsgBuff[m_MsgCount] = LogMsg{ .level = static_cast<ELogLevel>(color), .text = out };
             m_MsgCount++;
             if (m_MsgCount == m_MsgBuff.size()) {
@@ -104,6 +99,9 @@ namespace aby {
         static void set_streams(std::ostream& log_stream = std::clog, std::ostream& err_stream = std::cerr);
         static std::size_t add_callback(Callback&& callback);
         static void remove_callback(std::size_t idx);
+        static std::string time_date_now_header();
+        static std::string time_date_now();
+
 
         template <typename... Args>
         static void log(std::format_string<Args...> fmt, Args&&... args) {

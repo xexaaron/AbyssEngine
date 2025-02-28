@@ -31,16 +31,19 @@ namespace aby::ui {
 
     void Button::on_event(App* app, Event& event) {
         Widget::on_event(app, event);
-        EventDispatcher dsp(event);
-        dsp.bind<MouseMovedEvent>([this](MouseMovedEvent& event){ 
-            return on_mouse_moved(event);
-        });
-        dsp.bind<MousePressedEvent>([this](MousePressedEvent& event){
-            return on_mouse_pressed(event);
-        });
-        dsp.bind<MouseReleasedEvent>([this](MouseReleasedEvent& event){ 
-            return on_mouse_released(event);
-        });
+        if (this->is_visible()) {
+            EventDispatcher dsp(event);
+            dsp.bind<MouseMovedEvent>([this](MouseMovedEvent& event) {
+                return on_mouse_moved(event);
+                });
+            dsp.bind<MousePressedEvent>([this](MousePressedEvent& event) {
+                return on_mouse_pressed(event);
+                });
+            dsp.bind<MouseReleasedEvent>([this](MouseReleasedEvent& event) {
+                return on_mouse_released(event);
+            });
+        }
+       
     }
 
     void Button::on_pressed() {
@@ -132,5 +135,15 @@ namespace aby::ui {
         }
         return false;
     }
+
+    ButtonStyle Button::button_style() {
+        return ButtonStyle{
+            .hovered  = { m_Hovered.color, m_Style.background.texture },
+            .pressed  = { m_Pressed.color, m_Style.background.texture },
+            .released = { m_Default.color, m_Style.background.texture },
+            .border   = m_Style.border
+        };
+    }
+
 
 }
