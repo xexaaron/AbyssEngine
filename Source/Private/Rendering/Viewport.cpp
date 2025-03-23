@@ -13,7 +13,6 @@ namespace aby {
 
 	void Viewport::on_create(App* app, bool deserialized) {
 		m_Camera.on_create(app, deserialized);
-		auto& ctx = app->ctx();
 	}
 
 	void Viewport::on_event(App* app, Event& event) {
@@ -23,11 +22,6 @@ namespace aby {
 	}
 	
 	void Viewport::on_tick(App* app, Time deltatime) {
-		float scale_factor = 200.f;  // Example scale factor, you can adjust this value
-		glm::vec2 size = { 400, 400    };
-		glm::vec3 pos  = { 200, 200, 0 };
-		glm::vec4 col  = { 1, 1, 1, 1  };
-
 		m_Camera.on_tick(app, deltatime);
 		auto& ren = app->renderer();
 		ren.on_begin(m_Camera.view_projection());

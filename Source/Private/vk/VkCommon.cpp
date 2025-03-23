@@ -1,6 +1,7 @@
 #include "vk/VkCommon.h"
 #include "vk/VkAllocator.h"
 #include "Core/Log.h"
+#include <cstring>
 
 namespace aby::vk::helper {
 
@@ -69,7 +70,6 @@ namespace aby::vk::helper {
             default:
                 return "VkPhysicalDeviceType out of range";
         }
-        return "UNREACHABLE";
     }
     std::vector<VkExtensionProperties> get_extensions() {
         std::vector<VkExtensionProperties> extensions;
@@ -84,7 +84,7 @@ namespace aby::vk::helper {
         for (std::size_t i = 0; i < req_exts.size(); i++) {
             bool found = false;
             for (const auto& extension : extensions) {
-                if (strcmp(req_exts[i], extension.extensionName) == 0) {
+                if (std::strcmp(req_exts[i], extension.extensionName) == 0) {
                     found = true;
                     break;
                 }
@@ -148,7 +148,7 @@ namespace aby::vk::helper {
         // Initialize the VkImageMemoryBarrier2 structure
         VkImageMemoryBarrier2 image_barrier{
             .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-
+            .pNext = nullptr,
             // Specify the pipeline stages and access masks for the barrier
             .srcStageMask = srcStage,             // Source pipeline stage mask
             .srcAccessMask = srcAccessMask,        // Source access mask
@@ -175,12 +175,16 @@ namespace aby::vk::helper {
                 .layerCount = 1                                 // Number of array layers affected
             } };
 
-        // Initialize the VkDependencyInfo structure
         VkDependencyInfo dependency_info{
             .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-            .dependencyFlags = 0,                    // No special dependency flags
-            .imageMemoryBarrierCount = 1,                    // Number of image memory barriers
-            .pImageMemoryBarriers = &image_barrier        // Pointer to the image memory barrier(s)
+            .pNext = nullptr,
+            .dependencyFlags = 0,                  
+            .memoryBarrierCount = 0,
+            .pMemoryBarriers = nullptr,
+            .bufferMemoryBarrierCount = 0,
+            .pBufferMemoryBarriers = nullptr,
+            .imageMemoryBarrierCount = 1,                    
+            .pImageMemoryBarriers = &image_barrier        
         };
 
         vkCmdPipelineBarrier2(cmd, &dependency_info);

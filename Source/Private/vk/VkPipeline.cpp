@@ -1,6 +1,5 @@
 #include "vk/VkPipeline.h"
 #include "vk/VkAllocator.h"
-#include <array>
 #include "Core/Log.h"
 
 namespace aby::vk {

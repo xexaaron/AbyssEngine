@@ -16,9 +16,7 @@ namespace aby::vk {
         m_Descriptor(primitive_descriptor),
         m_IndexCount(0)
     {
-        if (m_Descriptor.IndicesPer == m_Descriptor.VerticesPer) {
-            m_IndexBuffer.destroy();
-        }
+       
     }
 
     void RenderPrimitive::destroy() {
@@ -32,11 +30,11 @@ namespace aby::vk {
         return m_Descriptor;
     }
 
-    std::uint32_t RenderPrimitive::index_count() const {
+    std::size_t RenderPrimitive::index_count() const {
         return m_IndexCount;
     }
 
-    std::uint32_t RenderPrimitive::vertex_count() const {
+    std::size_t RenderPrimitive::vertex_count() const {
         return m_VertexAccumulator.count();
     }
 
@@ -50,12 +48,13 @@ namespace aby::vk {
     }
 
     bool RenderPrimitive::should_flush() const {
-        return m_VertexAccumulator.count() + m_Descriptor.VerticesPer >= m_VertexAccumulator.capacity();
+        bool flush = m_VertexAccumulator.count() + m_Descriptor.VerticesPer >= m_VertexAccumulator.capacity();
+        return flush;
     }
 
     bool RenderPrimitive::should_flush(std::size_t requested_primitives) const {
-        bool should = m_VertexAccumulator.count() + (m_Descriptor.VerticesPer * requested_primitives) >= m_VertexAccumulator.capacity();
-        return should;
+        bool flush = m_VertexAccumulator.count() + (m_Descriptor.VerticesPer * requested_primitives) >= m_VertexAccumulator.capacity();
+        return flush;
     }
 
 
@@ -78,11 +77,11 @@ namespace aby::vk {
 
 
     void RenderPrimitive::draw_indexed(VkCommandBuffer cmd) {
-        vkCmdDrawIndexed(cmd, m_IndexCount, 1, 0, 0, 0);
+        vkCmdDrawIndexed(cmd, static_cast<std::uint32_t>(m_IndexCount), 1u, 0u, 0u, 0u);
     }
 
     void RenderPrimitive::draw_nonindexed(VkCommandBuffer cmd) {
-        vkCmdDraw(cmd, this->vertex_count(), 1, 0, 0);
+        vkCmdDraw(cmd, static_cast<std::uint32_t>(this->vertex_count()), 1u, 0u, 0u);
     }
 
 
@@ -123,8 +122,8 @@ namespace aby::vk {
                 .VerticesPer = 3
             }), // Triangles
             RenderPrimitive(ctx, m_Module->vertex_descriptor(), PrimitiveDescriptor{
-                .MaxVertices = 10000,
-                .MaxIndices = 60000,
+                .MaxVertices = 10000 * 2,
+                .MaxIndices = 60000 * 2,
                 .IndicesPer = 6,
                 .VerticesPer = 4
             }) // Quads
@@ -132,6 +131,7 @@ namespace aby::vk {
     {
         auto& quad_prim = this->quads();
         auto& prim_desc = quad_prim.descriptor();
+    #ifdef NDEBUG
         uint32_t* indices = new uint32_t[prim_desc.MaxIndices];
         for (uint32_t i = 0, offset = 0; i < prim_desc.MaxIndices; i += prim_desc.IndicesPer, offset += prim_desc.VerticesPer) {
             indices[i + 0] = offset + 0;
@@ -143,6 +143,18 @@ namespace aby::vk {
         }
         quad_prim.set_index_data(indices, ctx->devices());
         delete[] indices;
+    #else
+        std::vector<uint32_t> indices(prim_desc.MaxIndices);
+        for (uint32_t i = 0, offset = 0; i < prim_desc.MaxIndices; i += prim_desc.IndicesPer, offset += prim_desc.VerticesPer) {
+            indices[i + 0] = offset + 0;
+            indices[i + 1] = offset + 1;
+            indices[i + 2] = offset + 2;
+            indices[i + 3] = offset + 2;
+            indices[i + 4] = offset + 3;
+            indices[i + 5] = offset + 0;
+        }
+        quad_prim.set_index_data(indices.data(), ctx->devices());
+    #endif
     }
 
     void RenderModule::destroy() {
@@ -173,10 +185,9 @@ namespace aby::vk {
                 prim.draw(cmd);
             }
         }
-      
     }
 
-    void RenderModule::set_uniforms(const void* data, std::size_t bytes, std::size_t binding) {
+    void RenderModule::set_uniforms(const void* data, std::size_t bytes, std::uint32_t binding) {
         m_Module->set_uniforms(data, bytes, binding);
     }
 
@@ -211,7 +222,6 @@ namespace aby::vk {
         const auto& glyphs = font_obj->glyphs();
 
         glm::vec2 text_size = font_obj->measure(text.text) * text.scale;
-        glm::vec2 bmp_size = tex_obj->size();
         glm::vec3 current_position = { text.pos.x, text.pos.y, 0.f }; 
         glm::vec4 color = text.color;
 

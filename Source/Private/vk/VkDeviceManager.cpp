@@ -1,6 +1,7 @@
 #include "vk/VkDeviceManager.h"
 #include "vk/VkAllocator.h"
 #include "Core/Log.h"
+#include <cstring>
 #include <vector>
 
 namespace aby::vk {
@@ -44,6 +45,7 @@ namespace aby::vk {
         ABY_ASSERT(m_Graphics.FamilyIdx != UINT32_MAX, "Required queue family not found!");
 
         // Query required device features
+
         VkPhysicalDeviceFeatures2 query_device_features2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
         VkPhysicalDeviceVulkan13Features query_vulkan13_features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
         VkPhysicalDeviceExtendedDynamicStateFeaturesEXT query_extended_dynamic_state_features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT };
@@ -65,8 +67,6 @@ namespace aby::vk {
         ABY_ASSERT(query_descriptor_indexing_features.shaderSampledImageArrayNonUniformIndexing, "Bindless textures feature is missing");
         ABY_ASSERT(query_descriptor_indexing_features.descriptorBindingSampledImageUpdateAfterBind, "Bindless textures feature is missing");
 
-
-        // Enable necessary features
         VkPhysicalDeviceDescriptorIndexingFeatures enable_indexing_features = {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES,
             .pNext = nullptr,
@@ -90,7 +90,6 @@ namespace aby::vk {
             .dynamicRendering = VK_TRUE
         }; 
     
-
         VkPhysicalDeviceFeatures base_features{
             .samplerAnisotropy = VK_TRUE,
         };
@@ -101,10 +100,11 @@ namespace aby::vk {
             .features = base_features
         };
 
-
         float priority = 1.0f;
         VkDeviceQueueCreateInfo queue_create_info{
             .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
             .queueFamilyIndex = m_Graphics.FamilyIdx,
             .queueCount = 1,
             .pQueuePriorities = &priority
@@ -114,12 +114,14 @@ namespace aby::vk {
         VkDeviceCreateInfo dci = {
             .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
             .pNext = &enable_device_features2,
+            .flags = 0,
             .queueCreateInfoCount = 1,
             .pQueueCreateInfos = &queue_create_info,
             .enabledLayerCount = 0,
             .ppEnabledLayerNames = nullptr,
             .enabledExtensionCount = static_cast<std::uint32_t>(extensions.size()),
             .ppEnabledExtensionNames = extensions.data(),
+            .pEnabledFeatures = nullptr,
         };
 
         // Create the logical device with enabled features
@@ -132,6 +134,23 @@ namespace aby::vk {
         VkPhysicalDeviceProperties props = {};
         vkGetPhysicalDeviceProperties(m_Physical, &props);
         m_MaxTextureSlots = props.limits.maxPerStageDescriptorSampledImages;
+
+        ABY_DBG("vk::DeviceManager::create");
+        ABY_DBG("  Physical Device {}", props.deviceName);
+        ABY_DBG("  Type            {}", helper::to_string(props.deviceType));
+        ABY_DBG("  Driver Version: {}", props.driverVersion);
+        ABY_DBG("  Enabled Feature(s) 10");
+        ABY_DBG("  ({})   -- ({})", 1, "shaderSampledImageArrayNonUniformIndexing");
+        ABY_DBG("  ({})   -- ({})", 2, "descriptorBindingUniformBufferUpdateAfterBind");
+        ABY_DBG("  ({})   -- ({})", 3, "descriptorBindingSampledImageUpdateAfterBind");
+        ABY_DBG("  ({})   -- ({})", 4, "descriptorBindingPartiallyBound");
+        ABY_DBG("  ({})   -- ({})", 5, "descriptorBindingVariableDescriptorCount");
+        ABY_DBG("  ({})   -- ({})", 6, "runtimeDescriptorArray");
+        ABY_DBG("  ({})   -- ({})", 7, "extendedDynamicState");
+        ABY_DBG("  ({})   -- ({})", 8, "synchronization2");
+        ABY_DBG("  ({})   -- ({})", 9, "dynamicRendering");
+        ABY_DBG("  ({})  -- ({})", 10, "samplerAnisotropy");
+       
     }
 
     std::uint32_t DeviceManager::max_texture_slots() const {
@@ -156,7 +175,7 @@ namespace aby::vk {
         std::vector<VkPhysicalDevice> devices;
         VK_ENUMERATE(devices, vkEnumeratePhysicalDevices, instance);
         VkPhysicalDevice best_device = VK_NULL_HANDLE;
-        int best_score = -1; // Arbitrary "worst" score to start with
+        int best_score = -1;
 
         for (const auto& device : devices) {
             VkPhysicalDeviceProperties device_properties;
@@ -165,7 +184,6 @@ namespace aby::vk {
             VkPhysicalDeviceFeatures device_features;
             vkGetPhysicalDeviceFeatures(device, &device_features);
 
-            // Query for queue family support (e.g., graphics and compute)
             std::vector<VkQueueFamilyProperties> queue_families;
             VK_ENUMERATE(queue_families, vkGetPhysicalDeviceQueueFamilyProperties, device);
 
@@ -180,32 +198,26 @@ namespace aby::vk {
                 }
             }
 
-            // Check if the device supports required extensions (e.g., VK_KHR_swapchain)
             std::vector<VkExtensionProperties> extensions; 
             VK_ENUMERATE(extensions, vkEnumerateDeviceExtensionProperties, device, nullptr);
             bool has_swapchain_extension = false;
             for (const auto& extension : extensions) {
-                if (strcmp(extension.extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0) {
+                if (std::strcmp(extension.extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0) {
                     has_swapchain_extension = true;
                     break;
                 }
             }
 
-            // Calculate a "score" based on your criteria
             int device_score = 0;
-
-            // For example, prefer devices that support graphics and compute queues, and swapchain support
-            if (has_graphics_queue) device_score += 2; // +2 points for supporting graphics queue
-            if (has_compute_queue) device_score += 1;  // +1 point for supporting compute queue
-            if (has_swapchain_extension) device_score += 3; // +3 points for supporting swapchain extension
-
-            // If the score of this device is better, update the best_device
+            if (has_graphics_queue)      device_score += 2; 
+            if (has_compute_queue)       device_score += 1; 
+            if (has_swapchain_extension) device_score += 3; 
             if (device_score > best_score) {
                 best_score = device_score;
                 best_device = device;
             }
         }
-        return best_device; // Return the best device found (or VK_NULL_HANDLE if none found)
+        return best_device;
     }
 
     VkPhysicalDevice DeviceManager::physical() {

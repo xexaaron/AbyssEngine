@@ -6,8 +6,8 @@
 namespace aby {
 
     ICamera::ICamera(const Config& cfg, const glm::vec3& pos) :
-        m_Yaw(0.f),
         m_Pitch(0.f),
+        m_Yaw(0.f),
         m_AspectRatio(cfg.AspectRatio),
         m_FOV(cfg.FOV),
         m_NearClip(cfg.NearClip),
@@ -65,6 +65,7 @@ namespace aby {
 }
 
 namespace aby {
+
     OrientedCamera::OrientedCamera(const Config& cfg, const glm::vec3& focal_point, float distance_from_focal_point) :
         ICamera(cfg),
         m_Distance(distance_from_focal_point),
@@ -99,9 +100,9 @@ namespace aby {
 
     void OrientedCamera::on_pan(const glm::vec2& delta) {
         float x = std::min(m_ViewportSize.x / 1000.0f, 2.4f);
-        float x_speed = 0.0366f * (x * x) - (m_AspectRatio * 0.1) * x + 0.3021f;
+        float x_speed = 0.0366f * (x * x) - (m_AspectRatio * 0.1f) * x + 0.3021f;
         float y = std::min(m_ViewportSize.y / 1000.0f, 2.4f);
-        float y_speed = 0.0366f * (y * y) - (m_AspectRatio * 0.1) * y + 0.3021f;
+        float y_speed = 0.0366f * (y * y) - (m_AspectRatio * 0.1f) * y + 0.3021f;
         m_FocalPoint += -up() * delta.x * x_speed * m_Distance;
         m_FocalPoint += up() * delta.y * y_speed * m_Distance;
     }

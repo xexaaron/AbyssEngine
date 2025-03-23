@@ -6,8 +6,6 @@
 
 namespace aby::ui {
 
-
-
     ParentWidget::ParentWidget(std::size_t reserve) :
         m_Children(reserve) {}
 
@@ -95,17 +93,36 @@ namespace aby::ui {
         return std::span(m_Children.cbegin(), m_Children.size());
     }
 
-    void ParentWidget::for_each(for_each_fn&& fn) {
+    void ParentWidget::for_each(const for_each_fn& fn) {
         for (auto& child : m_Children) {
             fn(child);
         }
     }
     
-    void ParentWidget::for_each(for_each_fn_i&& fn) {
+    void ParentWidget::for_each(const for_each_fn_i& fn) {
         std::size_t i = 0;
         for_each([&i, fn](auto widget) {
             fn(widget, i++);
         });
     }
+
+    void ParentWidget::recurse(const for_each_fn& fn) {
+        for (auto& child : m_Children) {
+            fn(child);
+            if (auto parent = std::dynamic_pointer_cast<ParentWidget>(child); parent != nullptr) {
+                parent->recurse(fn);
+            }
+        }
+    }
+
+    void ParentWidget::recurse(const for_each_fn_c& fn) const {
+        for (const auto& child : m_Children) {
+            fn(child);
+            if (const auto parent = std::dynamic_pointer_cast<const ParentWidget>(child); parent != nullptr) {
+                parent->recurse(fn);
+            }
+        }
+    }
+
 
 }

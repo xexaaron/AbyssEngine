@@ -20,6 +20,7 @@ namespace aby {
 
         Window*     window();
         App*        app();
+
         EBackend    backend() const;
 
         ResourceClass<Shader>&        shaders();
@@ -33,9 +34,9 @@ namespace aby {
     protected:
         Context(App* app, Window* window);
     protected:
+        App*                   m_App;
         EBackend               m_Backend;
         Window*                m_Window;
-        App*                   m_App;
         ResourceClass<Shader>  m_Shaders;
         ResourceClass<Texture> m_Textures;
         ResourceClass<Font>    m_Fonts;

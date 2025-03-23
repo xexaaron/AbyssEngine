@@ -35,16 +35,17 @@ namespace aby::vk {
 
     class DebugAllocator : public DefaultAllocator {
     public:
+        virtual ~DebugAllocator() = default;
         virtual void* alloc(std::size_t size, std::size_t alignment, void* user_data = nullptr) override;
         virtual void* realloc(void* original, std::size_t size, std::size_t alignment, void* user_data = nullptr) override;
         virtual void  free(void* mem, void* user_data = nullptr) override;
     private:
     };
 
-//#ifdef NDEBUG
+#ifdef NDEBUG
     using Allocator = DefaultAllocator;
-//#else
-  //  using Allocator = DebugAllocator;
-//#endif
+#else
+    using Allocator = DebugAllocator;
+#endif
 
 }

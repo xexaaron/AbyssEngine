@@ -4,7 +4,6 @@
 #include "vk/VkTexture.h"
 #include "vk/VkContext.h"
 #include <stb_image/stb_image.h>
-#include <bit>
 
 namespace aby {
 
@@ -23,7 +22,6 @@ namespace aby {
                     ABY_LOG("  Bytes:    {}", tex->bytes());
                     return ctx->textures().add(tex);
                 });
-                break;
             }
             default:
                 ABY_ASSERT(false, "Unsupported ctx backend");
@@ -116,9 +114,9 @@ namespace aby {
             return;  
         }
         auto ptr   = reinterpret_cast<std::byte*>(data);
-        m_Size.x   = static_cast<float>(w);
-        m_Size.y   = static_cast<float>(h);
-        m_Channels = c;
+        m_Size.x   = static_cast<unsigned int>(w);
+        m_Size.y   = static_cast<unsigned int>(h);
+        m_Channels = static_cast<unsigned int>(c);
         m_Data.assign(ptr, ptr + (w * h * c));
         stbi_image_free(data);
     }
@@ -136,7 +134,11 @@ namespace aby {
         };
         m_Data.resize(byte_count);
         for (size_t i = 0; i < byte_count; i += 4) {
-            std::memcpy(&m_Data[i], rgba.data(), 4);
+            m_Data[i + 0] = rgba[0];
+            m_Data[i + 1] = rgba[1];
+            m_Data[i + 2] = rgba[2];
+            m_Data[i + 3] = rgba[3];
+            //std::memcpy(&m_Data[i], rgba.data(), 4);
         }
     }
     
@@ -148,8 +150,6 @@ namespace aby {
         ABY_ASSERT(data.size() % channels == 0, "Invalid texture data size");
         ABY_ASSERT(m_Size.x * m_Size.y * channels == data.size(), "Data size does not match square image");
     }
-
-
 
     Texture::Texture(const Texture& other) :
         m_Size(other.m_Size),

@@ -27,7 +27,6 @@ namespace aby::ui::helper {
 
 namespace aby::ui {
 
-
 	Ref<Console> Console::create(const Style& style) {
 		return create_ref<Console>(style);
 	}
@@ -36,11 +35,12 @@ namespace aby::ui {
 	Console::Console(const Style& style) :
 		LayoutContainer({ .anchor = {.position = EAnchor::BOTTOM_LEFT, .offset = {}} }, style, EDirection::VERTICAL, ELayout::BOTTOM_TO_TOP),
 		m_Constraints{
-			.max_items = 0,
 			.item_height = 20,
+			.max_items = 0,
 			.max_logs = 300,
 		},
 		m_Callback(SIZE_MAX),
+		m_ScrollPosition(0),
 		m_App(nullptr),
 		m_Objs{
 			.input = ConsoleInputTextbox::create(this, style),
@@ -59,8 +59,8 @@ namespace aby::ui {
 				{ 100, 100 }
 			)
 		},
-		m_ScrollPosition(0),
-		m_ActiveChannel(nullptr)
+		m_ActiveChannel(nullptr),
+		m_ResizeAcc(0.f)
 	{
 		Transform t{
 			.anchor = {},
@@ -81,13 +81,16 @@ namespace aby::ui {
 		t.size.x = 80;
 		ti.text = "60 FPS";
 		m_Objs.fps = Textbox::create(t, s, ti);
+		set_resizability(EResize::N);
 	}
 
 	void Console::on_create(App* app, bool deserialzied) {
-		m_Transform.size.x = app->window()->size().x;
-		m_Transform.size.y = (app->window()->size().y / 2.5) - m_Constraints.item_height;
-		m_Objs.input->set_position({ 0, app->window()->size().y - m_Constraints.item_height });
-		m_Objs.input->set_size({ app->window()->size().x, m_Constraints.item_height });
+		auto x = static_cast<float>(app->window()->size().x);
+		auto y = static_cast<float>(app->window()->size().y);
+		m_Transform.size.x = x;
+		m_Transform.size.y = (y / 2.5f) - m_Constraints.item_height;
+		m_Objs.input->set_position({ 0, y - m_Constraints.item_height });
+		m_Objs.input->set_size({ x, m_Constraints.item_height });
 		m_Objs.input->on_create(app, false);
 		m_Objs.opts->add_child(Button::create(
 			Transform{ {}, {}, { m_Objs.opts->transform().size.x, m_Constraints.item_height } },
@@ -101,7 +104,7 @@ namespace aby::ui {
 			false
 		));
 		m_Objs.menu->set_position(m_Transform.position);
-		m_Objs.menu->set_size({ app->window()->size().x, m_Constraints.item_height + 4 });
+		m_Objs.menu->set_size({ x, m_Constraints.item_height + 4 });
 		m_Objs.menu->add_child(m_Objs.date_time);
 		m_Objs.menu->add_child(m_Objs.fps);
 		m_Objs.menu->add_child(m_Objs.opts);
@@ -110,78 +113,55 @@ namespace aby::ui {
 		m_App = app;
 		LayoutContainer::on_create(app, deserialzied);
 		invalidate_self();
-		m_Callback = Logger::add_callback([this](LogMsg msg) {
+		m_Callback = Logger::add_callback([this](const LogMsg& msg) {
 			this->add_msg(msg);
 			this->scroll_to_bottom();
 		});
 	}
 
 	bool Console::on_window_resize(WindowResizeEvent& event) {
-		m_Transform.size.x	   = event.size().x;
-		m_Transform.size.y     = (event.size().y / 2.5) - m_Constraints.item_height;
+		auto x = static_cast<float>(event.size().x);
+		auto y = static_cast<float>(event.size().y);
+		m_Transform.size.x	   = x;
 		m_Constraints.max_items = calc_max_items();
-		m_Objs.input->set_position({ 0, event.size().y - m_Constraints.item_height });
-		m_Objs.input->set_size({ event.size().x, m_Constraints.item_height });
+		m_Objs.input->set_position({ 0, y - m_Constraints.item_height });
+		m_Objs.input->set_size({ x, m_Constraints.item_height });
 		m_Objs.menu->set_position(m_Transform.position);
-		m_Objs.menu->set_size({ event.size().x, m_Constraints.item_height + 4 });
+		m_Objs.menu->set_size({ x, m_Constraints.item_height + 4 });
 		invalidate_self();
 		return false;
 	}
 
-	std::uint32_t Console::calc_max_items() {
+	void Console::on_resize(EResize direction, float distance) {
+		m_Objs.menu->set_position(m_Transform.position);
+		m_Constraints.max_items = calc_max_items();
+		m_ResizeAcc += std::abs(distance);
+		if (m_ResizeAcc >= m_Constraints.item_height)
+		{
+			m_ResizeAcc = 0;
+			scroll_up();
+			LayoutContainer::for_each([this](Ref<Widget> widget, std::size_t i) {
+				widget->set_position(calc_item_pos(i));
+				widget->on_invalidate();
+			});
+			invalidate_self();
+		}
+	}
+
+	std::uint32_t Console::calc_max_items() const {
 		return std::max(0, static_cast<int>((m_Transform.size.y - (m_Constraints.item_height * 2)) / m_Constraints.item_height));
 	}
 
-	void Console::for_each(for_each_fn&& fn) {
+	void Console::for_each(const for_each_fn& fn) {
 		if (m_Children.empty()) {
 			return;
 		}
 
-		// Define the visible range based on scroll position
-		std::uint32_t start = std::max(0u, m_ScrollPosition);
-		std::uint32_t end   = std::min(start + m_Constraints.max_items, static_cast<std::uint32_t>(m_Children.size()));
-
-		// Iterate in reverse from `end - 1` down to `start`
-		for (std::int32_t i = static_cast<std::int32_t>(end) - 1; i >= static_cast<std::int32_t>(start); i--) {
+		std::size_t start = std::max(std::size_t(0), m_ScrollPosition);
+		std::size_t end   = std::min(start + m_Constraints.max_items, m_Children.size());
+		for (std::ptrdiff_t i = static_cast<std::ptrdiff_t>(end) - 1; i >= static_cast<std::ptrdiff_t>(start); i--) {
 			fn(m_Children[i]);
 		}
-	}
-
-	bool Console::on_mouse_scrolled(MouseScrolledEvent& event) {
-		constexpr auto scroll_amt = 3;
-		if (m_Children.size() > m_Constraints.max_items) {
-			if (event.offset_y() > 0) { // Scroll up
-				for (std::size_t i = 0; i < scroll_amt; i++) {
-					if (m_ScrollPosition > 0) {
-						m_ScrollPosition--;
-					}
-					else {
-						break;
-					}
-				}
-				LayoutContainer::for_each([this](Ref<Widget> widget, std::size_t i) {
-					widget->set_position(calc_item_pos(i));
-					widget->on_invalidate();
-				});
-			}
-			else if (event.offset_y() < 0) { // Scroll down
-				for (std::size_t i = 0; i < scroll_amt; i++) {
-					if (m_ScrollPosition < static_cast<int>(m_Children.size()) - m_Constraints.max_items) {
-						m_ScrollPosition++;
-					}
-					else {
-						break;
-					}
-				}
-				LayoutContainer::for_each([this](Ref<Widget> widget, std::size_t i) {
-					widget->set_position(calc_item_pos(i));
-					widget->on_invalidate();
-				});
-			}
-
-		}
-		invalidate_self();
-		return false;
 	}
 
 	bool Console::on_invalidate() {
@@ -192,6 +172,7 @@ namespace aby::ui {
 			child->on_invalidate();
 		}
 		return LayoutContainer::on_invalidate();
+
 	}
 
 	void Console::on_tick(App* app, Time time) {
@@ -204,7 +185,7 @@ namespace aby::ui {
 		static float elapsed = 0.f;
 		elapsed += time.sec();
 		if (elapsed >= 1.f) {
-			int fps = (time.sec() > 0.0f) ? (1.f / time.sec()) : 0.0f;
+			int fps = static_cast<int>((time.sec() > 0.0f) ? (1.f / time.sec()) : 0.0f);
 			m_Objs.fps->set_text(std::format("{} FPS", fps));
 			m_Objs.date_time->set_text(Logger::time_date_now());
 			elapsed -= 1.f; 
@@ -245,8 +226,24 @@ namespace aby::ui {
 		return false;
 	}
 
+	bool Console::on_mouse_scrolled(MouseScrolledEvent& event) {
+		if (m_Children.size() > m_Constraints.max_items) {
+			if (event.offset_y() > 0) { // Scroll up
+				scroll_up();
+			}
+			else if (event.offset_y() < 0) { // Scroll down
+				scroll_down();
+			}
+			LayoutContainer::for_each([this](Ref<Widget> widget, std::size_t i) {
+				widget->set_position(calc_item_pos(i));
+				widget->on_invalidate();
+			});
+		}
+		invalidate_self();
+		return false;
+	}
 
-	glm::vec2 Console::calc_item_pos(std::size_t item) {
+	glm::vec2 Console::calc_item_pos(std::size_t item) const {
 		glm::vec2 pos = {
 			0,
 			((m_Transform.position.y + m_Transform.size.y)) - ((item + 2) * (m_Constraints.item_height))
@@ -324,7 +321,6 @@ namespace aby::ui {
 		ABY_LOG("{}", cmd);
 	}
 
-
 	void Console::exec_aby_cmd(const std::string& cmd) {
 		if (cmd == "quit") {
 			m_App->quit();
@@ -336,12 +332,13 @@ namespace aby::ui {
 
 	void Console::exec_sys_cmd(const std::string& cmd) {
 		if (m_ActiveChannel && m_ActiveChannel->is_open()) {
-			m_ActiveChannel->write(cmd); // Send command
+			m_ActiveChannel->write(cmd);
 		}
 		else {
-			m_ActiveChannel = sys::Process::create([](const std::string& msg) {
+			auto read = [](const std::string& msg) {
 				ABY_LOG("{}", msg);
-			});
+			};
+			m_ActiveChannel = sys::Process::create(read);
 			m_ActiveChannel->open(cmd);
 		}
 	}
@@ -352,6 +349,30 @@ namespace aby::ui {
 		}
 	}
 
+	void Console::scroll_down() {
+		constexpr auto scroll_amt = 3;
+		for (std::size_t i = 0; i < scroll_amt; i++) {
+			if (m_ScrollPosition < static_cast<int>(m_Children.size()) - m_Constraints.max_items) {
+				m_ScrollPosition++;
+			}
+			else {
+				break;
+			}
+		}
+
+	}
+
+	void Console::scroll_up() {
+		constexpr auto scroll_amt = 3;
+		for (std::size_t i = 0; i < scroll_amt; i++) {
+			if (m_ScrollPosition > 0) {
+				m_ScrollPosition--;
+			} else {
+				break;
+			}
+		}
+
+	}
 }
 
 namespace aby::ui {
@@ -384,4 +405,7 @@ namespace aby::ui {
 		m_Console->exec_cmd(msg);
 		m_Console->scroll_to_bottom();
 	}
+
+
+
 }

@@ -1,5 +1,6 @@
 #include "vk/VkTexture.h"
 #include "vk/VkContext.h"
+#include "vk/VkAllocator.h"
 
 namespace aby::vk {
     
@@ -86,6 +87,8 @@ namespace aby::vk {
 
         const std::byte* p = this->data().data();
         const void* vp = static_cast<const void*>(p);
+        ABY_ASSERT(p, "Data is not valid");
+        ABY_ASSERT(vp, "Data is not valid");
 
         vk::Buffer staging(vp, this->bytes(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, ctx->devices());
         Ref<CmdPool> cmd_pool = ctx->devices().create_cmd_pool();

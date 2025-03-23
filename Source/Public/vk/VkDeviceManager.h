@@ -2,10 +2,8 @@
 #include "vk/VkCommon.h"
 #include "vk/VkInstance.h"
 #include "vk/VkCmdPool.h"
-#include "vk/VkCmdBuff.h"
 #include "vk/VkDescriptorPool.h"
 #include "Core/Common.h"
-#include <xutility>
 
 namespace aby::vk {
 
@@ -15,7 +13,6 @@ namespace aby::vk {
     };
 
     class DeviceManager {
-    public:
     public:
         DeviceManager();
         DeviceManager(Instance& inst, VkSurfaceKHR surface, const std::vector<const char*>& extensions);
@@ -34,7 +31,7 @@ namespace aby::vk {
 
         std::uint32_t max_texture_slots() const;
     protected:
-        static VkPhysicalDevice choose_best_device(VkInstance instace);
+        static VkPhysicalDevice choose_best_device(VkInstance inst);
     private:
         VkPhysicalDevice m_Physical;
         VkDevice m_Logical;

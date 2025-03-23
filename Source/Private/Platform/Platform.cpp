@@ -41,10 +41,6 @@ namespace aby::sys {
         return PLATFORM_NAMESPACE::get_exec_path();
     }
 
-    auto set_cursor(ECursor cursor) -> bool {
-        return PLATFORM_NAMESPACE::set_cursor(cursor);
-    }
-
     auto get_pid() -> int {
         return PLATFORM_NAMESPACE::get_pid();
     }

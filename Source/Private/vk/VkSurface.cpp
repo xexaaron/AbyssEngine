@@ -8,10 +8,11 @@
 #include "vulkan/vulkan_win32.h"
 #define VK_PLATFORM_SURFACE_EXTENSION_NAME VK_KHR_WIN32_SURFACE_EXTENSION_NAME
 #elif defined(__linux__)
+#include <X11/Xlib.h>
 #include "vulkan/vulkan_xlib.h"
 #define GLFW_EXPOSE_NATIVE_X11
 #include <glfw/glfw3native.h>
-#define VK_PLATFORM_SURFACE_EXTENSION_NAME VK_KHR_X11_SURFACE_EXTENSION_NAME
+#define VK_PLATFORM_SURFACE_EXTENSION_NAME VK_KHR_XLIB_SURFACE_EXTENSION_NAME
 #else
 #error "Unsupported Platform"
 #endif
@@ -35,29 +36,32 @@ namespace aby::vk {
 
 	void Surface::create(Instance& instance, Window* window) {
         m_Instance = instance;
+        ABY_DBG("vk::Surface::create");
     #ifdef _WIN32
         VkWin32SurfaceCreateInfoKHR ci;
         ci.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        ci.pNext = NULL;
+        ci.pNext = nullptr;
         ci.flags = 0;
         ci.hwnd = static_cast<HWND>(window->native());
         ci.hinstance = reinterpret_cast<HINSTANCE>(GetWindowLongPtr(ci.hwnd, GWLP_HINSTANCE));
         VK_CHECK(vkCreateWin32SurfaceKHR(instance, &ci, IAllocator::get(), &m_Surface));
+        ABY_DBG("  Platform Win32");
     #elif defined(__linux__)
         VkXlibSurfaceCreateInfoKHR ci;
         ci.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
         ci.pNext = NULL;
         ci.flags = 0;
-        ci.window = static_cast<::Window>(window->native());
+        ci.window = reinterpret_cast<::Window>(window->native());
         ci.dpy = glfwGetX11Display();
         VK_CHECK(vkCreateXlibSurfaceKHR(instance, &ci, IAllocator::get(), &m_Surface));
+        ABY_DBG("  Platform Linux");
     #endif
-       
 	}
 
 	void Surface::destroy() {
         vkDestroySurfaceKHR(m_Instance, m_Surface, IAllocator::get());
-	}
+        ABY_DBG("vk::Surface::destroy");
+    }
 
     VkSurfaceFormatKHR Surface::format(DeviceManager& devices) const {
         std::vector<VkSurfaceFormatKHR> available_formats;

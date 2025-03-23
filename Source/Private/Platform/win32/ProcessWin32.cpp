@@ -1,9 +1,11 @@
+#ifdef _WIN32
+
 #include "Platform/win32/ProcessWin32.h"
 #include "Core/Log.h"
 #include "Core/App.h"
 #include <istream>
 #include <regex>
-#include <algorithm>
+
 namespace aby::sys::win32 {
 
     std::string get_last_err() {
@@ -14,7 +16,7 @@ namespace aby::sys::win32 {
 
         LPSTR messageBuffer = nullptr;
         size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+            nullptr, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, nullptr);
 
         std::string message(messageBuffer, size);
 
@@ -99,13 +101,13 @@ namespace aby::sys::win32 {
                 std::string input = m_Writes.front();
                 m_Writes.pop();
                 DWORD bytes_written;
-                WriteFile(m_Handles.in.write, input.c_str(), input.size(), &bytes_written, NULL);
+                WriteFile(m_Handles.in.write, input.c_str(), static_cast<DWORD>(input.size()), &bytes_written, NULL);
             }
             DWORD bytes_avail = 0;
             if (PeekNamedPipe(m_Handles.out.read, NULL, 0, NULL, &bytes_avail, NULL)) {
                 if (bytes_avail > 0) {
                     DWORD bytes_read;
-                    if (ReadFile(m_Handles.out.read, buffer, sizeof(buffer), &bytes_read, NULL)) {
+                    if (ReadFile(m_Handles.out.read, buffer, sizeof(buffer) - 1, &bytes_read, NULL)) {
                         buffer[bytes_read] = '\0';
                         std::string str(buffer);
                         sanitize(str);
@@ -216,11 +218,12 @@ namespace aby::sys::win32 {
         // Remove beginning of msg esc sequence.
         constexpr char esc = '\x1b';
         constexpr std::array begin_of_msg = { esc, '[', '?', '2', '5', '1' };
-        std::size_t i = 0;
-        if (sanitized[0])
-        for (; i < begin_of_msg.size() && sanitized[i] == begin_of_msg[i]; ++i) {}
-        if (i == begin_of_msg.size() - 1) {
-            sanitized = sanitized.substr(begin_of_msg.size());
+        if (sanitized[0]) {
+            std::size_t i = 0;
+            for (; i < begin_of_msg.size() && sanitized[i] == begin_of_msg[i]; ++i) {}
+            if (i == begin_of_msg.size() - 1) {
+                sanitized = sanitized.substr(begin_of_msg.size());
+            }
         }
         // Remove ']0;FILE' from end of msg
         constexpr std::array end_of_msg = { esc, ']', '0', ';', };
@@ -245,7 +248,7 @@ namespace aby::sys::win32 {
         si.StartupInfo.cb = sizeof(STARTUPINFOEXA);
 
         // Discover the size required for the list
-        size_t required_bytes;
+        size_t required_bytes = 0;
         InitializeProcThreadAttributeList(NULL, 1, 0, &required_bytes);
 
         // Allocate memory to represent the list
@@ -294,3 +297,5 @@ namespace aby::sys::win32 {
     }
 
 }
+
+#endif

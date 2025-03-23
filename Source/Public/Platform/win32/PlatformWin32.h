@@ -1,9 +1,10 @@
 #pragma once
 
+#ifdef _WIN32
+
 #include "Core/Common.h"
 #include <cstdio>
 #include <Windows.h>
-#include <iostream>
 #include <thread>
 
 #define WIN32_CHECK(x) do { \
@@ -20,7 +21,8 @@ namespace aby::sys::win32 {
 	auto is_terminal(std::FILE* stream) -> bool;
     auto set_thread_name(std::thread& thread, const std::string& name) -> bool;
     auto get_exec_path() -> fs::path;
-    auto set_cursor(ECursor cursor) -> bool;
     auto get_pid() -> int;
 
 }
+
+#endif

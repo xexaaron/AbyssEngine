@@ -4,7 +4,6 @@
 #include "Core/Serialize.h"
 #include "Core/Event.h"
 #include "Core/Time.h"
-#include <set>
 
 namespace aby {
 
@@ -12,9 +11,10 @@ namespace aby {
 
 	class Object {
 	public:
-		Object() : m_ID() {}
-		Object(const Object& other) : m_ID(other.m_ID) {}
-		Object(Object&& other) noexcept : m_ID(other.m_ID) {}
+		Object() = default;
+		Object(const Object& other) = default;
+		Object(Object&& other) noexcept = default;
+		virtual ~Object() = default;
 
 		/**
 		* @brief Called before the application 'ticks' and polls for events every frame.
@@ -32,7 +32,7 @@ namespace aby {
 		/**
 		* @brief Called every application tick.
 		* @param app Pointer to the application.
-		* @param deltatime The deltatime in millseconds.
+		* @param deltatime The deltatime in milliseconds.
 		*/
 		virtual void on_tick(App* app, Time deltatime) {};
 		/**
@@ -47,15 +47,13 @@ namespace aby {
 		virtual void on_serialize(Serializer& serializer) {}
 		/**
 		* @brief Called before the object is created.
-		* @param serializier Serializer to write one derived Object instance to.
-		* @return true:  If deserialization occured.
+		* @param serializer Serializer to write one derived Object instance to.
+		* @return true:  If deserialization occurred.
 		* @return false: If deserialization did not occur.
 		*/
 		virtual bool on_deserialize(Serializer& serializer) { return false;  }
 
-		inline UUID uuid() const { 
-			return m_ID;
-		}
+		UUID uuid() const { return m_ID; }
 
 		template <typename T> requires (std::is_base_of_v<Object, T>)
 		T* as() {
@@ -64,9 +62,7 @@ namespace aby {
 			return p;
 		}
 
-		Object& operator=(const Object& other) {
-			m_ID = other.m_ID;
-		}
+		Object& operator=(const Object& other) = default;
 		
 		bool operator==(const Object& other) const {
 			return m_ID == other.m_ID;

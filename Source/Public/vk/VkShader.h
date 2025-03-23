@@ -2,15 +2,9 @@
 #include "Core/Common.h"
 #include "vk/VkCommon.h"
 #include "vk/VkDeviceManager.h"
-#include "vk/VkDescriptorPool.h"
 #include "Rendering/Shader.h"
-#include <glm/glm.hpp>
-#include <ranges>
 #include <map>
-#include <any>
 #include <filesystem>
-#include <algorithm>
-#include <span>
 
 namespace aby::vk {
 
@@ -38,6 +32,7 @@ namespace aby::vk {
         uint32_t binding;
         uint32_t count;
     };
+    
     struct ShaderDescriptor {
         std::map<std::size_t, std::size_t> uniform_binding_sizes() const {
             std::map<std::size_t, std::size_t> binding_size_map;
@@ -78,7 +73,6 @@ namespace aby::vk {
                 default: return 0;
             }
         }
-        
 
         std::vector<ShaderUniform> uniforms;
         std::vector<ShaderStorage> storages;
@@ -88,7 +82,7 @@ namespace aby::vk {
     
     class VertexClass {
     public:
-        VertexClass(const ShaderDescriptor& descriptor, std::size_t max_vertices, std::size_t binding = 0) :
+        VertexClass(const ShaderDescriptor& descriptor, std::size_t max_vertices, std::uint32_t binding = 0) :
             m_Binding(binding),
             m_VertexSize(0),
             m_MaxVertices(max_vertices) 

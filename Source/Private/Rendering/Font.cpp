@@ -19,12 +19,10 @@ namespace ft {
         FT_Face create_face(const std::filesystem::path& path, std::uint32_t pt, const glm::vec2& dpi) {
             FT_Face face = nullptr;
             std::string path_str = path.string();
-            FT_CHECK(::FT_New_Face(m_Library, path_str.c_str(), 0, &face));
-            FT_CHECK(::FT_Set_Char_Size(face, 0, pt << 6, dpi.x, dpi.y));
-            
+            FT_CHECK(::FT_New_Face(m_Library, path_str.c_str(), FT_Long(0), &face));
+            FT_CHECK(::FT_Set_Char_Size(face, FT_F26Dot6(0), pt << 6u, static_cast<FT_UInt>(dpi.x), static_cast<FT_UInt>(dpi.y)));
             ABY_LOG("Font Faces:  {}", face->num_faces);
             ABY_LOG("Font Glyphs: {}", face->num_glyphs);
-
             return face;
         }
 
@@ -66,20 +64,18 @@ namespace ft {
         std::unordered_map<char32_t, aby::Font::Glyph> load_glyph_range_ttf(char32_t start, char32_t end, FT_FaceRec_* face, const std::filesystem::path& cache) {
             constexpr glm::ivec2 ATLAS_SIZE = { 512, 512 };  // Texture Atlas Size (Fixed or dynamically sized as needed)
 
-            int max_glyphs = end - start;
             std::uint32_t tex_width = ATLAS_SIZE.x;
             std::uint32_t tex_height = ATLAS_SIZE.y;
 
             std::vector<char> pixels(tex_width * tex_height, 0); // Initialize pixel buffer with 0 (black)
-            std::uint32_t offset = 0;
 
             int pen_x = 0;
             int pen_y = 0;
-            int pad = 1;
 
             std::unordered_map<char32_t, aby::Font::Glyph> out;
 
             for (char32_t c = start; c < end; ++c) {
+                int pad = 1;
                 if (::FT_Load_Char(face, c, FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_LIGHT))
                     continue;  // If it is not a valid character, continue
 
@@ -95,7 +91,7 @@ namespace ft {
                 glm::vec2 uv_max = { static_cast<float>(pen_x + bmp->width) / tex_width, static_cast<float>(pen_y + bmp->rows) / tex_height };
                 glm::vec4 uvs = { uv_min.x, uv_min.y, uv_max.x, uv_max.y };
                 out[c] = aby::Font::Glyph{
-                    .advance = static_cast<std::uint32_t>(glyph->advance.x >> 6),
+                    .advance = static_cast<std::uint32_t>(glyph->advance.x >> 6u),
                     .offset = pen_y * tex_width + pen_x,
                     .bearing = { glyph->bitmap_left, glyph->bitmap_top },
                     .size = { bmp->width, bmp->rows },
@@ -107,10 +103,10 @@ namespace ft {
                     },
                 };
 
-                for (int row = 0; row < bmp->rows; ++row) {
-                    for (int col = 0; col < bmp->width; ++col) {
-                        int x = pen_x + col;
-                        int y = pen_y + row;
+                for (unsigned int row = 0; row < bmp->rows; ++row) {
+                    for (unsigned int col = 0; col < bmp->width; ++col) {
+                        unsigned int x = pen_x + col;
+                        unsigned int y = pen_y + row;
                         pixels[y * tex_width + x] = bmp->buffer[row * bmp->pitch + col];  // Copy pixel data
                     }
                 }
@@ -119,7 +115,7 @@ namespace ft {
             }
 
             std::vector<unsigned char> png_data(tex_width * tex_height * 4);
-            for (int i = 0; i < tex_width * tex_height; ++i) {
+            for (unsigned int i = 0; i < tex_width * tex_height; ++i) {
                 png_data[i * 4 + 0] = pixels[i];  // Red channel
                 png_data[i * 4 + 1] = pixels[i];  // Green channel
                 png_data[i * 4 + 2] = pixels[i];  // Blue channel
@@ -216,10 +212,10 @@ namespace aby {
 
     Font::Font(Context* ctx, const fs::path& path, const glm::vec2& dpi, std::uint32_t pt) :
         m_SizePt(pt),
+        m_TextHeight(0),
         m_Texture{},
         m_Name(path.filename().string()),
-        m_Glyphs{},
-        m_TextHeight(0)
+        m_Glyphs{}
     {
         std::pair<char32_t, char32_t> ascii{ 32, 128 };
         auto png  = ft::Library::get().cache_path(ascii.first, ascii.second, m_Name, pt, ".png");
@@ -231,7 +227,7 @@ namespace aby {
     }
 
 
-    float Font::size() const {
+    std::uint32_t Font::size() const {
         return m_SizePt;
     }
 

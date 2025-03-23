@@ -30,8 +30,8 @@ namespace aby::vk {
         bool should_flush() const;
         bool should_flush(std::size_t requested_primitives) const;
         bool empty() const;
-        std::uint32_t index_count() const;
-        std::uint32_t vertex_count() const;
+        std::size_t index_count() const;
+        std::size_t vertex_count() const;
         const vk::PrimitiveDescriptor& descriptor() const;
 
         RenderPrimitive& operator++() {
@@ -55,7 +55,7 @@ namespace aby::vk {
         vk::VertexBuffer      m_VertexBuffer;
         vk::IndexBuffer       m_IndexBuffer;
         PrimitiveDescriptor   m_Descriptor;
-        std::uint32_t         m_IndexCount;
+        std::size_t           m_IndexCount;
     };
 
     enum class ERenderPrimitive {
@@ -75,7 +75,7 @@ namespace aby::vk {
         void destroy();
         void reset();
         void flush(VkCommandBuffer cmd, DeviceManager& manager, ERenderPrimitive primitive = ERenderPrimitive::ALL);
-        void set_uniforms(const void* data, std::size_t bytes, std::size_t binding = 0);
+        void set_uniforms(const void* data, std::size_t bytes, std::uint32_t binding = 0);
         void draw_triangle(const Triangle& triangle);
         void draw_quad(const Quad& quad);
         void draw_text(const Text& text);

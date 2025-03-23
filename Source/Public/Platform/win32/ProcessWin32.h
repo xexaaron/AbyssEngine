@@ -1,4 +1,7 @@
 #pragma once
+
+#ifdef _WIN32
+
 #include "Platform/Process.h"
 #include "Platform/win32/PlatformWin32.h"
 #include "Core/Thread.h"
@@ -20,8 +23,8 @@ namespace aby::sys::win32 {
 
 	class Process : public sys::Process {
 	public:
-		Process(const std::function<void(const std::string&)>& read_callback);
-		~Process();
+		explicit Process(const std::function<void(const std::string&)>& read_callback);
+		~Process() final;
 
 		bool open(const std::string& cmd) override;
 		void close() override;
@@ -41,3 +44,5 @@ namespace aby::sys::win32 {
 		std::atomic<bool>		bRunning;
 	};
 }
+
+#endif

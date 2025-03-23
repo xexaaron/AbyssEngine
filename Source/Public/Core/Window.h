@@ -2,11 +2,10 @@
 #include "Core/Common.h"
 #include "Core/Event.h"
 #include <string>
-#include <stdexcept>
 #include <vector>
 #include <glm/glm.hpp>
 
-class GLFWwindow;
+struct GLFWwindow;
 
 namespace aby {
 
@@ -20,10 +19,11 @@ namespace aby {
 
     struct WindowData {
         std::string   title;
-        std::uint32_t width;
-        std::uint32_t height;
-        EWindowFlags  flags;
-        std::function<void(Event&)> callback;
+        std::uint32_t width  = 800;
+        std::uint32_t height = 600;
+        EWindowFlags  flags  = EWindowFlags::NONE;
+        ECursor       cursor = ECursor::ARROW;
+        std::function<void(Event&)> callback = {};
     };
 
     struct WindowInfo {
@@ -41,17 +41,17 @@ namespace aby {
 
     class Window {
     public:
-        Window(const WindowInfo& info);
+        explicit Window(const WindowInfo& info);
         ~Window();
 
         static Unique<Window> create(const WindowInfo& info);
 
         /**
-        * @brief Initalize the window based on flags provided in ctor.
-        *        Allows time to setup callbacks through register_event
+        * @brief Initialize the window based on flags provided in ctor.
+        *        Allows time to set up callbacks through register_event
 
         */
-        void initalize();
+        void initialize();
         void poll_events() const;
         void swap_buffers() const;
         void close(); 
@@ -96,8 +96,8 @@ namespace aby {
     private:
         void setup_callbacks();
     private:
-        WindowData m_Data;
-        GLFWwindow* m_Window;
         std::vector<std::function<void(Event&)>> m_Callbacks;
+        WindowData  m_Data;
+        GLFWwindow* m_Window;
     };
 }

@@ -68,11 +68,24 @@ namespace aby::vk {
         }
 
         ci.pApplicationInfo = &ai;
-        ci.enabledExtensionCount = extensions.size();
+        ci.enabledExtensionCount = static_cast<std::uint32_t>(extensions.size());
         ci.ppEnabledExtensionNames = extensions.data();
-        ci.enabledLayerCount = layers.size();
+        ci.enabledLayerCount = static_cast<std::uint32_t>(layers.size());
         ci.ppEnabledLayerNames = layers.data();
         VK_CHECK(vkCreateInstance(&ci, IAllocator::get(), &m_Inst));
+        ABY_DBG("vk::Instance::create");
+        ABY_DBG("  App Version      {}.{}.{}", info.version.major, info.version.minor, info.version.patch);
+        ABY_DBG("  Vulkan Version   1.3.0");
+        ABY_DBG("  Extension(s)     {}", extensions.size());
+        ABY_DBG("  Enabled Extensions: {}", extensions.size());
+        for (std::size_t i = 0; i < extensions.size(); i++) {
+            ABY_DBG("  ({}) -- {}", i + 1, extensions[i]);
+        }
+        ABY_DBG("  Enabled Layers(s)        {}", layers.size());
+        for (std::size_t i = 0; i < layers.size(); i++) {
+            ABY_DBG("  ({}) -- {}", i + 1, layers[i]);
+        }
+
         pfn::load_functions(m_Inst);
     }
 

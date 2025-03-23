@@ -1,5 +1,4 @@
 #include "Rendering/UI/Canvas.h"
-#include "Core/Log.h"
 
 namespace aby::ui {
     
@@ -11,7 +10,7 @@ namespace aby::ui {
         Panel(Transform{
             .position = { 0, 0 },
             .size = { 800, 600 }
-        }, style)
+        }, style, EResize::NONE)
     {
 
     }

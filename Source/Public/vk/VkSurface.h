@@ -2,7 +2,7 @@
 #include "vk/VkCommon.h"
 #include "vk/VkInstance.h"
 #include "vk/VkDeviceManager.h"
-#include "Core/Common.h"
+#include "Core/Window.h"
 
 namespace aby::vk {
 

@@ -1,5 +1,4 @@
 #include "Rendering/UI/Widget.h"
-#include "Core/Log.h"
 // widget
 namespace aby::ui {
 
@@ -13,7 +12,7 @@ namespace aby::ui {
 
     void Widget::on_event(App* app, Event& event) {
         EventDispatcher dsp(event);
-        // Use non member bind to ensure polymorphic access of on_window_resize.
+        // Use non-member bind to ensure polymorphic access of on_window_resize.
         dsp.bind<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool {
             return this->on_window_resize(std::forward<WindowResizeEvent&>(event));
         });
@@ -97,7 +96,6 @@ namespace aby::ui {
     void Widget::invalidate_self() {
         bInvalid = true;
         bInvalid = on_invalidate();
-
     }
 
     bool Widget::on_window_resize(WindowResizeEvent& event) {

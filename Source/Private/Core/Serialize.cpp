@@ -1,4 +1,5 @@
 #include "Core/Serialize.h"
+#include <fstream>
 
 namespace aby {
     Serializer::Serializer(const SerializeOpts& opts) : m_Opts(opts), m_Offset(0) {
@@ -12,7 +13,7 @@ namespace aby {
     void Serializer::seek(std::int64_t offset) {
         m_Offset += offset;
         ABY_ASSERT(m_Offset >= 0, "Out of range");
-        ABY_ASSERT(m_Offset < m_Data.size(), "Out of range");
+        ABY_ASSERT(m_Offset < static_cast<int64_t>(m_Data.size()), "Out of range");
     }
     void Serializer::set_mode(ESerializeMode mode) {
         m_Opts.mode = mode;

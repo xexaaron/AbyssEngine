@@ -7,12 +7,10 @@
 #include <set>
 #include <fstream>
 
-#pragma warning(push, 0)
-    #include <shaderc/shaderc.hpp>
-    #include <spirv_cross/spirv_cross.hpp>
-    #include <spirv_cross/spirv_glsl.hpp>
-    #include <spirv_cross/spirv_reflect.hpp>
-#pragma warning(pop)
+#include <shaderc/shaderc.hpp>
+#include <spirv_cross/spirv_cross.hpp>
+#include <spirv_cross/spirv_glsl.hpp>
+#include <spirv_cross/spirv_reflect.hpp>
 
 namespace aby::vk::helper {
 
@@ -25,7 +23,6 @@ namespace aby::vk::helper {
             default:
                 throw std::out_of_range("EShader");
         }
-        throw std::out_of_range("Unreachable Code");
     }
 
     uint32_t get_stride(const spirv_cross::SPIRType& type) {
@@ -75,9 +72,7 @@ namespace aby::vk {
         if (type == EShader::FROM_EXT) {
             type = get_type_from_ext(path.extension());
         }
-    #pragma warning(push, 0)
         shaderc::Compiler compiler;
-    #pragma warning(pop)
         shaderc::CompileOptions options;
         options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
         options.SetTargetSpirv(shaderc_spirv_version_1_3);
@@ -146,12 +141,9 @@ namespace aby::vk {
             uint32_t binding = compiler.get_decoration(uniform.id, spv::DecorationBinding);
 
             if (type.basetype == spirv_cross::SPIRType::Struct) {
-                uint32_t buffer_size = static_cast<uint32_t>(compiler.get_declared_struct_size(type));
-
                 // Extract struct members (e.g., `MVP { mat4 model, view, proj; }`)
                 for (uint32_t i = 0; i < type.member_types.size(); i++) {
                     spirv_cross::SPIRType member_type = compiler.get_type(type.member_types[i]);
-                    uint32_t offset = compiler.get_member_decoration(type.self, i, spv::DecorationOffset);
                     descriptor.uniforms.emplace_back(
                         compiler.get_member_name(type.self, i),
                         set,
@@ -168,23 +160,22 @@ namespace aby::vk {
 
         // Storage buffers
         for (const auto& storage : resources.storage_buffers) {
-            uint32_t set = compiler.get_decoration(storage.id, spv::DecorationDescriptorSet);
-            uint32_t binding = compiler.get_decoration(storage.id, spv::DecorationBinding);
-
-            descriptor.storages.push_back({ storage.name, set, binding });
+            descriptor.storages.push_back({
+                storage.name,
+                compiler.get_decoration(storage.id, spv::DecorationDescriptorSet),
+                compiler.get_decoration(storage.id, spv::DecorationBinding)
+            });
         }
 
         // Combined image samplers
         for (const auto& sampler : resources.sampled_images) {
-            uint32_t set = compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet);
-            uint32_t binding = compiler.get_decoration(sampler.id, spv::DecorationBinding);
             auto type = compiler.get_type(sampler.type_id);
-            uint32_t count = 1;
-            if (type.self == spv::OpTypeArray) {
-                count = type.array.size(); // Set the count to the array length
-            }
-
-            descriptor.samplers.push_back({ sampler.name, set, binding, count });
+            descriptor.samplers.push_back({
+                sampler.name,
+                compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet),
+                compiler.get_decoration(sampler.id, spv::DecorationBinding),
+                type.self == spv::OpTypeArray ? static_cast<std::uint32_t>(type.array.size()) : 1
+            });
         }
 
         uint32_t global_offset = 0;
@@ -203,6 +194,8 @@ namespace aby::vk {
                     case 2: format = VK_FORMAT_R32G32_SFLOAT; break;
                     case 3: format = VK_FORMAT_R32G32B32_SFLOAT; break;
                     case 4: format = VK_FORMAT_R32G32B32A32_SFLOAT; break;
+                    default:
+                        std::unreachable();
                 }
             }
             else if (type.basetype == spirv_cross::SPIRType::Int) {
@@ -211,6 +204,8 @@ namespace aby::vk {
                     case 2: format = VK_FORMAT_R32G32_SINT; break;
                     case 3: format = VK_FORMAT_R32G32B32_SINT; break;
                     case 4: format = VK_FORMAT_R32G32B32A32_SINT; break;
+                    default:
+                        std::unreachable();
                 }
             }
             else if (type.basetype == spirv_cross::SPIRType::UInt) {
@@ -219,6 +214,8 @@ namespace aby::vk {
                     case 2: format = VK_FORMAT_R32G32_UINT; break;
                     case 3: format = VK_FORMAT_R32G32B32_UINT; break;
                     case 4: format = VK_FORMAT_R32G32B32A32_UINT; break;
+                    default:
+                        std::unreachable();
                 }
             } 
             else {
@@ -398,6 +395,7 @@ namespace aby::vk {
            .stage = stage_flags,
            .module = m_Module,
            .pName = "main",  // Entry point name
+           .pSpecializationInfo = nullptr,
         };
         return ci;
     }
@@ -467,8 +465,8 @@ namespace aby::vk {
         std::vector<std::uint32_t> max_bindings(descriptor_set_count, max_binding);
         alloc_count_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT;
         alloc_count_info.pNext = nullptr;
-        alloc_count_info.descriptorSetCount = max_bindings.size();
-        alloc_count_info.pDescriptorCounts = max_bindings.data();
+        alloc_count_info.descriptorSetCount = static_cast<std::uint32_t>(max_bindings.size());
+        alloc_count_info.pDescriptorCounts  = max_bindings.data();
 
 
         VkDescriptorSetAllocateInfo allocInfo{};
@@ -605,7 +603,7 @@ namespace aby::vk {
             .pTexelBufferView = nullptr
         };
         writes.push_back(write_uniforms);
-        vkUpdateDescriptorSets(logical, writes.size(), writes.data(), 0, nullptr);
+        vkUpdateDescriptorSets(logical, static_cast<std::uint32_t>(writes.size()), writes.data(), 0, nullptr);
     }
 
     Resource ShaderModule::vert() const {

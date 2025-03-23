@@ -10,8 +10,8 @@ namespace aby::vk {
     }
 
     DescriptorPool::DescriptorPool(VkDevice logical) :
-        m_Pool(VK_NULL_HANDLE),
-        m_Logical(VK_NULL_HANDLE)
+        m_Logical(VK_NULL_HANDLE),
+        m_Pool(VK_NULL_HANDLE)
     {
         create(logical);
     }

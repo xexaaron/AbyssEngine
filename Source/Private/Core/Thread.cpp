@@ -31,33 +31,46 @@ namespace aby {
     }
 
     LoadThread::LoadThread(QueryResourceNextHandle query_next_handle) :
-        Thread([this]() { load(); }, "Load Thread"),
+        Thread([this]() { 
+            load();
+        }, "Load Thread"),
         m_QueryNextHandle(std::move(query_next_handle)),
         m_FinishState(EFinishState::CONTINUE) 
     {
-
+    #ifndef ASYNC_RESOURCE_LOADING
+        m_FinishState.store(EFinishState::FINISH);
+        m_Thread.join();
+    #endif
     }
 
     LoadThread::~LoadThread() {
+    #ifdef ASYNC_RESOURCE_LOADING
         m_FinishState.store(EFinishState::FINISH, std::memory_order_release);
         m_Thread.detach();
+    #endif
     }
 
     Resource LoadThread::add_task(EResource type, Task&& task) {
-        std::lock_guard  lock_guard(m_Mutex);
-        Resource::Handle next_handle = m_QueryNextHandle(type);
+        Resource::Handle next_handle   = m_QueryNextHandle(type);
         std::size_t      next_position = m_Tasks.count(type);
-        Resource::Handle handle = static_cast<Resource::Handle>(next_position + next_handle);
+        Resource::Handle handle        = static_cast<Resource::Handle>(next_position + next_handle);
+    #ifdef ASYNC_RESOURCE_LOADING
+        std::lock_guard  lock_guard(m_Mutex);
         m_Tasks.emplace(type, std::move(task));
         ABY_DBG("LoadThread::add_task(...) Resource[ type: {}, handle: {} ]", static_cast<int>(type), handle);
         return Resource{ type, handle };
+    #else     
+        task();
+        return Resource(type, handle);
+    #endif
     }
 
-    std::size_t LoadThread::tasks() {
+    std::size_t LoadThread::tasks() const {
         return m_Tasks.size();
     }
 
     void LoadThread::sync() {
+    #ifdef ASYNC_RESOURCE_LOADING
         if (m_Tasks.empty() || m_FinishState.load(std::memory_order_acquire) == EFinishState::FINISH) return; 
         std::lock_guard lock(m_Mutex);
         while (!m_Tasks.empty()) {
@@ -69,9 +82,11 @@ namespace aby {
         }
         m_FinishState.store(EFinishState::FINISH, std::memory_order_release);
         m_Tasks.clear();
+    #endif
     }
 
     void LoadThread::load() {
+    #ifdef ASYNC_RESOURCE_LOADING
         while (m_FinishState.load(std::memory_order_acquire) != EFinishState::FINISH) {
             std::lock_guard lock(m_Mutex);
             if (!m_Tasks.empty()) {
@@ -92,6 +107,7 @@ namespace aby {
                     break;
             }
         }
+    #endif
     }
 
 }

@@ -1,15 +1,9 @@
 #pragma once
 #include "vk/VkContext.h"
-#include "vk/VkSurface.h"
-#include "vk/VkCmdPool.h"
 #include "vk/VkCmdBuff.h"
 #include "vk/VkRenderModule.h"
-#include "Core/Window.h"
-#include "Core/Log.h"
-#include "Core/Resource.h"
 #include "Rendering/Renderer.h"
 #include "Rendering/Vertex.h"
-#include <array>
 #include <glm/glm.hpp>
 
 namespace aby::vk {

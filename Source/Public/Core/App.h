@@ -4,15 +4,15 @@
 #include "Core/Object.h"
 #include "Rendering/Context.h"
 #include "Rendering/Renderer.h"
-#include <glm/glm.hpp>
-#include <iostream>
 #include <filesystem>
 
 namespace aby {
 
+	extern App& main(const std::vector<std::string>& args);
+
 	class App {
 	public:
-		App(const AppInfo& app_info = {}, const WindowInfo& window_info = {});
+		explicit App(const AppInfo& app_info = {}, const WindowInfo& window_info = {});
 		~App();
 
 		void run();
@@ -42,12 +42,11 @@ namespace aby {
 		void on_event(Event& event);
 	private:
 		static fs::path s_Path;
-		AppInfo       m_Info;
-		Unique<Window> m_Window;
-		Ref<Context>  m_Ctx;
-		Ref<Renderer> m_Renderer;
+		AppInfo         m_Info;
+		Unique<Window>  m_Window;
+		Ref<Context>    m_Ctx;
+		Ref<Renderer>   m_Renderer;
 		std::vector<Ref<Object>> m_Objects;
 	};
-
 
 }

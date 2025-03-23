@@ -3,6 +3,10 @@
 #include "Core/Resource.h"
 #include <glm/glm.hpp>
 
+namespace aby {
+    class App;
+}
+
 namespace aby::ui {
     
     enum class EAnchor {
@@ -107,5 +111,35 @@ namespace aby::ui {
         std::size_t prefix       = 0;     // How much of the text is a prefix and therefore should not be deletable.
         bool submit_clears_focus = false; // Does pressing enter/submitting make the input text box lose focus.
         bool submit_clears_text  = true;  // Does pressing enter/submitting clear the text (not including prefix).
+    };
+
+
+    struct ResizeResult {
+        float distance;
+        EResize direction; // N, E -> Grow. S, W -> Shrink
+    };
+
+    class ResizeOperation {
+    public:
+        ResizeOperation(EResize resizability);
+        ~ResizeOperation() = default;
+
+        bool begin(const glm::vec2& mouse_pos);
+        void update(App* app, const Transform& transform, const glm::vec2& mouse_pos, float pad = 0.f);
+        ResizeResult resize(Transform& transform, const glm::vec2& mouse_pos);
+        void reset();
+
+        bool can_resize() const;
+        bool is_resizing() const;
+        bool should_resize() const;
+
+        void set_resizability(EResize resizability);
+    private:
+        bool      is      = false;          // Determines if a resize operation is occurring.
+        EResize   ability = EResize::NONE;  // Determines the edges allowed to be resized.
+        EResize   state   = EResize::NONE;  // Determines which edge is currently being resized
+        ECursor   cursor  = ECursor::ARROW; // The cursor to set on a resize operation.
+        glm::vec2 start   = { 0, 0 };       // The start position of the mouse.
+        glm::vec2 end     = { 0, 0 };       // The end position of the mouse.
     };
 }

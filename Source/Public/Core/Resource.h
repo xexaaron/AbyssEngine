@@ -5,8 +5,6 @@
 #include <queue>
 #include <vector>
 #include <any>
-#include <functional>
-
 
 namespace aby {
 
@@ -36,8 +34,7 @@ namespace aby {
         }
         else if constexpr (std::is_same_v<T, Font>) {
             return EResource::FONT;
-        }
-        else {
+        } else {
             static_assert(false, "T != EResource Enumeration");
         }
         return EResource::NONE;
@@ -49,8 +46,8 @@ namespace aby {
     public:
         Resource() : m_Type(EResource::NONE), m_Handle(0) {}
         Resource(EResource type, Handle handle) : m_Type(type), m_Handle(handle) {}
-        Resource(const Resource& other) : m_Type(other.m_Type), m_Handle(other.m_Handle) {}
-        Resource(Resource&& other) noexcept : m_Type(other.m_Type), m_Handle(other.m_Handle) {}
+        Resource(const Resource& other) = default;
+        Resource(Resource&& other) noexcept = default;
 
         EResource type() const { return m_Type; }
         Handle    handle() const { return m_Handle; }
@@ -58,20 +55,12 @@ namespace aby {
         explicit operator bool() const {
             return (m_Type != EResource::NONE);
         }
-        Resource& operator=(const Resource& other) {
-            m_Type = other.m_Type;
-            m_Handle = other.m_Handle;
-            return *this;
-        }
-        Resource& operator=(Resource&& other) noexcept {
-            m_Type = other.m_Type;
-            m_Handle = other.m_Handle;
-            return *this;
-        }
-        bool operator==(const Resource& other) {
+        Resource& operator=(const Resource& other) = default;
+        Resource& operator=(Resource&& other) noexcept = default;
+        bool operator==(const Resource& other) const {
             return ((m_Type == other.m_Type) && (m_Handle == other.m_Handle));
         }
-        bool operator!=(const Resource& other) {
+        bool operator!=(const Resource& other) const {
             return !this->operator==(other);
         }
     private:
@@ -82,9 +71,10 @@ namespace aby {
     template <typename T> requires (CIsResource<T>)
     class IResourceHandler {
     public:
-        using Handle = typename Resource::Handle;
+        using Handle = Resource::Handle;
     public:
-        IResourceHandler(std::any user_data) : m_UserData(user_data) {}
+        explicit IResourceHandler(std::any user_data) : m_UserData(std::move(user_data)) {}
+        virtual ~IResourceHandler() = default;
 
         virtual void on_add(Handle handle, Ref<T> resource) = 0;
         virtual void on_erase(Handle handle, Ref<T> resource) = 0;
@@ -95,7 +85,7 @@ namespace aby {
     template <typename T> requires (CIsResource<T>)
     class ResourceClass {
     public:
-        using Handle = typename Resource::Handle;
+        using Handle = Resource::Handle;
         
         using Handler = IResourceHandler<T>;
 
@@ -147,7 +137,7 @@ namespace aby {
             return m_Resources.at(resource.handle());
         }
 
-        const Ref<T> at(Resource resource) const {
+        Ref<T> at(Resource resource) const {
             assert_contains(resource);
             return m_Resources.at(resource.handle());
         }

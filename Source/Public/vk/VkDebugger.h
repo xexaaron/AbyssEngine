@@ -1,7 +1,6 @@
 #pragma once
 #include "vk/VkCommon.h"
 #include "vk/VkInstance.h"
-#include "Core/Common.h"
 
 namespace aby::vk {
 	
@@ -23,8 +22,8 @@ namespace aby::vk {
 			void* user_data
 		);
 	private:
-		VkDebugUtilsMessengerEXT m_Debugger;
 		VkInstance m_Instance;
+		VkDebugUtilsMessengerEXT m_Debugger;
 	};
 
 

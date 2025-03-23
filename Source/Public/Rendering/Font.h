@@ -1,10 +1,7 @@
 #pragma once
 #include "Core/Common.h"
-#include "Core/Log.h"
 #include "Core/Resource.h"
 #include "Rendering/Texture.h"
-#include "Rendering/Vertex.h"
-#include <iostream>
 #include <unordered_map>
 #include <fstream>
 
@@ -29,7 +26,7 @@ namespace aby {
 
         Resource      texture() const;
         std::string   name() const;
-        float         size() const;
+        std::uint32_t size() const;
         const Glyphs& glyphs() const;
         glm::vec2     measure(const std::string& text) const;
         float         text_height() const;

@@ -10,17 +10,23 @@ namespace aby {
         m_App(app),
         m_Backend(app->info().backend),
         m_Window(window),
+        m_Shaders{},
+        m_Textures{},
+        m_Fonts{},
         m_LoadThread([this](EResource type) -> Resource::Handle {
             switch (type) {
                 using enum EResource;
                 case SHADER:
-                    return this->shaders().size();
+                    return static_cast<Resource::Handle>(this->shaders().size());
                 case TEXTURE:
-                    return this->textures().size();
+                    return static_cast<Resource::Handle>(this->textures().size());
                 case FONT:
-                    return this->fonts().size();
+                    return static_cast<Resource::Handle>(this->fonts().size());
+                case MAX_ENUM:
+                case NONE:
+                default:
+                    throw std::runtime_error("Resource must have a type");
             }
-            return 0;
         })
     {
 

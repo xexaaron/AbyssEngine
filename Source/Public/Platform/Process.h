@@ -16,7 +16,7 @@ namespace aby::sys {
 		virtual void write(const std::string& data) = 0;
 		virtual void kill() = 0;
 	protected:
-		Process(const std::function<void(const std::string&)>& read_callback);
+		explicit Process(const std::function<void(const std::string&)>& read_callback);
 	protected:
 		std::function<void(const std::string&)> m_Read;
 	};

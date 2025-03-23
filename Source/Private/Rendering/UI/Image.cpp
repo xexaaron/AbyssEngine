@@ -28,6 +28,8 @@ namespace aby::ui {
             auto parent_widget = parent->as<Widget>();
             auto parent_size = parent_widget->transform().size;
             switch (m_Transform.anchor.position) {
+                case EAnchor::NONE:
+                    std::unreachable();
                 case EAnchor::TOP_MIDDLE:
                     m_Transform.position.x += (parent_size.x / 2) - (m_Transform.size.x / 2);
                     break;
@@ -56,6 +58,8 @@ namespace aby::ui {
                     m_Transform.position.x += (parent_size.x) - (m_Transform.size.x);
                     m_Transform.position.y += (parent_size.y) - (m_Transform.size.y);
                     break;
+                default:
+                    std::unreachable();
             }
         }
 

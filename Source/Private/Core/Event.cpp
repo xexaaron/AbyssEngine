@@ -30,7 +30,7 @@ namespace aby {
 	}
 	std::string KeyPressedEvent::to_string() const {
 		std::stringstream ss;
-		ss << "Key Pressed Event : " << m_KeyCode << "(Occurences : " << m_RepeatCount << ")";
+		ss << "Key Pressed Event : " << m_KeyCode << "(Occurrences : " << m_RepeatCount << ")";
 		return ss.str();
 	}
 	

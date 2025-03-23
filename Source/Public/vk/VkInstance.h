@@ -1,8 +1,6 @@
 #pragma once
 #include "vk/VkCommon.h"
-#include "Core/Window.h"
 #include "Core/Common.h"
-
 
 namespace aby::vk {
 	

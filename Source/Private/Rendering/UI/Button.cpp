@@ -1,5 +1,4 @@
 #include "Rendering/UI/Button.h"
-#include "Core/Log.h"
 
 namespace aby::ui {
     
@@ -12,9 +11,9 @@ namespace aby::ui {
         m_Default(style.released),
         m_Hovered(style.hovered),
         m_Pressed(style.pressed),
-        m_State(EButtonState::DEFAULT),
         m_Window(nullptr),
-        bTextCopyable(text_copyable)
+        bTextCopyable(text_copyable),
+        m_State(EButtonState::DEFAULT)
     {
 
     }
@@ -96,7 +95,7 @@ namespace aby::ui {
             on_pressed();
             invalidate_self();
         }
-        return hit; // Stop propogating if we intercepted the hit.
+        return hit; // Stop if we intercepted the hit.
     }
    
     bool Button::on_mouse_released(MouseReleasedEvent& event) {
@@ -136,7 +135,7 @@ namespace aby::ui {
         return false;
     }
 
-    ButtonStyle Button::button_style() {
+    ButtonStyle Button::button_style() const {
         return ButtonStyle{
             .hovered  = { m_Hovered.color, m_Style.background.texture },
             .pressed  = { m_Pressed.color, m_Style.background.texture },

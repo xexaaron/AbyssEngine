@@ -34,11 +34,11 @@ namespace aby::sys::win32 {
     auto is_terminal(std::FILE* stream) -> bool  {
     #ifdef _MSVC_VER
         return _isattty(_fileno(stream));
-    #elif defined(_WIN32)
+    #else
         DWORD mode;
-        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-        if (hOut == INVALID_HANDLE_VALUE) return false;
-        return GetConsoleMode(hOut, &mode);
+        HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (out == INVALID_HANDLE_VALUE) return false;
+        return GetConsoleMode(out, &mode);
     #endif
 	}
 
@@ -66,35 +66,6 @@ namespace aby::sys::win32 {
         ABY_ASSERT(GetModuleFileName(NULL, path_buff, MAX_PATH) != 0, "");
         return fs::path(path_buff);
     }
-
-    auto set_cursor(ECursor cursor) -> bool {
-        decltype(IDC_ARROW) wcursor = IDC_ARROW;
-        switch (cursor) {
-            case ECursor::ARROW:
-                break;
-            case ECursor::IBEAM:
-                wcursor = ((LPSTR)((ULONG_PTR)((WORD)(32513)))); break;
-            case ECursor::CROSSHAIR:
-                wcursor = ((LPSTR)((ULONG_PTR)((WORD)(32515)))); break;
-            case ECursor::HAND:
-                wcursor = ((LPSTR)((ULONG_PTR)((WORD)(32649)))); break;
-            case ECursor::HRESIZE:
-                wcursor = ((LPSTR)((ULONG_PTR)((WORD)(32644)))); break;
-            case ECursor::VRESIZE:
-                wcursor = ((LPSTR)((ULONG_PTR)((WORD)(32645)))); break;
-            default:
-                break;
-        }
-
-        HCURSOR hcursor = LoadCursor(nullptr, MAKEINTRESOURCE(wcursor));
-        if (hcursor) {
-            ::SetCursor(hcursor);
-            return true;
-        }
-
-        return false;
-    }
-
 
     auto get_pid() -> int {
         return GetCurrentProcessId();

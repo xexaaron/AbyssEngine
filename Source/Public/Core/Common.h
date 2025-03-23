@@ -6,21 +6,17 @@
 #include <limits>
 #include <random>
 #include <type_traits>
+#include <mutex>
+#include <utility>
 
-#define abstract
+#ifdef _MSC_VER
+#include <crtdbg.h>
+#endif
 
-#ifdef min
 #undef min
-#endif
-#ifdef max
 #undef max
-#endif
 
-#ifndef NDEBUG
-#define DBG(x) x 
-#else 
-#define DBG(x)
-#endif
+#define MACRO_SCOPE(x) do { x; } while(0)
 
 #if defined(_WIN32) || defined(_WIN64)
 #if defined(ABY_BUILD_DLL) 
@@ -38,23 +34,29 @@
 #define API(x)
 #endif
 
+#ifndef _WIN32
+#if defined(__unix__) || defined(__linux__) || defined(__APPLE__)
+#define POSIX 
+#endif
+#endif
+
 #ifndef ABY_DBG_BREAK
 #ifdef _MSC_VER
-#define ABY_DBG_BREAK() __debugbreak()
+#define ABY_DBG_BREAK() __debugbreak(); 
 #elif defined(__has_builtin)
 #if __has_builtin(__builtin_debugtrap)
 #define ABY_DBG_BREAK() __builtin_debugtrap()
 #elif __has_builtin(__builtin_trap)
 #define ABY_DBG_BREAK() __builtin_trap()
 #endif
-#elif defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+#elif defined(POSIX)
 extern "C" int raise(int sig);
 #define ABY_DBG_BREAK() raise(SIGTRAP)
 #elif defined(_WIN32)
 extern "C" __declspec(dllimport) void __stdcall DebugBreak();
 #define ABY_DBG_BREAK() DebugBreak()
 #else
-#define ABY_DBG_BREAK() ((void)0)
+#define ABY_DBG_BREAK() std::system("pause"); std::abort(-1);
 #endif
 #endif
 
@@ -74,63 +76,57 @@ extern "C" __declspec(dllimport) void __stdcall DebugBreak();
 #endif // __GNUC__
 #endif
 
-#ifndef _WIN32
-#if defined(__unix__) || defined(__linux__) || defined(__APPLE__)
-#define POSIX 
+#ifdef _MSC_VER
+    #define OVERRIDEABLE __declspec(selectany)
+#elif defined(__GNUC__) || defined(__clang__)
+    #define OVERRIDEABLE __attribute__((weak))
+#else
+    #pragma message("Extern function defintions are required")
+    #define OVERRIDEABLE
 #endif
+
+#ifndef NDEBUG
+#define IF_DBG(x) x 
+#else 
+#define IF_DBG(x)
 #endif
+
+#define abstract
+#define ABY_LOG(...) aby::Logger::log(__VA_ARGS__)
+#define ABY_ERR(...) aby::Logger::error(__VA_ARGS__)
+#define ABY_WARN(...) aby::Logger::warn(__VA_ARGS__)
+#define ABY_DBG(...) IF_DBG(aby::Logger::debug(__VA_ARGS__))
+#define ABY_ASSERT(condition, ...)                                                   \
+    IF_DBG(do {                                                                      \
+        if (!(condition)) {                                                          \
+            aby::Logger::Assert("File:{}:{}\n{}",                                    \
+                std::string_view(__FILE__).substr(                                   \
+                    std::string_view(__FILE__).find_last_of("/\\") + 1),             \
+                __LINE__,                                                            \
+                ABY_FUNC_SIG                                                         \
+            );                                                                       \
+            aby::Logger::Assert("({})\n{}", #condition, std::format(__VA_ARGS__));  \
+            aby::Logger::flush();                                                    \
+            ABY_DBG_BREAK();                                                         \
+        }                                                                            \
+    } while (0))
 
 #define EXPAND_VEC2(v) v.x, v.y
 #define EXPAND_VEC3(v) v.x, v.y, v.z
 #define EXPAND_VEC4(v) v.x, v.y, v.z, v.w
 #define EXPAND_COLOR(c) c.r, c.g, c.b, c.a
-
 #define BIT(x) (1U << x)
-#define DECLARE_ENUM_OPS(e)                             \
-constexpr e operator|(e lhs, e rhs) {                   \
-    return static_cast<e>(                              \
-        static_cast<std::underlying_type_t<e>>(lhs) |   \
-        static_cast<std::underlying_type_t<e>>(rhs)     \
-    );                                                  \
-}                                                       \
-                                                        \
-constexpr e operator&(e lhs, e rhs) {                \
-    return static_cast<e>(                           \
-        static_cast<std::underlying_type_t<e>>(lhs) &   \
-        static_cast<std::underlying_type_t<e>>(rhs)     \
-    );                                                  \
-}                                                       \
-                                                        \
-constexpr e operator^(e lhs, e rhs) {                   \
-    return static_cast<e>(                              \
-        static_cast<std::underlying_type_t<e>>(lhs) ^   \
-        static_cast<std::underlying_type_t<e>>(rhs)     \
-    );                                                  \
-}                                                       \
-                                                        \
-constexpr e operator~(e trait) {                        \
-    return static_cast<e>(                              \
-        ~static_cast<std::underlying_type_t<e>>(trait)  \
-    );                                                  \
-}                                                       \
-constexpr e& operator|=(e& lhs, e rhs) {                \
-    lhs = lhs | rhs;                                    \
-    return lhs;                                         \
-}                                                       \
-                                                        \
-constexpr e& operator&=(e& lhs, e rhs) {                \
-    lhs = static_cast<e>(                               \
-        static_cast<std::underlying_type_t<e>>(lhs) &   \
-        static_cast<std::underlying_type_t<e>>(rhs)     \
-    );                                                  \
-    return lhs;                                         \
-}                                                       \
-                                                        \
-constexpr e& operator^=(e& lhs, e rhs) {                \
-    lhs = lhs ^ rhs;                                    \
-    return lhs;                                         \
-}                                                       
+#define CONCAT(x, y) x##y
+#define DECLARE_ENUM_OP_EQ(e, op) constexpr e& operator op##=(e& lhs, e rhs) { lhs = static_cast<e>(std::to_underlying(lhs) op std::to_underlying(rhs)); return lhs; }
+#define DECLARE_ENUM_OP(e, op) constexpr e operator op(e lhs, e rhs) { return static_cast<e>(std::to_underlying(lhs) op std::to_underlying(rhs)); }
 
+#define DECLARE_ENUM_OPS(e) \
+    DECLARE_ENUM_OP(e, |)   \
+    DECLARE_ENUM_OP(e, &)   \
+    DECLARE_ENUM_OP(e, ^)   \
+    DECLARE_ENUM_OP_EQ(e, |) \
+    DECLARE_ENUM_OP_EQ(e, &) \
+    constexpr e operator~(e trait) { return static_cast<e>(~std::to_underlying(trait)); }
 
 namespace fs = std::filesystem;
 
@@ -178,7 +174,7 @@ namespace aby {
         friend T;
     public:
         template <typename... Args>
-        CreateRefEnabler(Args&&... args) : T(std::forward<Args>(args)...) {}
+        explicit CreateRefEnabler(Args&&... args) : T(std::forward<Args>(args)...) {}
     };
 }
 
@@ -238,7 +234,7 @@ namespace aby {
                 else {
                     generator.seed(std::random_device{}());
                 }
-                });
+            });
 
             if constexpr (std::is_floating_point_v<T>) {
                 std::uniform_real_distribution<T> distribution(Min, Max);
@@ -249,38 +245,29 @@ namespace aby {
                 return distribution(generator);
             }
         }
-
-        operator T() const noexcept {
-            return Random<T, Min, Max, Seed>::gen();
-        }
     };
 
     class UUID {
     public:
         UUID() : m_Value(Random<uint64_t, 2083231>::gen()) {}
-        UUID(const UUID& other) : m_Value(other.m_Value) {}
-        UUID(UUID&& other) noexcept : m_Value(other.m_Value) {}
+        UUID(const UUID& other) = default;
+        UUID(UUID&& other) noexcept = default;
 
         operator std::uint64_t() const {
             return m_Value;
         }
 
-        UUID& operator=(const UUID& other) {
-            m_Value = other.m_Value;
-        }
+        UUID& operator=(const UUID& other) = default;
 
-        bool operator==(const UUID& other) {
+        bool operator==(const UUID& other) const {
             return m_Value == other.m_Value;
         }
-        bool operator!=(const UUID& other) {
+        bool operator!=(const UUID& other) const {
             return !this->operator==(other);
         }
 
     private:
         uint64_t m_Value;
     };
-
-
-
 
 }

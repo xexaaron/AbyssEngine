@@ -29,9 +29,8 @@ namespace aby::vk {
         m_Img(0)
     {
         m_Ctx->window()->register_event(this, &Renderer::on_event);
-        std::vector<int32_t> samplers(m_Ctx->devices().max_texture_slots());
-        std::iota(samplers.begin(), samplers.end(), 0);
         Resource default_tex = Texture::create(m_Ctx.get(), { 1, 1 }, { 1, 1, 1, 1 });
+        (void)default_tex;
     }
     
     void Renderer::draw_text(const Text& text) {
@@ -141,7 +140,9 @@ namespace aby::vk {
         VkCommandBuffer cmd = m_Frames[img].CmdBuffer;
         VkCommandBufferBeginInfo begin_info{
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+            .pNext = nullptr,
             .flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,
+            .pInheritanceInfo = nullptr
         };
         VK_CHECK(vkBeginCommandBuffer(cmd, &begin_info));
 
@@ -163,8 +164,12 @@ namespace aby::vk {
 
         VkRenderingAttachmentInfo color_attachment{
             .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+            .pNext = nullptr,
             .imageView = m_Swapchain.views()[img],
             .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            .resolveMode = VK_RESOLVE_MODE_NONE,
+            .resolveImageView = nullptr,
+            .resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED,
             .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
             .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
             .clearValue = clear_value 
@@ -173,26 +178,38 @@ namespace aby::vk {
         // Begin rendering
         VkRenderingInfo rendering_info{
             .sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
-            .renderArea = {                         
-                 .offset = {
-                    0, 0
+            .pNext = nullptr,
+            .flags = 0,
+            .renderArea = VkRect2D{                         
+                .offset = VkOffset2D{
+                    .x = 0,
+                    .y = 0
                  },        
-                 .extent = {              
+                .extent = VkExtent2D{              
                     .width  = m_Ctx->window()->width(),
                     .height = m_Ctx->window()->height()
                     }
-                 },
+                },
             .layerCount = 1,
+            .viewMask = 0,
             .colorAttachmentCount = 1,
-            .pColorAttachments = &color_attachment 
+            .pColorAttachments = &color_attachment,
+            .pDepthAttachment = nullptr,
+            .pStencilAttachment = nullptr
         };
         VkViewport vp{
-          .width = static_cast<float>(m_Ctx->window()->width()),
-          .height = static_cast<float>(m_Ctx->window()->height()),
-          .minDepth = 0.0f,
-          .maxDepth = 1.0f
+            .x = 0,
+            .y = 0,
+            .width = static_cast<float>(m_Ctx->window()->width()),
+            .height = static_cast<float>(m_Ctx->window()->height()),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f,
         };
         VkRect2D scissor{
+            .offset = {
+                .x = 0,
+                .y = 0
+            },
             .extent = {
                 .width = m_Ctx->window()->width(),
                 .height = m_Ctx->window()->height()
@@ -229,7 +246,11 @@ namespace aby::vk {
         VK_CHECK(vkEndCommandBuffer(cmd));
 
         if (m_Frames[img].Release == VK_NULL_HANDLE) {
-            VkSemaphoreCreateInfo semaphore_info{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+            VkSemaphoreCreateInfo semaphore_info{ 
+                .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
+            };
             VK_CHECK(vkCreateSemaphore(m_Ctx->devices().logical(), &semaphore_info, IAllocator::get(), &m_Frames[img].Release));
         }
 
@@ -237,6 +258,7 @@ namespace aby::vk {
 
         VkSubmitInfo info{
             .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+            .pNext = nullptr,
             .waitSemaphoreCount = 1,
             .pWaitSemaphores = &m_Frames[img].Acquire,
             .pWaitDstStageMask = &wait_stage,
@@ -286,7 +308,11 @@ namespace aby::vk {
         
         VkSemaphore acquire_semaphore;
         if (m_RecycledSemaphores.empty()) {
-            VkSemaphoreCreateInfo info = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+            VkSemaphoreCreateInfo info = { 
+                .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0
+            };
             VK_CHECK(vkCreateSemaphore(logical, &info, IAllocator::get(), &acquire_semaphore));
         }
         else {
@@ -326,11 +352,13 @@ namespace aby::vk {
         auto swapchain = m_Swapchain.operator VkSwapchainKHR();
         VkPresentInfoKHR present{
             .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+            .pNext = nullptr,
             .waitSemaphoreCount = 1,
             .pWaitSemaphores = &m_Frames[img].Release,
             .swapchainCount = 1,
             .pSwapchains = &swapchain,
             .pImageIndices = &img,
+            .pResults = nullptr
         };
 
         // Present swapchain image

@@ -24,20 +24,20 @@ namespace aby {
 
 namespace aby {
 
-    App::App(const AppInfo& app_info, const WindowInfo& window_info) : 
+    App::App(const AppInfo& app_info, const WindowInfo& window_info) :
+        m_Info(app_info),
         m_Window(Window::create(WindowInfo{
-            .size  = window_info.size,
+            .size = window_info.size,
             .flags = window_info.flags,
-            .title = (app_info.binherit ? app_info.name : window_info.title)
+            .title = std::string(app_info.binherit ? app_info.name : window_info.title)
         })),
         m_Ctx(Context::create(this, m_Window.get())),
-        m_Renderer(Renderer::create(m_Ctx)),
-        m_Info(app_info)
+        m_Renderer(Renderer::create(m_Ctx))
     {
         m_Window->register_event(this, &App::on_event);
         fs::path object_cache = cache() / "Objects";
-        if (!std::filesystem::exists(object_cache)) {
-            std::filesystem::create_directories(object_cache);
+        if (!fs::exists(object_cache)) {
+            fs::create_directories(object_cache);
         }
     }
 
@@ -51,22 +51,10 @@ namespace aby {
 
         auto object_cache = cache() / "Objects";
         for (auto& obj : m_Objects) {
-            auto file = object_cache / std::to_string(obj->uuid()) / ".bin";
-            if (std::filesystem::exists(file)) {
-                SerializeOpts opts{
-                  .file = file,
-                  .mode = ESerializeMode::READ
-                };
-                Serializer serializer(opts);
-                bool deserialized = obj->on_deserialize(serializer);
-                obj->on_create(this, deserialized);
-            }
-            else {
-                obj->on_create(this, false);
-            }
+            obj->on_create(this, false);
         }
 
-        m_Window->initalize();
+        m_Window->initialize();
 
         for (auto& object : m_Objects) {
             if (auto p = std::dynamic_pointer_cast<ui::Widget>(object)) {
@@ -91,13 +79,6 @@ namespace aby {
         }
 
         for (auto& obj : m_Objects) {
-            SerializeOpts opts{
-                .file = object_cache / std::to_string(obj->uuid()) / ".bin",
-                .mode = ESerializeMode::WRITE
-            };
-            Serializer serializer(opts);
-            obj->on_serialize(serializer);
-            serializer.save();
             obj->on_destroy(this);
         }
     }
@@ -152,7 +133,7 @@ namespace aby {
     }
 
     void App::remove_object(Ref<Object> obj) {
-        auto it = std::remove(m_Objects.begin(), m_Objects.end(), obj);
+        auto it = std::ranges::remove(m_Objects, obj).begin();
         if (it != m_Objects.end()) {
             (*it)->on_destroy(this);
             m_Objects.erase(it, m_Objects.end());
@@ -171,7 +152,7 @@ namespace aby {
         return m_Info;
     }
  
-    void App::quit() {
+    void App::quit()  {
         m_Window->close();
     }
     
@@ -188,8 +169,8 @@ namespace aby {
     #endif
         std::stringstream ss;
         ss << watchdog.string() << " "
-           << App::exe().filename().replace_extension("").string() << " "
-           << App::exe().string();
+           << App::exe().filename().replace_extension("").string() << " " // monitor this app
+           << App::exe().string();                                        // run this app
         Thread restart([cmd = ss.str()]() {
             std::system(cmd.c_str());
         });
@@ -197,6 +178,25 @@ namespace aby {
         restart.detach();
         this->quit();
     }
+}
 
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#include <cstdlib>
 
+#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)  
+#define new DEBUG_NEW  // Override `new` to track allocations
+
+int main(int argc, char* argv[]) {
+#if _MSC_VER && !defined(NDEBUG) 
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+#endif
+    std::vector<std::string> args(argc, "");
+    for (int i = 0; i < argc; i++) {
+        args[i] = argv[i];
+    }
+    aby::App& app = aby::main(args);
+    app.run();
+    return 0;
 }

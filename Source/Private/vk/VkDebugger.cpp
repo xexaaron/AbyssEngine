@@ -24,21 +24,25 @@ namespace aby::vk {
         m_Instance = instance;
         VkDebugUtilsMessengerCreateInfoEXT dbg = {};
         dbg.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-        dbg.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
+        dbg.messageSeverity = 
+            // VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+            // VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
             VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
             VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-        dbg.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT |
+        dbg.messageType = 
+            // VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+            // VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT |
             VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
             VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
         dbg.pfnUserCallback = msg_callback;
         dbg.pUserData = nullptr;
         VK_CHECK(CreateDebugUtilsMessengerEXT(instance, &dbg, IAllocator::get(), &m_Debugger));
+        ABY_DBG("vk::Debugger::create");
 	}
 
     void Debugger::destroy() {
         DestroyDebugUtilsMessengerEXT(m_Instance, m_Debugger, IAllocator::get());
+        ABY_DBG("vk::Debugger::destroy");
     }
 
     Debugger::operator VkDebugUtilsMessengerEXT() {
@@ -61,8 +65,8 @@ namespace aby::vk {
                 break;
             }
             default:
-                return VK_ERROR_UNKNOWN;
+                return static_cast<VkBool32>(VK_ERROR_UNKNOWN);
         }
-        return VK_SUCCESS;
+        return static_cast<VkBool32>(VK_SUCCESS);
     }
 }

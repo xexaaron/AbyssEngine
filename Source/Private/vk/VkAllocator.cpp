@@ -2,6 +2,18 @@
 #include "Core/Log.h"
 #include <cstdlib>
 
+#ifdef _MSC_VER
+    #include <crtdbg.h>  // MSVC CRT Debug functions
+#endif
+
+#ifdef _MSC_VER
+    #define MSVC(x) x
+#else
+    #define MSVC(x)
+#endif
+
+#define MSVC_CHECK(x, ...) MSVC(ABY_ASSERT(x, __VA_ARGS__))
+
 namespace aby::vk {
 
     IAllocator::IAllocator() {
@@ -47,29 +59,32 @@ namespace aby::vk {
     }
     
     void DefaultAllocator::free(void* mem, void* user_data) {
-        if (!mem) {
-            return;
-        }
         std::free(mem);
     }
 
 }
 
 namespace aby::vk {
-    
+
     void* DebugAllocator::alloc(std::size_t size, std::size_t alignment, void* user_data) {
-        ABY_DBG("[IAllocator::alloc] {} bytes with an aligment of {}", size, alignment);
-        return DefaultAllocator::alloc(size, alignment, user_data);
+        MSVC(_CrtCheckMemory());
+        void* p = DefaultAllocator::alloc(size, alignment, user_data);
+        MSVC_CHECK(_CrtCheckMemory(), "[IAllocator::alloc] Heap corruption detected.");
+        return p;
     }
 
     void* DebugAllocator::realloc(void* original, std::size_t size, std::size_t alignment, void* user_data) {
-        ABY_DBG("[IAllocator::realloc] {} bytes with an aligment of {}. Previous address: {}", size, alignment, original);
-        return DefaultAllocator::realloc(original, size, alignment);
+        MSVC(_CrtCheckMemory());
+        void* p = DefaultAllocator::realloc(original, size, alignment);
+        MSVC_CHECK(_CrtCheckMemory(), "[IAllocator::realloc] Heap corruption detected.");
+        return p;
     }
 
     void DebugAllocator::free(void* mem, void* user_data) {
-        ABY_DBG("[IAllocator::free] Address: {}", mem);
+        MSVC(_CrtCheckMemory());
+        if (mem == nullptr) { return; }
         DefaultAllocator::free(mem, user_data);
+        MSVC_CHECK(_CrtCheckMemory(), "[IAllocator::free] Heap corruption detected.");
     }
 
 }

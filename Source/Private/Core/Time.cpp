@@ -1,4 +1,5 @@
 #include "Core/Time.h"
+#include <utility>
 
 namespace std {
     string to_string(aby::ETime value) {
@@ -9,9 +10,8 @@ namespace std {
             case MICROSECONDS:	return "microseconds";
             case NANOSECONDS:	return "nanoseconds";
             default: 
-                return "Unknown";
+                std::unreachable();
         }
-        return "UNREACHABLE: ETime";
     }
 }
 
@@ -43,7 +43,7 @@ namespace aby {
         m_Start = std::chrono::high_resolution_clock::now();
     }
 
-    Time Timer::elapsed() {
+    Time Timer::elapsed() const {
         using clock = std::chrono::high_resolution_clock;
         using ns = std::chrono::nanoseconds;
 

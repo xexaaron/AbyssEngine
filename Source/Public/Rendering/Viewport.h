@@ -1,5 +1,4 @@
 #pragma once
-#include "Core/Common.h"
 #include "Core/Object.h"
 #include "Rendering/Camera.h"
 #include <glm/glm.hpp>

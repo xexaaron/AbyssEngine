@@ -76,7 +76,7 @@ namespace aby {
 		glm::mat4 m_Projection;
 	};
 
-	class OrientedCamera : public ICamera {
+	class OrientedCamera final : public ICamera {
 	public:
 		explicit OrientedCamera(const Config& cfg = {}, const glm::vec3& focal_point = glm::vec3(0.f), float distance = 200.f);
 		~OrientedCamera() = default;
@@ -99,7 +99,7 @@ namespace aby {
 		glm::vec3 m_FocalPoint;
 	};
 
-	class FreeCamera : public ICamera {
+	class FreeCamera final : public ICamera {
 	public:
 		explicit FreeCamera(const Config& cfg = {});
 

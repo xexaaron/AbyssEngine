@@ -15,11 +15,16 @@ namespace aby::ui {
         void on_event(App* app, Event& event) override;
         void on_destroy(App* app) override;
         bool on_invalidate() override;
+        virtual void on_resize(EResize direction, float distance);
 
+        void set_resizability(EResize resizability);
     protected:
         virtual bool on_mouse_moved(MouseMovedEvent& event);
+        virtual bool on_mouse_pressed(MousePressedEvent& event);
+        virtual bool on_mouse_released(MouseReleasedEvent& event);
     private:
-        EResize m_Resizability;
+        ResizeOperation m_Resize;
+        App* m_App;
     };
 
 }

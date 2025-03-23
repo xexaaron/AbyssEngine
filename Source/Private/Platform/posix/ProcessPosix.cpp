@@ -19,12 +19,12 @@ namespace aby::sys::posix {
 	}
 
 	bool Process::is_open() {
-
+		return false;
 	}
 
 
 	bool Process::open(const std::string& cmd) {
-
+		return false;
 	}
 
 	void Process::close() {
@@ -34,11 +34,7 @@ namespace aby::sys::posix {
 
 	}
 
-	void Process::read() {
-
-	}
-
-	void Process::kill() override {
+	void Process::kill() {
 
 	}
 

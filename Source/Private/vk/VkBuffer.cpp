@@ -6,6 +6,29 @@
 
 
 namespace aby::vk {
+
+    Buffer::Buffer(std::size_t bytes, VkBufferUsageFlags flags, DeviceManager& manager) : 
+        m_Logical(manager.logical()),
+        m_Buffer(VK_NULL_HANDLE),
+        m_Memory(VK_NULL_HANDLE),
+        m_Flags(flags),
+        m_Size(bytes)
+    {
+        create(manager);
+    }
+
+    Buffer::Buffer(const void* data, std::size_t bytes, VkBufferUsageFlags flags, DeviceManager& manager) :
+        m_Logical(manager.logical()),
+        m_Buffer(VK_NULL_HANDLE),
+        m_Memory(VK_NULL_HANDLE),
+        m_Flags(flags),
+        m_Size(bytes)
+    {
+        create(manager);
+        if (data != nullptr) {
+            set_data(data, bytes, manager);
+        }
+    }
     
     void Buffer::create(DeviceManager& manager) {
         VkBufferCreateInfo bufferCreateInfo = {};
@@ -28,19 +51,13 @@ namespace aby::vk {
                 manager.physical()
             )
         };
+
+        if (allocInfo.memoryTypeIndex == UINT32_MAX) {
+            throw std::runtime_error("Out of memory!");
+        }
+
         VK_CHECK(vkAllocateMemory(manager.logical(), &allocInfo, IAllocator::get(), &m_Memory));
         VK_CHECK(vkBindBufferMemory(manager.logical(), m_Buffer, m_Memory, 0));
-    }
-
-
-    Buffer::Buffer(std::size_t bytes, VkBufferUsageFlags flags, DeviceManager& manager) : 
-        m_Buffer(VK_NULL_HANDLE),
-        m_Memory(VK_NULL_HANDLE),
-        m_Flags(flags),
-        m_Size(bytes),
-        m_Logical(manager.logical())
-    {
-        create(manager);
     }
 
     void Buffer::clear() {
@@ -48,7 +65,6 @@ namespace aby::vk {
         std::memset(mapped, 0, m_Size);
         unmap(mapped);
     }
-
 
     void* Buffer::map(std::size_t size, std::size_t offset) {
         void* mapped;
@@ -60,22 +76,11 @@ namespace aby::vk {
         vkUnmapMemory(m_Logical, m_Memory);
     }
 
-    Buffer::Buffer(const void* data, std::size_t bytes, VkBufferUsageFlags flags, DeviceManager& manager) :
-        m_Buffer(VK_NULL_HANDLE),
-        m_Memory(VK_NULL_HANDLE),
-        m_Flags(flags),
-        m_Size(bytes),
-        m_Logical(manager.logical())
-    {
-        create(manager);
-
-        if (data != nullptr) {
-            set_data(data, bytes, manager);
-        }
-    }
-
     void Buffer::set_data(const void* data, std::size_t bytes, DeviceManager& manager) {
         if (bytes > m_Size) {
+            ABY_DBG("Buffer::resize(old_size = {}, new_size = {})", m_Size, bytes);
+            destroy();
+            m_Size = bytes;
             create(manager);
         }
         void* mapped = map(bytes);
@@ -84,9 +89,16 @@ namespace aby::vk {
     }
 
     void Buffer::destroy() {
-        vkDestroyBuffer(m_Logical, m_Buffer, IAllocator::get());
-        vkFreeMemory(m_Logical, m_Memory, IAllocator::get());
+        if (m_Buffer) {
+            vkDestroyBuffer(m_Logical, m_Buffer, IAllocator::get());
+            m_Buffer = VK_NULL_HANDLE;
+        }
+        if (m_Memory) {
+            vkFreeMemory(m_Logical, m_Memory, IAllocator::get());
+            m_Memory = VK_NULL_HANDLE;
+        }
     }
+
     
     VkDeviceMemory Buffer::memory() {
         return m_Memory;
@@ -146,12 +158,11 @@ namespace aby::vk {
         vkCmdBindVertexBuffers(cmd, 0, 1, &m_Buffer, &offset);
     }
 
-    void VertexBuffer::print(std::ostream& os, const VertexClass& vertex_class, const ShaderDescriptor& descriptor) {
+    void VertexBuffer::print(std::ostream& os, const VertexClass& vertex_class, const ShaderDescriptor& descriptor) const {
         void* mapped_memory;
         vkMapMemory(m_Logical, m_Memory, 0, m_VertexSize, 0, &mapped_memory);
 
         os << "{";
-        size_t vertex_size = vertex_class.vertex_size();
         size_t vertex_offset = 0;  // Tracks the current offset within the vertex buffer.
 
         // Loop through each vertex (assuming you know how many vertices you have, typically m_Count)
@@ -162,89 +173,89 @@ namespace aby::vk {
             for (const auto& input : descriptor.inputs) {
                 if (input.binding == vertex_class.binding()) {
                     // Process the data for this input
-                    void* current_data = reinterpret_cast<char*>(mapped_memory) + vertex_offset;
+                    void* current_data = static_cast<char*>(mapped_memory) + vertex_offset;
                     os << " (";
                     switch (input.format) {
                         case VK_FORMAT_R32_SFLOAT:
                         {
-                            float* data = reinterpret_cast<float*>(current_data);
+                            float* data = static_cast<float*>(current_data);
                             os << *data;
                             vertex_offset += sizeof(float);
                             break;
                         }
                         case VK_FORMAT_R32G32_SFLOAT:
                         {
-                            float* data = reinterpret_cast<float*>(current_data);
+                            float* data = static_cast<float*>(current_data);
                             os << data[0] << ", " << data[1];
                             vertex_offset += sizeof(float) * 2;
                             break;
                         }
                         case VK_FORMAT_R32G32B32_SFLOAT:
                         {
-                            float* data = reinterpret_cast<float*>(current_data);
+                            float* data = static_cast<float*>(current_data);
                             os << data[0] << ", " << data[1] << ", " << data[2];
                             vertex_offset += sizeof(float) * 3;
                             break;
                         }
                         case VK_FORMAT_R32G32B32A32_SFLOAT:
                         {
-                            float* data = reinterpret_cast<float*>(current_data);
+                            float* data = static_cast<float*>(current_data);
                             os << data[0] << ", " << data[1] << ", " << data[2] << ", " << data[3];
                             vertex_offset += sizeof(float) * 4;
                             break;
                         }
                         case VK_FORMAT_R32_SINT:
                         {
-                            int* data = reinterpret_cast<int*>(current_data);
+                            int* data = static_cast<int*>(current_data);
                             os << *data;
                             vertex_offset += sizeof(int);
                             break;
                         }
                         case VK_FORMAT_R32G32_SINT:
                         {
-                            int* data = reinterpret_cast<int*>(current_data);
+                            int* data = static_cast<int*>(current_data);
                             os << data[0] << ", " << data[1];
                             vertex_offset += sizeof(int) * 2;
                             break;
                         }
                         case VK_FORMAT_R32G32B32_SINT:
                         {
-                            int* data = reinterpret_cast<int*>(current_data);
+                            int* data = static_cast<int*>(current_data);
                             os << data[0] << ", " << data[1] << ", " << data[2];
                             vertex_offset += sizeof(int) * 3;
                             break;
                         }
                         case VK_FORMAT_R32G32B32A32_SINT:
                         {
-                            int* data = reinterpret_cast<int*>(current_data);
+                            int* data = static_cast<int*>(current_data);
                             os << data[0] << ", " << data[1] << ", " << data[2] << ", " << data[3];
                             vertex_offset += sizeof(int) * 4;
                             break;
                         }
                         case VK_FORMAT_R32_UINT:
                         {
-                            uint32_t* data = reinterpret_cast<uint32_t*>(current_data);
+                            uint32_t* data = static_cast<uint32_t*>(current_data);
                             os << *data;
                             vertex_offset += sizeof(uint32_t);
                             break;
                         }
                         case VK_FORMAT_R32G32_UINT:
                         {
-                            uint32_t* data = reinterpret_cast<uint32_t*>(current_data);
+                            uint32_t* data = static_cast<uint32_t*>(current_data);
                             os << data[0] << ", " << data[1];
                             vertex_offset += sizeof(uint32_t) * 2;
                             break;
                         }
                         case VK_FORMAT_R32G32B32_UINT:
                         {
-                            uint32_t* data = reinterpret_cast<uint32_t*>(current_data);
+                            uint32_t* data = static_cast<uint32_t*>(current_data);
                             os << data[0] << ", " << data[1] << ", " << data[2];
                             vertex_offset += sizeof(uint32_t) * 3;
                             break;
                         }
                         case VK_FORMAT_R32G32B32A32_UINT:
                         {
-                            uint32_t* data = reinterpret_cast<uint32_t*>(current_data);
+                            uint32_t* data = static_cast<uint32_t*>(current_data);
                             os << data[0] << ", " << data[1] << ", " << data[2] << ", " << data[3];
                             vertex_offset += sizeof(uint32_t) * 4;
                             break;

@@ -6,6 +6,9 @@
     #define GLFW_EXPOSE_NATIVE_WIN32
     #include <glfw/glfw3native.h>
     #include <dwmapi.h>
+    #ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+        #define DWMWA_USE_IMMERSIVE_DARK_MODE 20  // Value from modern Windows SDKs
+    #endif
 #elif defined(__linux__)
     #define GLFW_EXPOSE_NATIVE_X11
     #include <glfw/glfw3native.h>
@@ -13,15 +16,23 @@
     #error "Unsupported Platform"
 #endif
 
+
+
 namespace aby {
 
     Window::Window(const WindowInfo& info) :
+        m_Callbacks{},
         m_Data{
             .title    = info.title,
             .width    = info.size.x,
             .height   = info.size.y,
             .flags    = info.flags,
-            .callback = [](Event&){}
+            .cursor   = ECursor::ARROW,
+            .callback = [this](Event& event) -> void {
+                for (auto it = m_Callbacks.rbegin(); it != m_Callbacks.rend(); ++it) {
+                    (*it)(event);
+                }
+            }
         },
         m_Window(nullptr)
     {
@@ -36,15 +47,14 @@ namespace aby {
             ABY_ERR("[GLFW] ({}): {}", code, description);
         });
 
-        m_Window = glfwCreateWindow(info.size.x, info.size.y, info.title.c_str(), nullptr, nullptr);
+        m_Window = glfwCreateWindow(static_cast<int>(info.size.x), static_cast<int>(info.size.y), info.title.c_str(), nullptr, nullptr);
         if (!m_Window) {
             glfwTerminate();
             ABY_ASSERT(Window::m_Window, "Failed to create GLFW window");
         }
 
         glfwMakeContextCurrent(m_Window);
-        glfwSetWindowUserPointer(m_Window, this);
-        setup_callbacks();
+        glfwSetWindowUserPointer(m_Window, &m_Data);
 
     #ifdef _WIN32
         BOOL use_dark_mode = TRUE;
@@ -67,7 +77,8 @@ namespace aby {
         return glfwWindowShouldClose(m_Window);
     }
 
-    void Window::initalize() {
+    void Window::initialize() {
+        setup_callbacks();
         if ((m_Data.flags & EWindowFlags::VSYNC) != EWindowFlags::NONE) {
             set_vsync(true);
         }
@@ -86,7 +97,6 @@ namespace aby {
         m_Data.width = width;
         m_Data.height = height;
         m_Data.callback(wr_event);
-
     }
 
     void Window::poll_events() const {
@@ -108,7 +118,7 @@ namespace aby {
     #ifdef _WIN32
             return static_cast<void*>(glfwGetWin32Window(m_Window));
     #elif defined(__linux__)
-            return static_cast<void*>(glfwGetX11Window(m_Window));
+            return reinterpret_cast<void*>(glfwGetX11Window(m_Window));
     #endif
     }
     std::uint32_t Window::width() const {
@@ -140,15 +150,15 @@ namespace aby {
     }
 
     void Window::set_size(std::uint32_t w, std::uint32_t h) {
-        glfwSetWindowSize(m_Window, w, h);
+        glfwSetWindowSize(m_Window, static_cast<int>(w), static_cast<int>(h));
     }
 
     void Window::set_position(std::uint32_t x, std::uint32_t y) {
-        glfwSetWindowPos(m_Window, x, y);
+        glfwSetWindowPos(m_Window, static_cast<int>(x), static_cast<int>(y));
     }
 
-    void Window::set_minimized(bool minimzed) {
-        if (minimzed) {
+    void Window::set_minimized(bool minimized) {
+        if (minimized) {
             glfwIconifyWindow(m_Window);
         }
         else {
@@ -204,24 +214,23 @@ namespace aby {
 
     void Window::setup_callbacks() {
         glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* win, int w, int h) {
-            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
+            WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
             WindowResizeEvent event(w, h, data.width, data.height);
             data.width  = w;
             data.height = h;
             data.callback(event);
         });
         glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* win) {
-            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
+            WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
             WindowCloseEvent wc_event;
             data.callback(wc_event);
         });
         glfwSetKeyCallback(m_Window, [](GLFWwindow* win, int key, int scancode, int action, int mods) {
-            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
+            WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
             switch (action) {
                 case GLFW_PRESS:
                 {
                     KeyPressedEvent kp_event(static_cast<Button::EKey>(key), 0, static_cast<Button::EMod>(mods));
-                    GLFW_MOD_SHIFT;
                     data.callback(kp_event);
                     break;
                 }
@@ -237,16 +246,17 @@ namespace aby {
                     data.callback(kr_event);
                     break;
                 }
-
+                default:
+                    std::unreachable();
             }
         });
         glfwSetCharCallback(m_Window, [](GLFWwindow* win, unsigned int keycode) {
-            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
+            WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
             KeyTypedEvent ev(static_cast<Button::EKey>(keycode));
             data.callback(ev);
         });
         glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* win, int button, int action, int mods) {
-            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
+            WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
             double xpos, ypos;
             glfwGetCursorPos(win, &xpos, &ypos);
             glm::u32vec2 pos(
@@ -272,21 +282,22 @@ namespace aby {
                     data.callback(mr_event);
                     break;
                 }
+                default:
+                    std::unreachable();
             }
         });
         glfwSetScrollCallback(m_Window, [](GLFWwindow* win, double xOffset, double yOffset) {
-            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
-            MouseScrolledEvent ms_event((float)xOffset, (float)yOffset);
+            WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
+            MouseScrolledEvent ms_event(static_cast<float>(xOffset), static_cast<float>(yOffset));
             data.callback(ms_event);
         });
-
         glfwSetCursorPosCallback(m_Window, [](GLFWwindow* win, double xPos, double yPos) {
-            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
-            MouseMovedEvent ms_event((float)xPos, (float)yPos);
+            WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
+            MouseMovedEvent ms_event(static_cast<float>(xPos), static_cast<float>(yPos));
             data.callback(ms_event);
         });
         glfwSetWindowIconifyCallback(m_Window, [](GLFWwindow* win, int iconified) {
-            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
+            WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
             if (iconified == GLFW_TRUE) {
                 data.flags |= EWindowFlags::MINIMIZED;
                 data.flags &= ~EWindowFlags::MAXIMIZED;
@@ -306,10 +317,9 @@ namespace aby {
             data.width = width;
             data.height = height;
             data.callback(wr_event);
-            });
-
+        });
         glfwSetWindowMaximizeCallback(m_Window, [](GLFWwindow* win, int maximized) {
-            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(win);
+            WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
             if (maximized == GLFW_TRUE) {
                 data.flags |= EWindowFlags::MAXIMIZED;
                 data.flags &= ~EWindowFlags::MINIMIZED;
@@ -329,12 +339,7 @@ namespace aby {
             data.width = width;
             data.height = height;
             data.callback(wr_event);
-            });
-        m_Data.callback = [this](Event& event) -> void {
-            for (auto it = m_Callbacks.rbegin(); it != m_Callbacks.rend(); ++it) {
-                (*it)(event);
-            }
-        };
+        });
     }
  
     void Window::register_event(const std::function<void(Event&)>& event) {
@@ -361,13 +366,17 @@ namespace aby {
         ABY_ASSERT(mode, "Failed to get video mode");
         
         return {
-            (mode->width  / (widthMM / 25.4f))  * xscale,
-            (mode->height / (heightMM / 25.4f)) * yscale
+            (static_cast<float>(mode->width)  / (static_cast<float>(widthMM) / 25.4f))  * xscale,
+            (static_cast<float>(mode->height) / (static_cast<float>(heightMM) / 25.4f)) * yscale
         };
 
     }
 
     void Window::set_cursor(ECursor cursor) {
+        if (cursor == m_Data.cursor) {
+            return;
+        }
+        
         GLFWcursor* gcursor = nullptr;
         switch (cursor) {
             case ECursor::ARROW:
@@ -392,8 +401,10 @@ namespace aby {
                 gcursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
                 break;
         }
+
         if (gcursor) {
             glfwSetCursor(m_Window, gcursor);
+            m_Data.cursor = cursor;
         }
     }
 

@@ -1,5 +1,4 @@
 #include "Rendering/UI/Textbox.h"
-#include "Core/Log.h"
 
 namespace aby::ui {
     Ref<Textbox> Textbox::create(const Transform& transform, const Style& style, const TextInfo& info) {

@@ -40,7 +40,7 @@ namespace aby {
         Timer operator=(Timer&&) = delete;
 
         void reset();
-        Time elapsed();
+        Time elapsed() const;
     private:
         std::chrono::time_point<std::chrono::high_resolution_clock> m_Start;
     };

@@ -7,10 +7,10 @@ namespace aby::ui {
     }
 
     LayoutContainer::LayoutContainer(const Transform& transform, const Style& style, EDirection direction, ELayout layout , float padding) :
-        Panel(transform, style),
+        Panel(transform, style, EResize::NONE),
         m_Direction(direction),
-        m_Padding(padding),
-        m_Layout(layout)
+        m_Layout(layout),
+        m_Padding(padding)
     {
         m_Transform.size.y += padding * 2;
         if (m_Layout == ELayout::AUTO) {
@@ -48,14 +48,14 @@ namespace aby::ui {
 
 
     void LayoutContainer::on_tick(App* app, Time deltatime) {
-        if (!bVisible) return;
+        if (!bVisible) return;      
         Panel::on_tick(app, deltatime);
     }
 
     void LayoutContainer::align() {
         if (m_Children.empty()) return;
 
-        auto vector_idx = static_cast<std::size_t>(m_Direction);
+        auto vector_idx = static_cast<bool>(m_Direction);
 
         auto widget_pos = m_Transform.position[vector_idx] + m_Padding;
         if (m_Layout == ELayout::RIGHT_TO_LEFT || m_Layout == ELayout::BOTTOM_TO_TOP) {

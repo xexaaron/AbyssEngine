@@ -4,16 +4,16 @@
 #include "Core/Log.h"
 #include <mutex>
 #include <thread>
-#include <shared_mutex>
+#include <condition_variable>
 
 namespace aby {
 
     class Thread {
     public:
-        template <typename Fn>
+        template <typename Fn> requires (!std::is_same_v<std::decay_t<Fn>, Thread>)
         explicit Thread(Fn&& fn, const std::string& thread_name = "") : m_Thread(std::forward<Fn>(fn)) {
             set_name(thread_name);
-            ABY_LOG("Created Thread: {}", thread_name);
+            ABY_LOG("Thread::Thread: {}", thread_name);
         }
 
         virtual ~Thread();
@@ -26,7 +26,7 @@ namespace aby {
         std::thread m_Thread;
     };
 
-    class LoadThread : public Thread {
+    class LoadThread final : public Thread {
     private:
         enum class EFinishState {
             FINISH           = 0,
@@ -37,11 +37,11 @@ namespace aby {
         using QueryResourceNextHandle = std::function<Resource::Handle(EResource)>;
         using Task = std::function<void()>;
 
-        LoadThread(QueryResourceNextHandle query_next_handle);
+        explicit LoadThread(QueryResourceNextHandle query_next_handle);
         ~LoadThread();
 
         Resource add_task(EResource type, Task&& task);
-        std::size_t tasks();
+        std::size_t tasks() const;
         void sync();
     private:
         void load();

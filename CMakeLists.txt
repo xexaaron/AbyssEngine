@@ -1,19 +1,48 @@
 cmake_minimum_required(VERSION 3.28.3)
 project(Abyss)
 
+function(add_subproject name)
+    string(TOUPPER ${name} UPPER_NAME)
+    set(${UPPER_NAME}_DIR ${name} PARENT_SCOPE)
+    add_subdirectory("Tools/${name}")
+    set_target_properties(${name} PROPERTIES FOLDER "${PROJECT_NAME}/Tools")
+    target_compile_options(${name} PRIVATE ${COMPILE_OPTS})
+endfunction()
+
+function(set_vendor_properties library folder)
+    set_target_properties(${library} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Vendor/${library}/${CMAKE_BUILD_TYPE}"
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Vendor/${library}/${CMAKE_BUILD_TYPE}"
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Vendor/${library}/${CMAKE_BUILD_TYPE}"
+        FOLDER ${folder}
+    )
+endfunction()
+
 set(CMAKE_DISABLE_PREDEFINED_TARGETS TRUE)
 set(CMAKE_CXX_STANDARD 23)
 set(ENGINE ${PROJECT_NAME}Engine)
 set(EDITOR ${PROJECT_NAME}Editor)
 set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE})
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(DEBUG_SUFFIX "d")
 else()
     set(DEBUG_SUFFIX "")
 endif()
-   
-set(VULKAN_DIR $ENV{VULKAN_SDK})
 
+if (MSVC)
+    # W4                    warn level 4
+    # wd4100                unreferenced formal parameter
+    # Zc:preprocessor       standard conformant preprocssor (allow __VA_OPT__)
+    set(COMPILE_OPTS /W4 /wd4100 /Zc:preprocessor)
+else()
+    set(COMPILE_OPTS -Wall -Wextra -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-unused-function)
+endif()
+
+
+set(VULKAN_DIR $ENV{VULKAN_SDK} CACHE STRING "" FORCE)
 set(VULKAN_INCLUDE_DIR "${VULKAN_DIR}/include")
 set(VULKAN_LIBRARY_DIR "${VULKAN_DIR}/lib")
 set(VULKAN_BIN_DIR "${VULKAN_DIR}/bin")
@@ -26,42 +55,47 @@ set(GLFW_LIBRARY_DIR "${CMAKE_BINARY_DIR}/Vendor/glfw/src/${CMAKE_BUILD_TYPE}")
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build GLFW examples")
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build GLFW tests")
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build GLFW docs")
+if(CMAKE_HOST_SYSTEM_VERSION MATCHES "microsoft-standard-WSL2")
+    set(GLFW_BUILD_WAYLAND 0)
+    set(GLFW_BUILD_X11 1)
+endif()
 add_subdirectory(${GLFW_DIR})
-set_target_properties(glfw PROPERTIES FOLDER "Dependencies/glfw")
-set_target_properties(uninstall PROPERTIES FOLDER "Dependencies/glfw")
-set_target_properties(update_mappings PROPERTIES FOLDER "Dependencies/glfw")
+set_vendor_properties(glfw "Dependencies/glfw")
 
 set(STB_INCLUDE_DIR "Vendor/stb")
 set(STB_IMPL "${STB_INCLUDE_DIR}/stb.cpp")
 
-set(GLM_DIR "Vendor/glm")
+set(GLM_DIR "$ENV{VULKAN_SDK}")
 set(GLM_INCLUDE_DIR ${GLM_DIR})
-add_subdirectory(${GLM_DIR})
-target_compile_definitions(glm PRIVATE GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_FORCE_LEFT_HANDED)
-set_target_properties(glm PROPERTIES FOLDER "Dependencies")
+set(GLM_DEFINITIONS GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE  GLM_FORCE_LEFT_HANDED)
 
 set(FREETYPE_DIR "Vendor/freetype")
 set(FREETYPE_INCLUDE_DIR "${FREETYPE_DIR}/include")
 set(FREETYPE_DEVEL_DIR "${FREETYPE_DIR}/devel")
-
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries" FORCE)
 set(FREETYPE_LIBRARY_DIR "${FREETYPE_DIR}/objs")
 add_subdirectory(${FREETYPE_DIR})
-set_target_properties(freetype PROPERTIES FOLDER "Dependencies")
+set_vendor_properties(freetype "Dependencies")
 target_compile_definitions(freetype PRIVATE SKIP_INSTALL_ALL)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
+set(FREETYPE_INCLUDE_DIRS ${FREETYPE_DIR} ${FREETYPE_DEVEL_DIR})
 
-function(add_subproject name)
-    string(TOUPPER ${name} UPPER_NAME)
-    set(${UPPER_NAME}_DIR ${name} PARENT_SCOPE)
-    add_subdirectory("Tools/${name}")
-    set_target_properties(${name} PROPERTIES FOLDER "${PROJECT_NAME}/Tools")
-endfunction()
 
-add_subproject("packager")
-add_subproject("localize")
-add_subproject("tests")
-add_subproject("watchdog")
+
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    get_filename_component(VULKAN_LIB_PATH "${VULKAN_LIBRARY_DIR}/vulkan-1.lib" ABSOLUTE)
+    get_filename_component(SPIRV_CROSS_LIB_PATH "${VULKAN_LIBRARY_DIR}/spirv-cross-core${DEBUG_SUFFIX}.lib" ABSOLUTE)
+    get_filename_component(SPIRV_CROSS_GLSL_LIB_PATH "${VULKAN_LIBRARY_DIR}/spirv-cross-glsl${DEBUG_SUFFIX}.lib" ABSOLUTE)
+    get_filename_component(SHADER_C_LIB_PATH "${VULKAN_LIBRARY_DIR}/shaderc_shared${DEBUG_SUFFIX}.lib" ABSOLUTE)
+    set(PLATFORM_LIBS "dwmapi.lib")
+else()
+    get_filename_component(VULKAN_LIB_PATH "${VULKAN_LIBRARY_DIR}/libvulkan.so" ABSOLUTE)
+    get_filename_component(SPIRV_CROSS_LIB_PATH "${VULKAN_LIBRARY_DIR}/libspirv-cross-core.a" ABSOLUTE)
+    get_filename_component(SPIRV_CROSS_GLSL_LIB_PATH "${VULKAN_LIBRARY_DIR}/libspirv-cross-glsl.a" ABSOLUTE)
+    get_filename_component(SHADER_C_LIB_PATH "${VULKAN_LIBRARY_DIR}/libshaderc_shared.so" ABSOLUTE)
+    set(PLATFORM_LIBS "")
+endif()
+
 
 set(CPP_SOURCES
     Source/Private/Core/Log.cpp
@@ -175,7 +209,6 @@ set(HEADER_FILES
     Source/Public/Platform/win32/ProcessWin32.h
     Source/Public/Platform/posix/ProcessPosix.h
     Source/Public/Platform/Process.h
-
 )
 
 file(GLOB CORE_HEADERS "Source/Public/Core/*.h")
@@ -225,67 +258,66 @@ source_group("Private/Platform/win32" FILES ${WIN32_SOURCES})
 file(GLOB PLATFORM_SOURCES "Source/Private/Platform/*.cpp")
 source_group("Private/Platform" FILES ${PLATFORM_SOURCES}) 
 
-
 file(GLOB POSIX_SOURCES "Source/Private/Platform/posix/*.cpp")
 source_group("Private/Platform/posix" FILES ${POSIX_SOURCES}) 
 
 file(GLOB VK_SOURCES "Source/Private/vk/*.cpp")
 source_group("Private/vk" FILES ${VK_SOURCES})
 
+set(COMMON_INCLUDE_DIRS "Source/Public" ${GLFW_INCLUDE_DIR} ${STB_INCLUDE_DIR} ${GLM_INCLUDE_DIR})
 set(RESOURCES ${SHADER_SOURCES} ${TEXTURE_SOURCES} ${FONT_SOURCES})
+
+add_subproject("localize")
+add_subproject("tests")
+add_subproject("watchdog")
 add_library(${ENGINE} ${CPP_SOURCES} ${HEADER_FILES} ${RESOURCES})
 add_executable(${EDITOR} Source/main.cpp ${RESOURCES})
-
-target_compile_definitions(${ENGINE} PRIVATE 
-    GLM_FORCE_RADIANS 
-    GLM_FORCE_DEPTH_ZERO_TO_ONE 
-    GLM_FORCE_LEFT_HANDED
-)
-target_compile_definitions(${EDITOR} PRIVATE
-    GLM_FORCE_RADIANS 
-    GLM_FORCE_DEPTH_ZERO_TO_ONE 
-    GLM_FORCE_LEFT_HANDED
-)
-
-target_include_directories(${ENGINE} PUBLIC
-    Source/Public
-    ${VULKAN_INCLUDE_DIR} 
-    ${GLFW_INCLUDE_DIR}
-    ${STB_INCLUDE_DIR}
-    ${GLM_INCLUDE_DIR}
-    ${FREETYPE_DIR}
-    ${FREETYPE_DEVEL_DIR}
-)
-
-target_include_directories(${EDITOR} PUBLIC
-    Source/Public
-    ${GLFW_INCLUDE_DIR}
-    ${STB_INCLUDE_DIR}
-    ${GLM_INCLUDE_DIR}
-)
-
+target_compile_options(${ENGINE} PRIVATE ${COMPILE_OPTS})
+target_compile_options(${EDITOR} PRIVATE ${COMPILE_OPTS})
+target_compile_definitions(${ENGINE} PRIVATE ${GLM_DEFINITIONS} ABY_BUFFERED_LOGGING)
+target_compile_definitions(${EDITOR} PRIVATE ${GLM_DEFINITIONS} ABY_BUFFERED_LOGGING)
+target_include_directories(${ENGINE} PUBLIC ${VULKAN_INCLUDE_DIR} ${COMMON_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS})
+target_include_directories(${EDITOR} PUBLIC Source/Public ${COMMON_INCLUDE_DIRS})
 set_target_properties(${ENGINE} PROPERTIES FOLDER "Abyss")
 set_target_properties(${EDITOR} PROPERTIES FOLDER "Abyss")
-
-get_filename_component(VULKAN_LIB_PATH "${VULKAN_LIBRARY_DIR}/vulkan-1.lib" ABSOLUTE)
-get_filename_component(SHADER_C_LIB_PATH "${VULKAN_LIBRARY_DIR}/shaderc_shared${DEBUG_SUFFIX}.lib" ABSOLUTE)
-get_filename_component(SPIRV_CROSS_LIB_PATH "${VULKAN_LIBRARY_DIR}/spirv-cross-core${DEBUG_SUFFIX}.lib" ABSOLUTE)
-get_filename_component(SPIRV_CROSS_GLSL_LIB_PATH "${VULKAN_LIBRARY_DIR}/spirv-cross-glsl${DEBUG_SUFFIX}.lib" ABSOLUTE)
-get_filename_component(FREETYPE_LIB_PATH "${FREETYPE_LIBRARY_DIR}/freetype.lib" ABSOLUTE)
-get_filename_component(GLFW_LIB_PATH "${GLFW_LIBRARY_DIR}/glfw3.lib" ABSOLUTE)
 
 target_link_libraries(${ENGINE} PRIVATE
     ${VULKAN_LIB_PATH}
     ${SHADER_C_LIB_PATH}
     ${SPIRV_CROSS_LIB_PATH}
     ${SPIRV_CROSS_GLSL_LIB_PATH}
+    ${PLATFORM_LIBS}
     freetype
     glfw
 )
 
-if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    target_link_libraries(${ENGINE} PRIVATE dwmapi.lib)
-endif()
-
 target_link_libraries(${EDITOR} PRIVATE ${ENGINE})
+add_dependencies(${ENGINE} freetype glfw)
 add_dependencies(${EDITOR} ${ENGINE})
+
+add_custom_command(TARGET ${EDITOR} POST_BUILD 
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/Source/Textures"
+            "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/Textures"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/Source/Fonts"
+            "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/Fonts"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/Source/Shaders"
+            "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/Shaders"
+    COMMENT "Copy resources"
+)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(FREETYPE_DLL_IN  "${CMAKE_BINARY_DIR}/Vendor/freetype/${CMAKE_BUILD_TYPE}/freetype${DEBUG_SUFFIX}.dll")
+    set(FREETYPE_DLL_OUT "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/freetype${DEBUG_SUFFIX}.dll")
+    set(SHADERC_DLL_IN  "${VULKAN_BIN_DIR}/shaderc_shared${DEBUG_SUFFIX}.dll")
+    set(SHADERC_DLL_OUT "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/shaderc_shared${DEBUG_SUFFIX}.dll")
+
+    add_custom_command(TARGET ${EDITOR} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E echo "Checking and copying DLLs..."
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${FREETYPE_DLL_IN} ${FREETYPE_DLL_OUT}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SHADERC_DLL_IN} ${SHADERC_DLL_OUT}
+        COMMENT "Copy necessary DLLs"
+    )
+endif()

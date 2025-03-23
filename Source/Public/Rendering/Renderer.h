@@ -7,7 +7,6 @@
 
 namespace aby {
 
-
     class Renderer abstract {
 	public:
         static Ref<Renderer> create(Ref<Context> ctx);

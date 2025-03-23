@@ -49,19 +49,19 @@ namespace aby::vk {
         return m_Images;
     }
 
-    std::uint32_t Swapchain::width() {
+    std::uint32_t Swapchain::width() const {
         return m_Extent.width;
     }
 
-    std::uint32_t Swapchain::height() {
+    std::uint32_t Swapchain::height() const {
         return m_Extent.height;
     }
 
-   glm::u32vec2 Swapchain::size() {
+   glm::u32vec2 Swapchain::size() const {
        return { m_Extent.width, m_Extent.height };
     }
 
-    VkFormat Swapchain::format() {
+    VkFormat Swapchain::format() const {
         return m_Format;
     }
 
@@ -119,6 +119,8 @@ namespace aby::vk {
 
         VkSwapchainCreateInfoKHR swapchain_ci = {
             .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+            .pNext = nullptr,
+            .flags = 0,
             .surface = surface,
             .minImageCount = swapchain_img_count,
             .imageFormat = format.format,
@@ -127,6 +129,8 @@ namespace aby::vk {
             .imageArrayLayers = 1,
             .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
             .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+            .queueFamilyIndexCount = 0,
+            .pQueueFamilyIndices = nullptr,
             .preTransform = pre_transform,
             .compositeAlpha = composite_alpha,
             .presentMode = present_mode,
@@ -167,6 +171,12 @@ namespace aby::vk {
                .image = m_Images[i],
                .viewType = VK_IMAGE_VIEW_TYPE_2D,
                .format = format.format,
+               .components = {
+                    .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+                    .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+                    .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+                    .a = VK_COMPONENT_SWIZZLE_IDENTITY,
+                },
                .subresourceRange = { 
                     .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
                     .baseMipLevel = 0,
@@ -212,12 +222,14 @@ namespace aby::vk {
 
         VkFenceCreateInfo info{
             .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+            .pNext = nullptr,
             .flags = VK_FENCE_CREATE_SIGNALED_BIT
         };
         VK_CHECK(vkCreateFence(logical, &info, IAllocator::get(), &QueueSubmit));
 
         VkCommandPoolCreateInfo cmd_pool_info{
             .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+            .pNext = nullptr,
             .flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
             .queueFamilyIndex = manager.graphics().FamilyIdx
         };
@@ -225,6 +237,7 @@ namespace aby::vk {
 
         VkCommandBufferAllocateInfo cmd_buf_info{
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+            .pNext = nullptr,
             .commandPool = CmdPool,
             .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
             .commandBufferCount = 1

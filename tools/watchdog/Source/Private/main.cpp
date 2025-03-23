@@ -1,15 +1,14 @@
 /**
 * @brief Monitor a program, when that program exits, execute a command. General usage is for restarting a process.
 * @param argc 3
-* @param argv <./WatchDog.exe> <pid or process name> <command>
+* @param argv watchdog <pid or process name> <command>
 */
 
 #include <iostream>
 #include <string>
 #include <thread>
 #include <chrono>
-
-
+#include <fstream>
 #include <locale>
 #include <codecvt>
 
@@ -29,11 +28,13 @@
 #endif
 
 
-#define ABY_ERR(fmt, ...) std::cerr << std::format("[Watchdog] [Error] " fmt, __VA_ARGS__) << '\n';
-#define ABY_LOG(fmt, ...) std::cout << std::format("[Watchdog] [Info]  " fmt, __VA_ARGS__) << '\n';
+#define ABY_ERR(fmt, ...) std::cerr << std::format("[Watchdog] [Error] " fmt __VA_OPT__(,) __VA_ARGS__) << '\n';
+#define ABY_LOG(fmt, ...) std::cout << std::format("[Watchdog] [Info]  " fmt __VA_OPT__(,) __VA_ARGS__) << '\n';
+
 
 namespace aby {
 
+#ifdef _WIN32
     auto to_wstring(const std::string& string) -> std::wstring {
         int size_needed = MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, nullptr, 0);
         if (size_needed <= 0) {
@@ -43,6 +44,7 @@ namespace aby {
         MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, &wstring[0], size_needed);
         return wstring;
     }
+#endif
 
     bool is_process_open(int process_id) {
     #ifdef _WIN32
@@ -122,7 +124,7 @@ int main(int argc, char* argv[]) {
     if (argc < 3) {
         ABY_ERR("Usage: watchdog <pid/process name> <command>.");
         ABY_ERR(" <pid/process name> If your monitoring a windowed application use the process name not the pid.");
-        ABY_ERR(" <command>          The command to execute after the monitored application has shutdown");
+        ABY_ERR(" <command>          The (system) command to execute after the monitored application has shutdown");
         return 1;
     }
 
