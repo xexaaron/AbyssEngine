@@ -4,6 +4,8 @@
 #include "vk/VkTexture.h"
 #include "vk/VkContext.h"
 #include <stb_image/stb_image.h>
+#include <array>
+
 
 namespace aby {
 

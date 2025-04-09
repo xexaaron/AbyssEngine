@@ -5,6 +5,7 @@
 #include "Core/App.h"
 #include <istream>
 #include <regex>
+#include <array>
 
 namespace aby::sys::win32 {
 

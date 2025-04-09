@@ -8,11 +8,10 @@
 namespace test_name {                                                            \
     static auto eval() -> bool;                                                  \
     class test_name;                                                             \
-    using T = test_name;                                                         \
     class test_name : public aby::Test {                                         \
     public:                                                                      \
         test_name() {                                                            \
-            aby::TestFramework::get().add(std::make_unique<T>());                \
+            aby::TestFramework::get().add(std::make_unique<test_name>());        \
         }                                                                        \
         auto operator()() -> bool override {                                     \
             return eval();                                                       \
@@ -21,7 +20,7 @@ namespace test_name {                                                           
             return #test_name;                                                   \
         }                                                                        \
     };                                                                           \
-    static T Instance;                                                           \
+    static test_name Instance;                                                   \
 }                                                                                \
 auto test_name::eval() -> bool        
 
@@ -30,8 +29,14 @@ namespace aby {
 
     class Test {
     public:
-        virtual auto operator()() -> bool = 0;
+        Test() = default;
+        Test(Test&) = delete;
+        Test(Test&&) noexcept = delete;
+        virtual ~Test() = default;
+
         virtual auto name() -> std::string_view = 0;
+
+        virtual auto operator()() -> bool = 0;
     private:
     };
 

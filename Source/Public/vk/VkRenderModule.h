@@ -6,6 +6,7 @@
 #include "vk/VkShader.h"
 #include "vk/VkContext.h"
 #include "Rendering/Vertex.h"
+#include <array>
 
 namespace aby::vk {
 

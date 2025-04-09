@@ -81,7 +81,7 @@ namespace aby::ui {
 		t.size.x = 80;
 		ti.text = "60 FPS";
 		m_Objs.fps = Textbox::create(t, s, ti);
-		set_resizability(EResize::N);
+		// set_resizability(EResize::N);
 	}
 
 	void Console::on_create(App* app, bool deserialzied) {
@@ -133,19 +133,19 @@ namespace aby::ui {
 	}
 
 	void Console::on_resize(EResize direction, float distance) {
-		m_Objs.menu->set_position(m_Transform.position);
-		m_Constraints.max_items = calc_max_items();
-		m_ResizeAcc += std::abs(distance);
-		if (m_ResizeAcc >= m_Constraints.item_height)
-		{
-			m_ResizeAcc = 0;
-			scroll_up();
-			LayoutContainer::for_each([this](Ref<Widget> widget, std::size_t i) {
-				widget->set_position(calc_item_pos(i));
-				widget->on_invalidate();
-			});
-			invalidate_self();
-		}
+		// m_Objs.menu->set_position(m_Transform.position);
+		// m_Constraints.max_items = calc_max_items();
+		// m_ResizeAcc += std::abs(distance);
+		// if (m_ResizeAcc >= m_Constraints.item_height)
+		// {
+		// 	m_ResizeAcc = 0;
+		// 	scroll_up();
+		// 	LayoutContainer::for_each([this](Ref<Widget> widget, std::size_t i) {
+		// 		widget->set_position(calc_item_pos(i));
+		// 		widget->on_invalidate();
+		// 	});
+		// 	invalidate_self();
+		// }
 	}
 
 	std::uint32_t Console::calc_max_items() const {

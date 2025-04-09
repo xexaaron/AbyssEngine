@@ -5,6 +5,10 @@ enum ErrorCode {
     EC_FAILURE = 1,
 };
 
+TEST(Foo) {
+    return true;
+}
+
 int main() {
     if (!aby::TestFramework::get().run()) {
         return EC_FAILURE;
