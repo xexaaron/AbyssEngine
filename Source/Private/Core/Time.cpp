@@ -46,11 +46,9 @@ namespace aby {
     Time Timer::elapsed() const {
         using clock = std::chrono::high_resolution_clock;
         using ns = std::chrono::nanoseconds;
-
         float elapsed_seconds =
             std::chrono::duration_cast<ns>(clock::now() - m_Start).count()
             * 0.001f * 0.001f * 0.001f;
-
         return Time(elapsed_seconds);
     }
 

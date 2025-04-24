@@ -45,6 +45,7 @@ namespace aby::ui {
 		bool on_key_pressed(KeyPressedEvent& event);
 		bool on_window_resize(WindowResizeEvent& event) override;
 		bool on_mouse_scrolled(MouseScrolledEvent& event);
+		bool on_mouse_released(MouseReleasedEvent& event);
 	protected:
 		glm::vec2 calc_item_pos(std::size_t item) const;
 		std::uint32_t calc_max_items() const;
@@ -53,12 +54,9 @@ namespace aby::ui {
 		void add_msg(Ref<Textbox> textbox);
 	private:
 		struct Constraints {
-			// Item height, (logs, input, menu)
-			float		item_height = 20.f;
-			// Max items on screen, including input and menu.
-			std::size_t max_items   = 0;
-			// Max logs to be kept in history for scrolling.
-			std::size_t max_logs	= 300;
+			std::float_t item_height = 20.f; // Item height, (logs, input, menu)
+			std::size_t  max_items   = 0;    // Max items on screen, including input and menu.
+			std::size_t  max_logs	= 300;  // Max logs to be kept in history for scrolling.
 		}; 
 		struct Objects {
 			Ref<ConsoleInputTextbox> input;
@@ -67,13 +65,21 @@ namespace aby::ui {
 				Ref<Textbox>	     fps;
 				Ref<Dropdown>        opts;
 		};
-		Constraints				  m_Constraints;
-		std::size_t				  m_Callback;
-		std::size_t				  m_ScrollPosition;
-		App*					  m_App;
-		Objects					  m_Objs;
-		Unique<sys::Process>      m_ActiveChannel;
-		float					  m_ResizeAcc;
+		struct State {
+			std::size_t			 scroll_pos;
+			std::float_t		 resize_acc;
+			bool				 focused;
+			Unique<sys::Process> active_channel;
+		};
+		struct Config {
+			std::size_t  callback;
+			std::int32_t scroll_amt;
+		};
+		App*		m_App;
+		Constraints	m_Constraints;
+		State		m_State;
+		Objects		m_Objs;
+		Config		m_Cfg;
 	};
 
 }

@@ -30,14 +30,14 @@ namespace aby::vk {
         void flush_if(RenderModule& module, bool flush, ERenderPrimitive primitive);
         void draw_triangle(RenderModule& module, const Triangle& triangle);
         void draw_quad(RenderModule& module, const Quad& quad);
-    private: // Events
+    private:
         bool on_resize(WindowResizeEvent& event);
         bool on_resize(std::uint32_t w, std::uint32_t h);
-    private:
         void recreate_swapchain();
         std::pair<VkResult, std::uint32_t> acquire_next_img();
         VkResult present_img(std::uint32_t img);
-    private:Ref<vk::Context> m_Ctx;
+    private:
+        Ref<vk::Context> m_Ctx;
         std::vector<Frame> m_Frames;
         vk::Swapchain m_Swapchain;
         RenderModule m_2D;

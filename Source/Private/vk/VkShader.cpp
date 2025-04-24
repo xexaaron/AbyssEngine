@@ -55,9 +55,8 @@ namespace aby::vk::helper {
 // ShaderCompiler
 namespace aby::vk {
 
-    std::vector<std::uint32_t> ShaderCompiler::compile(DeviceManager& devices, const fs::path& path, EShader type) {
-        auto cached = cache_dir(path);
-
+    std::vector<std::uint32_t> ShaderCompiler::compile(App* app, DeviceManager& devices, const fs::path& path, EShader type) {
+        auto cached = cache_dir(app, path);
         if (fs::exists(cached)) {
             std::vector<std::uint32_t> out;
             std::ifstream in(cached, std::ios::in | std::ios::binary);
@@ -120,8 +119,9 @@ namespace aby::vk {
         return out;
     }
 
-    fs::path ShaderCompiler::cache_dir(const fs::path& file) {
-        auto cache_dir = App::bin() / "Cache/Shaders";
+    fs::path ShaderCompiler::cache_dir(App* app, const fs::path& file) {
+        auto bin = app->bin();
+        auto cache_dir = bin / "Cache/Shaders";
         if (!fs::exists(cache_dir)) {
             fs::create_directories(cache_dir);
         }
@@ -277,9 +277,9 @@ namespace aby::vk {
     private:
     };
 
-    Shader::Shader(DeviceManager& devices, const fs::path& path, EShader type) :
+    Shader::Shader(App* app, DeviceManager& devices, const fs::path& path, EShader type) :
         aby::Shader(
-            ShaderCompiler::compile(devices, path, type),
+            ShaderCompiler::compile(app, devices, path, type),
             type == EShader::FROM_EXT ? ShaderCompiler::get_type_from_ext(path.extension()) : type
         ),
         m_Logical(devices.logical()),
@@ -355,8 +355,8 @@ namespace aby::vk {
     }
 
 
-    Ref<Shader> Shader::create(DeviceManager& devices, const fs::path& path, EShader type) {
-        return create_ref<Shader>(devices, path, type);
+    Ref<Shader> Shader::create(App* app, DeviceManager& devices, const fs::path& path, EShader type) {
+        return create_ref<Shader>(app, devices, path, type);
     }
 
     Shader::~Shader() {

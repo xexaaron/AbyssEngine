@@ -35,13 +35,15 @@ namespace aby {
 		const std::string& name() const;
 		const AppVersion&  version() const;
 
-		static fs::path    	   cache();
-		static fs::path    	   bin();
-		static const fs::path& exe();
+		fs::path    	cache();
+		fs::path    	bin();
+		const fs::path& exe();
 	protected:
 		void on_event(Event& event);
 	private:
-		static fs::path s_Path;
+		friend std::vector<std::string> setup(int argc, char** argv);
+	private:
+		static fs::path m_ExePath;
 		AppInfo         m_Info;
 		Unique<Window>  m_Window;
 		Ref<Context>    m_Ctx;

@@ -76,6 +76,21 @@ namespace aby::ui {
     const Transform& Widget::transform() const {
         return m_Transform;
     }
+
+    const glm::vec2& Widget::position() const
+    {
+        return m_Transform.position;
+    }
+
+    const glm::vec2& Widget::size() const
+    {
+        return m_Transform.size;
+    }
+
+    const Anchor& Widget::anchor() const
+    {
+        return m_Transform.anchor;
+    }
     
     const Style& Widget::style() const {
         return m_Style;

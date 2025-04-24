@@ -10,17 +10,35 @@
 #undef open
 #endif
 
-namespace aby::ui::helper {
+namespace aby::ui {
+	Ref<ConsoleInputTextbox> ConsoleInputTextbox::create(Console* console, const Style& style) {
+		return create_ref<ConsoleInputTextbox>(console, style);
+	}
 
-	glm::vec4 log_color_to_vec4(ELogColor color) {
-		switch (color) {
-			using enum ELogColor;
-			case Yellow: return { 1.0f, 1.0f, 0.0f, 1.0f };  // RGB(255, 255, 0)
-			case Cyan:   return { 0.0f, 1.0f, 1.0f, 1.0f };  // RGB(0, 255, 255)
-			case Grey:   return { 0.7f, 0.7f, 0.7f, 1.0f };  // RGB(128, 128, 128)
-			case Red:    return { 1.0f, 0.0f, 0.0f, 1.0f };  // RGB(255, 0, 0)
-			default:     return { 1.0f, 1.0f, 1.0f, 1.0f };  // Default to white
-		}
+	ConsoleInputTextbox::ConsoleInputTextbox(Console* console, const Style& style) :
+		InputTextbox(
+			Transform{},
+			style,
+			TextInfo{
+				.text = "",
+				.color = { 0.759, 0.761, 0.754, 1 },
+				.scale = 1.f,
+				.alignment = ETextAlignment::LEFT,
+			},
+			InputTextOptions{
+				.submit_clears_focus = false,
+				.submit_clears_text  = true,
+				.cursor				 = true, 
+			}
+			),
+		m_Console(console)
+	{
+		m_Text.prefix = ">>> ";
+	}
+
+	void ConsoleInputTextbox::on_submit(const std::string& msg) {
+		m_Console->exec_cmd(msg);
+		m_Console->scroll_to_bottom();
 	}
 
 }
@@ -31,7 +49,6 @@ namespace aby::ui {
 		return create_ref<Console>(style);
 	}
 
-
 	Console::Console(const Style& style) :
 		LayoutContainer({ .anchor = {.position = EAnchor::BOTTOM_LEFT, .offset = {}} }, style, EDirection::VERTICAL, ELayout::BOTTOM_TO_TOP),
 		m_Constraints{
@@ -39,8 +56,6 @@ namespace aby::ui {
 			.max_items = 0,
 			.max_logs = 300,
 		},
-		m_Callback(SIZE_MAX),
-		m_ScrollPosition(0),
 		m_App(nullptr),
 		m_Objs{
 			.input = ConsoleInputTextbox::create(this, style),
@@ -59,29 +74,37 @@ namespace aby::ui {
 				{ 100, 100 }
 			)
 		},
-		m_ActiveChannel(nullptr),
-		m_ResizeAcc(0.f)
+		m_State{
+			.scroll_pos		= 0,
+			.resize_acc		= 0.f,
+			.focused		= false,
+			.active_channel = nullptr,
+		},
+		m_Cfg{
+			.callback   = SIZE_MAX,
+			.scroll_amt = 3,
+		}
 	{
-		Transform t{
+		Transform transform{
 			.anchor = {},
 			.position = { 0, 0 },
 			.size = { 150, m_Constraints.item_height }
 		};
-		Style s{
+		Style obj_style{
 			.background = Style::dark_mode().background,
 			.border = {}
 		};
-		TextInfo ti{
+		TextInfo text_info{
 			.text  = Logger::time_date_now(),
 			.color = { 0.759, 0.761, 0.754, 1 },
 			.scale = 1.f,
 			.alignment = ETextAlignment::CENTER
 		};
-		m_Objs.date_time = Textbox::create(t, s, ti);
-		t.size.x = 80;
-		ti.text = "60 FPS";
-		m_Objs.fps = Textbox::create(t, s, ti);
-		// set_resizability(EResize::N);
+		m_Objs.date_time = Textbox::create(transform, obj_style, text_info);
+		transform.size.x = 80;
+		text_info.text = "60 FPS";
+		m_Objs.fps = Textbox::create(transform, obj_style, text_info);
+		//set_resizability(EResize::N);
 	}
 
 	void Console::on_create(App* app, bool deserialzied) {
@@ -113,7 +136,7 @@ namespace aby::ui {
 		m_App = app;
 		LayoutContainer::on_create(app, deserialzied);
 		invalidate_self();
-		m_Callback = Logger::add_callback([this](const LogMsg& msg) {
+		m_Cfg.callback = Logger::add_callback([this](const LogMsg& msg) {
 			this->add_msg(msg);
 			this->scroll_to_bottom();
 		});
@@ -148,20 +171,17 @@ namespace aby::ui {
 		// }
 	}
 
-	std::uint32_t Console::calc_max_items() const {
-		return std::max(0, static_cast<int>((m_Transform.size.y - (m_Constraints.item_height * 2)) / m_Constraints.item_height));
-	}
-
-	void Console::for_each(const for_each_fn& fn) {
-		if (m_Children.empty()) {
-			return;
-		}
-
-		std::size_t start = std::max(std::size_t(0), m_ScrollPosition);
-		std::size_t end   = std::min(start + m_Constraints.max_items, m_Children.size());
-		for (std::ptrdiff_t i = static_cast<std::ptrdiff_t>(end) - 1; i >= static_cast<std::ptrdiff_t>(start); i--) {
-			fn(m_Children[i]);
-		}
+	bool Console::on_mouse_released(MouseReleasedEvent& event) {
+		m_State.focused      = event.hit(m_Transform.position, m_Transform.size);
+		auto input_transform = m_Objs.input->transform();
+		bool input_focused   = event.hit(input_transform.position, input_transform.size);
+		m_Objs.input->set_focused(input_focused);
+		
+		if (input_focused)
+			if (auto pos = m_Objs.input->hit_text(event.pos()); pos != std::string::npos)
+				m_Objs.input->set_cursor_pos(pos);
+		
+		return false;
 	}
 
 	bool Console::on_invalidate() {
@@ -172,7 +192,6 @@ namespace aby::ui {
 			child->on_invalidate();
 		}
 		return LayoutContainer::on_invalidate();
-
 	}
 
 	void Console::on_tick(App* app, Time time) {
@@ -197,6 +216,7 @@ namespace aby::ui {
 		EventDispatcher dsp(event);
 		dsp.bind(this, &Console::on_mouse_scrolled);
 		dsp.bind(this, &Console::on_key_pressed);
+		dsp.bind(this, &Console::on_mouse_released);
 		m_Objs.input->on_event(app, event);
 		m_Objs.menu->on_event(app, event);
 		LayoutContainer::on_event(app, event);
@@ -206,19 +226,19 @@ namespace aby::ui {
 		LayoutContainer::on_destroy(app);
 		m_Objs.input->on_destroy(app);
 		m_Objs.menu->on_destroy(app);
-		if (m_ActiveChannel && m_ActiveChannel->is_open()) {
-			m_ActiveChannel->close();
+		if (m_State.active_channel && m_State.active_channel->is_open()) {
+			m_State.active_channel->close();
 		}
-		Logger::remove_callback(m_Callback);
+		Logger::remove_callback(m_Cfg.callback);
 	}
 
 	bool Console::on_key_pressed(KeyPressedEvent& event) {
-		if ((event.mods() & aby::Button::EMod::CTRL) != aby::Button::EMod::NONE &&
-			event.code() == aby::Button::KEY_C) 
+		if ((event.mods() & ::aby::Button::EMod::CTRL) != ::aby::Button::EMod::NONE &&
+			event.code() == ::aby::Button::KEY_C) 
 		{
-			if (m_ActiveChannel) {
-				m_ActiveChannel->kill();
-				m_ActiveChannel.reset();
+			if (m_State.active_channel) {
+				m_State.active_channel->kill();
+				m_State.active_channel.reset();
 				return true;
 			}
 		}
@@ -227,19 +247,21 @@ namespace aby::ui {
 	}
 
 	bool Console::on_mouse_scrolled(MouseScrolledEvent& event) {
-		if (m_Children.size() > m_Constraints.max_items) {
-			if (event.offset_y() > 0) { // Scroll up
-				scroll_up();
+		if (m_State.focused) {
+			if (m_Children.size() > m_Constraints.max_items) {
+				if (event.offset_y() > 0) { // Scroll up
+					scroll_up();
+				}
+				else if (event.offset_y() < 0) { // Scroll down
+					scroll_down();
+				}
+				LayoutContainer::for_each([this](Ref<Widget> widget, std::size_t i) {
+					widget->set_position(calc_item_pos(i));
+					widget->on_invalidate();
+					});
 			}
-			else if (event.offset_y() < 0) { // Scroll down
-				scroll_down();
-			}
-			LayoutContainer::for_each([this](Ref<Widget> widget, std::size_t i) {
-				widget->set_position(calc_item_pos(i));
-				widget->on_invalidate();
-			});
+			invalidate_self();
 		}
-		invalidate_self();
 		return false;
 	}
 
@@ -291,15 +313,15 @@ namespace aby::ui {
 	Ref<Textbox> Console::create_msg(const LogMsg& msg) {
 		std::size_t index = std::min(m_Children.size(), static_cast<std::size_t>(m_Constraints.max_items));
 		Transform transform{
-			.anchor = {},
+			.anchor   = {},
 			.position = calc_item_pos(index), 
-			.size = { m_Transform.size.x, m_Constraints.item_height }
+			.size     = { m_Transform.size.x, m_Constraints.item_height }
 		};
 
 		TextInfo info{
-			.text  = msg.text,
-			.color = helper::log_color_to_vec4(msg.color()),
-			.scale = 1.f,
+			.text      = msg.text,
+			.color     = Logger::log_color_to_vec4(msg.color()),
+			.scale	   = 1.f,
 			.alignment = ETextAlignment::LEFT
 		};
 
@@ -331,42 +353,55 @@ namespace aby::ui {
 	}
 
 	void Console::exec_sys_cmd(const std::string& cmd) {
-		if (m_ActiveChannel && m_ActiveChannel->is_open()) {
-			m_ActiveChannel->write(cmd);
+		if (m_State.active_channel && m_State.active_channel->is_open()) {
+			m_State.active_channel->write(cmd);
 		}
 		else {
 			auto read = [](const std::string& msg) {
 				ABY_LOG("{}", msg);
 			};
-			m_ActiveChannel = sys::Process::create(read);
-			m_ActiveChannel->open(cmd);
+			m_State.active_channel = sys::Process::create(read);
+			m_State.active_channel->open(cmd);
+		}
+	}
+
+	std::uint32_t Console::calc_max_items() const {
+		return std::max(0, static_cast<int>((m_Transform.size.y - (m_Constraints.item_height * 2)) / m_Constraints.item_height));
+	}
+
+	void Console::for_each(const for_each_fn& fn) {
+		if (m_Children.empty()) {
+			return;
+		}
+
+		std::size_t start = std::max(std::size_t(0), m_State.scroll_pos);
+		std::size_t end = std::min(start + m_Constraints.max_items, m_Children.size());
+		for (std::ptrdiff_t i = static_cast<std::ptrdiff_t>(end) - 1; i >= static_cast<std::ptrdiff_t>(start); i--) {
+			fn(m_Children[i]);
 		}
 	}
 
 	void Console::scroll_to_bottom() {
 		if (m_Children.size() > m_Constraints.max_items) {
-			m_ScrollPosition = m_Children.size() - m_Constraints.max_items + 1;
+			m_State.scroll_pos = m_Children.size() - m_Constraints.max_items + 1;
 		}
 	}
 
 	void Console::scroll_down() {
-		constexpr auto scroll_amt = 3;
-		for (std::size_t i = 0; i < scroll_amt; i++) {
-			if (m_ScrollPosition < static_cast<int>(m_Children.size()) - m_Constraints.max_items) {
-				m_ScrollPosition++;
+		for (std::size_t i = 0; i < m_Cfg.scroll_amt; i++) {
+			if (m_State.scroll_pos < static_cast<int>(m_Children.size()) - m_Constraints.max_items) {
+				m_State.scroll_pos++;
 			}
 			else {
 				break;
 			}
 		}
-
 	}
 
 	void Console::scroll_up() {
-		constexpr auto scroll_amt = 3;
-		for (std::size_t i = 0; i < scroll_amt; i++) {
-			if (m_ScrollPosition > 0) {
-				m_ScrollPosition--;
+		for (std::size_t i = 0; i < m_Cfg.scroll_amt; i++) {
+			if (m_State.scroll_pos > 0) {
+				m_State.scroll_pos--;
 			} else {
 				break;
 			}
@@ -375,37 +410,3 @@ namespace aby::ui {
 	}
 }
 
-namespace aby::ui {
-	Ref<ConsoleInputTextbox> ConsoleInputTextbox::create(Console* console, const Style& style) {
-		return create_ref<ConsoleInputTextbox>(console, style);
-	}
-
-	ConsoleInputTextbox::ConsoleInputTextbox(Console* console, const Style& style) :
-		InputTextbox(
-			Transform{},
-			style,
-			TextInfo{
-				.text = ">>> ",
-				.color = { 0.759, 0.761, 0.754, 1 },
-				.scale = 1.f,
-				.alignment = ETextAlignment::LEFT,
-			},
-			InputTextOptions{
-				.prefix = 4,
-				.submit_clears_focus = false,
-				.submit_clears_text = true,
-			}
-		),
-		m_Console(console)
-	{
-
-	}
-
-	void ConsoleInputTextbox::on_submit(const std::string& msg) {
-		m_Console->exec_cmd(msg);
-		m_Console->scroll_to_bottom();
-	}
-
-
-
-}

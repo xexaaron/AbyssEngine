@@ -114,17 +114,21 @@ namespace aby::vk {
 
 }
 
+namespace aby {
+    class App;
+}
+
 namespace aby::vk {
 
     class Context;
 
     class Shader : public aby::Shader {
     public:
-        Shader(DeviceManager& devices, const fs::path& path, EShader type = EShader::FROM_EXT);
+        Shader(App* app, DeviceManager& devices, const fs::path& path, EShader type = EShader::FROM_EXT);
         ~Shader();
 
-        static Ref<Shader> create(DeviceManager& devices, const fs::path& path, EShader type);
-        
+        static Ref<Shader> create(aby::App* app, DeviceManager& devices, const fs::path& path, EShader type);
+
         void destroy();
 
         const ShaderDescriptor& descriptor() const;
@@ -138,13 +142,13 @@ namespace aby::vk {
         VkDescriptorSetLayout m_Layout;
         ShaderDescriptor m_Descriptor;
     };
-    
+
     class TextureResourceHandler;
 
     class ShaderModule {
     public:
         ShaderModule(vk::Context* ctx, const fs::path& vert, const fs::path& frag);
-        
+
         static Ref<ShaderModule> create(vk::Context* ctx, const fs::path& vert, const fs::path& frag);
         void destroy();
 
@@ -163,7 +167,7 @@ namespace aby::vk {
 
         std::vector<VkPipelineShaderStageCreateInfo> stages() const;
     protected:
-        void create_uniform_buffer(VkDeviceSize size);
+        void create_uniform_buffer(std::size_t size);
     private:
         vk::Context* m_Ctx;
         VkPipelineLayout m_Layout;
@@ -176,12 +180,17 @@ namespace aby::vk {
         VertexClass m_Class;
         friend class TextureResourceHandler;
     };
+}
+
+
+
+namespace aby::vk {
 
     class ShaderCompiler {
     public:
-        static std::vector<std::uint32_t> compile(DeviceManager& devices, const fs::path& path, EShader type = EShader::FROM_EXT);
+        static std::vector<std::uint32_t> compile(App* app, DeviceManager& devices, const fs::path& path, EShader type = EShader::FROM_EXT);
         static EShader get_type_from_ext(const fs::path& ext);
-        static fs::path cache_dir(const fs::path& file = "");
+        static fs::path cache_dir(App* app, const fs::path& file = "");
         static ShaderDescriptor reflect(const std::vector<std::uint32_t>& binary_data);
     private:
     };

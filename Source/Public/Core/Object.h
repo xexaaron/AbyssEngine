@@ -4,6 +4,7 @@
 #include "Core/Serialize.h"
 #include "Core/Event.h"
 #include "Core/Time.h"
+#include <span>
 
 namespace aby {
 
@@ -12,8 +13,8 @@ namespace aby {
 	class Object {
 	public:
 		Object() = default;
-		Object(const Object& other) = default;
-		Object(Object&& other) noexcept = default;
+		Object(const Object&) = default;
+		Object(Object&&) noexcept = default;
 		virtual ~Object() = default;
 
 		/**
@@ -28,13 +29,13 @@ namespace aby {
 		* @param app Pointer to the application.
 		* @param event Event to be handed off to an EventDispatcher.
 		*/
-		virtual void on_event(App* app, Event& event) {};
+		virtual void on_event(App* app, Event& event) {}
 		/**
 		* @brief Called every application tick.
 		* @param app Pointer to the application.
 		* @param deltatime The deltatime in milliseconds.
 		*/
-		virtual void on_tick(App* app, Time deltatime) {};
+		virtual void on_tick(App* app, Time deltatime) {}
 		/**
 		* @brief Called when the object is removed from a container/manager.
 		* @param app Pointer to the application
@@ -62,7 +63,7 @@ namespace aby {
 			return p;
 		}
 
-		Object& operator=(const Object& other) = default;
+		Object& operator=(const Object&) = default;
 		
 		bool operator==(const Object& other) const {
 			return m_ID == other.m_ID;
@@ -75,6 +76,4 @@ namespace aby {
 	private:
 		friend class App;
 	};
-
-
 }

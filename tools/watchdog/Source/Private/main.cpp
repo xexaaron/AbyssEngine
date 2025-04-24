@@ -4,6 +4,8 @@
 * @param argv watchdog <pid or process name> <command>
 */
 
+#pragma comment(user, "Enable 'standard conformant preprocessor' for __VA_OPT__")
+
 #include <iostream>
 #include <string>
 #include <thread>
@@ -30,7 +32,6 @@
 
 #define ABY_ERR(fmt, ...) std::cerr << std::format("[Watchdog] [Error] " fmt __VA_OPT__(,) __VA_ARGS__) << '\n';
 #define ABY_LOG(fmt, ...) std::cout << std::format("[Watchdog] [Info]  " fmt __VA_OPT__(,) __VA_ARGS__) << '\n';
-
 
 namespace aby {
 
@@ -120,6 +121,7 @@ namespace aby {
         return false;
     }
 }
+
 int main(int argc, char* argv[]) {
     if (argc < 3) {
         ABY_ERR("Usage: watchdog <pid/process name> <command>.");

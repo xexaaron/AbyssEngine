@@ -8,9 +8,9 @@ set(CMAKE_CXX_STANDARD 23)
 set(ENGINE ${PROJECT_NAME}Engine)
 set(EDITOR ${PROJECT_NAME}Editor)
 set(CMAKE_BUILD_TYPE "Debug")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(DEBUG_SUFFIX "d")
@@ -93,11 +93,12 @@ set(CPP_SOURCES
     Source/Private/Core/Resource.cpp
     Source/Private/Core/Time.cpp
     Source/Private/Core/Thread.cpp
+    Source/Private/Utility/Inserter.cpp
+    Source/Private/Utility/TagParser.cpp
     Source/Private/Rendering/Font.cpp
     Source/Private/Rendering/Context.cpp
     Source/Private/Rendering/Renderer.cpp
     Source/Private/Rendering/Camera.cpp
-    Source/Private/Rendering/Viewport.cpp
     Source/Private/Rendering/Shader.cpp
     Source/Private/Rendering/Texture.cpp
     Source/Private/Rendering/UI/Widget.cpp
@@ -151,11 +152,12 @@ set(HEADER_FILES
     Source/Public/Core/Resource.h
     Source/Public/Core/Time.h
     Source/Public/Core/Thread.h
+    Source/Public/Utility/Inserter.h
+    Source/Public/Utility/TagParser.h
     Source/Public/Rendering/Font.h
     Source/Public/Rendering/Context.h
     Source/Public/Rendering/Renderer.h
     Source/Public/Rendering/Camera.h
-    Source/Public/Rendering/Viewport.h
     Source/Public/Rendering/Shader.h
     Source/Public/Rendering/Texture.h
     Source/Public/Rendering/Vertex.h
@@ -200,6 +202,9 @@ set(HEADER_FILES
 file(GLOB CORE_HEADERS "Source/Public/Core/*.h")
 source_group("Public/Core" FILES ${CORE_HEADERS}) 
 
+file(GLOB UTILITY_HEADERS "Source/Public/Utility/*.h")
+source_group("Public/Utility" FILES ${UTILITY_HEADERS})
+
 file(GLOB RENDERING_HEADERS "Source/Public/Rendering/*.h")
 source_group("Public/Rendering" FILES ${RENDERING_HEADERS})
 
@@ -231,6 +236,9 @@ source_group("Private" FILES ${STB_IMPL} "Source/main.cpp")
 
 file(GLOB CORE_SOURCES "Source/Private/Core/*.cpp")
 source_group("Private/Core" FILES ${CORE_SOURCES}) 
+
+file(GLOB UTILITY_SOURCES "Source/Private/Utility/*.cpp")
+source_group("Private/Utility" FILES ${UTILITY_SOURCES})
 
 file(GLOB RENDERING_SOURCES "Source/Private/Rendering/*.cpp")
 source_group("Private/Rendering" FILES ${RENDERING_SOURCES})
@@ -297,8 +305,8 @@ add_custom_command(TARGET ${EDITOR} POST_BUILD
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(FREETYPE_DLL_IN  "${CMAKE_BINARY_DIR}/Vendor/freetype/${CMAKE_BUILD_TYPE}/freetype${DEBUG_SUFFIX}.dll")
     set(FREETYPE_DLL_OUT "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/freetype${DEBUG_SUFFIX}.dll")
-    set(SHADERC_DLL_IN  "${VULKAN_BIN_DIR}/shaderc_shared${DEBUG_SUFFIX}.dll")
-    set(SHADERC_DLL_OUT "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/shaderc_shared${DEBUG_SUFFIX}.dll")
+    set(SHADERC_DLL_IN   "${VULKAN_BIN_DIR}/shaderc_shared${DEBUG_SUFFIX}.dll")
+    set(SHADERC_DLL_OUT  "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/shaderc_shared${DEBUG_SUFFIX}.dll")
 
     add_custom_command(TARGET ${EDITOR} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E echo "Checking and copying DLLs..."

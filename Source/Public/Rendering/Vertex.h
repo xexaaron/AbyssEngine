@@ -51,6 +51,7 @@ namespace aby {
         glm::vec4     color;
         std::uint32_t font;
         std::string   text;
+        std::string   prefix;
     };
 
 }

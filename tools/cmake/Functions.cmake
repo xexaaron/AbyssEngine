@@ -10,9 +10,9 @@ endfunction()
 
 function(set_vendor_properties library folder)
     set_target_properties(${library} PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Vendor/${library}/${CMAKE_BUILD_TYPE}"
-            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Vendor/${library}/${CMAKE_BUILD_TYPE}"
-            ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Vendor/${library}/${CMAKE_BUILD_TYPE}"
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Vendor/${library}"
+            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Vendor/${library}"
+            ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Vendor/${library}"
             FOLDER ${folder}
     )
 endfunction()

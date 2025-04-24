@@ -64,12 +64,13 @@ namespace aby {
     public:
         using Callback = std::function<void(const LogMsg&)>;
 
-        static void flush();
-        static void set_streams(std::ostream& log_stream = std::clog, std::ostream& err_stream = std::cerr);
+        static void        flush();
+        static void        set_streams(std::ostream& log_stream = std::clog, std::ostream& err_stream = std::cerr);
         static std::size_t add_callback(Callback&& callback);
-        static void remove_callback(std::size_t idx);
+        static void        remove_callback(std::size_t idx);
         static std::string time_date_now_header();
         static std::string time_date_now();
+        static glm::vec4   log_color_to_vec4(ELogColor color);
 
         template <typename... Args>
         static void log(std::format_string<Args...> fmt, Args&&... args) {

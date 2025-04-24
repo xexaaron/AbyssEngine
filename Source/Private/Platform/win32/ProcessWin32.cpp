@@ -158,7 +158,46 @@ namespace aby::sys::win32 {
         DWORD flags = 0;
         WIN32_CHECK(CreatePseudoConsole(size, m_Handles.in.read, m_Handles.out.write, flags, &m_Handles.con));
     }
-   
+
+    STARTUPINFOEX Process::create_startup_info() {
+        STARTUPINFOEXA si;
+        ZeroMemory(&si, sizeof(si));
+        si.StartupInfo.cb = sizeof(STARTUPINFOEXA);
+
+        // Discover the size required for the list
+        size_t required_bytes = 0;
+        InitializeProcThreadAttributeList(NULL, 1, 0, &required_bytes);
+
+        // Allocate memory to represent the list
+        si.lpAttributeList = (PPROC_THREAD_ATTRIBUTE_LIST)HeapAlloc(GetProcessHeap(), 0, required_bytes);
+        if (!si.lpAttributeList)
+        {
+            throw std::out_of_range("Out of memory");
+        }
+
+        // Initialize the list memory location
+        if (!InitializeProcThreadAttributeList(si.lpAttributeList, 1, 0, &required_bytes))
+        {
+            HeapFree(GetProcessHeap(), 0, si.lpAttributeList);
+            WIN32_CHECK(HRESULT_FROM_WIN32(GetLastError()));
+        }
+
+        // Set the pseudoconsole information into the list
+        if (!UpdateProcThreadAttribute(si.lpAttributeList,
+            0,
+            PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE,
+            m_Handles.con,
+            sizeof(m_Handles.con),
+            NULL,
+            NULL))
+        {
+            HeapFree(GetProcessHeap(), 0, si.lpAttributeList);
+            WIN32_CHECK(HRESULT_FROM_WIN32(GetLastError()));
+        }
+
+        return si;
+    }
+
     std::string replace_cursor_right_with_spaces(const std::string& input) {
     // This regex matches the ANSI escape sequence for moving the cursor right.
     // It captures one or more digits before the 'C'.
@@ -243,44 +282,61 @@ namespace aby::sys::win32 {
         buffer = replace_cursor_right_with_spaces(sanitized);
     }
 
-    STARTUPINFOEX Process::create_startup_info() {
-        STARTUPINFOEXA si;
-        ZeroMemory(&si, sizeof(si));
-        si.StartupInfo.cb = sizeof(STARTUPINFOEXA);
+    void sanitize_cursor(std::string& buffer) {
+        constexpr const char* ESC = "\x1B[";
+        std::size_t pos = 0;
 
-        // Discover the size required for the list
-        size_t required_bytes = 0;
-        InitializeProcThreadAttributeList(NULL, 1, 0, &required_bytes);
+        while ((pos = buffer.find(ESC, pos)) != std::string::npos) {
+            std::size_t begin_seq = pos + std::strlen(ESC);
+            std::size_t cursor = 0;
+            std::string n, x, y;
+            char cmd = '\0';
 
-        // Allocate memory to represent the list
-        si.lpAttributeList = (PPROC_THREAD_ATTRIBUTE_LIST)HeapAlloc(GetProcessHeap(), 0, required_bytes);
-        if (!si.lpAttributeList)
-        {
-            throw std::out_of_range("Out of memory");
+            // Safeguard for buffer overrun
+            if (begin_seq >= buffer.size()) break;
+
+            // Collect digits for n
+            while ((begin_seq + cursor) < buffer.size() && std::isdigit(buffer[begin_seq + cursor])) {
+                n += buffer[begin_seq + cursor++];
+            }
+
+            // Check for ; indicating y;x
+            if ((begin_seq + cursor) < buffer.size() && buffer[begin_seq + cursor] == ';') {
+                y = n;
+                n.clear();
+                cursor++; // skip ';'
+
+                // Collect digits for x
+                while ((begin_seq + cursor) < buffer.size() && std::isdigit(buffer[begin_seq + cursor])) {
+                    x += buffer[begin_seq + cursor++];
+                }
+            }
+
+            // Now fetch the command character
+            if ((begin_seq + cursor) < buffer.size() && std::isalpha(buffer[begin_seq + cursor])) {
+                cmd = buffer[begin_seq + cursor++];
+            }
+            else {
+                // Invalid or incomplete sequence
+                pos += 1;
+                continue;
+            }
+            // Calculate total length of the escape sequence
+            std::size_t total_len = cursor + std::strlen(ESC);
+
+            // Handle ESC[<n>C – Cursor Forward (right)
+            if (cmd == 'C' && !n.empty()) {
+                int num_spaces = std::stoi(n);
+                buffer.replace(pos, total_len, std::string(num_spaces, ' '));
+                pos += num_spaces; // Advance past the inserted spaces
+            }
+            else {
+                // Erase any other ESC sequence
+                buffer.erase(pos, total_len);
+            }
         }
-
-        // Initialize the list memory location
-        if (!InitializeProcThreadAttributeList(si.lpAttributeList, 1, 0, &required_bytes))
-        {
-            HeapFree(GetProcessHeap(), 0, si.lpAttributeList);
-            WIN32_CHECK(HRESULT_FROM_WIN32(GetLastError()));
-        }
-
-        // Set the pseudoconsole information into the list
-        if (!UpdateProcThreadAttribute(si.lpAttributeList,
-            0,
-            PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE,
-            m_Handles.con,
-            sizeof(m_Handles.con),
-            NULL,
-            NULL))
-        {
-            HeapFree(GetProcessHeap(), 0, si.lpAttributeList);
-            WIN32_CHECK(HRESULT_FROM_WIN32(GetLastError()));
-        }
-
-        return si;
     }
+
 
     std::vector<std::string> Process::split(const std::string& cmd) {
         std::vector<std::string> out;

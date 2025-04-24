@@ -18,7 +18,7 @@ namespace aby::ui {
         Image::on_create(app, deserialized);
         m_Font = app->ctx().fonts().at(Resource{ EResource::FONT, m_Text.font });
         if (auto font = m_Font.lock()) {
-            m_TextSize = font->measure(m_Text.text) * m_Text.scale;
+            m_TextSize = font->measure(m_Text.prefix + m_Text.text) * m_Text.scale;
         }
         invalidate_self();
     }
@@ -58,6 +58,54 @@ namespace aby::ui {
         return result;
     }
     
+    bool Textbox::on_window_resize(WindowResizeEvent& event) {
+        invalidate_self();
+        return false;
+    }
+
+    std::size_t Textbox::hit_text(const glm::vec2& mouse_pos) {
+        const auto prefix_len = m_Text.prefix.length();
+        const auto total_len = prefix_len + m_Text.text.length();
+
+        if (total_len == 0)
+            return std::string::npos;
+
+        auto font = m_Font.lock();
+        if (!font) {
+            ABY_ERR("Font object inaccessible (id: {})", m_Text.font);
+            return std::string::npos;
+        }
+
+        if (!font->is_mono()) {
+            throw std::runtime_error("TODO: Handle non monospaced hit transforms for text character selection");
+        }
+
+        bool hit = (mouse_pos.x >= m_Text.pos.x && mouse_pos.x <= m_Text.pos.x + m_TextSize.x) &&
+            (mouse_pos.y >= m_Text.pos.y && mouse_pos.y <= m_Text.pos.y + m_TextSize.y);
+
+        if (!hit)
+            return std::string::npos;
+
+        float relative_x = mouse_pos.x - m_Text.pos.x;
+        std::size_t char_index = static_cast<std::size_t>(relative_x / font->char_width());
+
+        if (char_index < prefix_len) {
+            return 0;
+        }
+        else {
+            return std::min(char_index - prefix_len, m_Text.text.size());
+        }
+    }
+
+    const Text& Textbox::text() const {
+        return m_Text;
+    }
+
+
+    glm::vec2 Textbox::text_size() {
+        return m_TextSize;
+    }
+
     void Textbox::set_text(const std::string& text, Ref<Font> font) {
         if (auto my_font = m_Font.lock(); my_font && font) {
             if (font != my_font) {
@@ -66,15 +114,6 @@ namespace aby::ui {
         }
         m_Text.text = text;
         m_TextSize  = m_Font.lock()->measure(text);
-    }
-
-    bool Textbox::on_window_resize(WindowResizeEvent& event) {
-        invalidate_self();
-        return false;
-    }
-
-    glm::vec2 Textbox::text_size() {
-        return m_TextSize;
     }
 
 

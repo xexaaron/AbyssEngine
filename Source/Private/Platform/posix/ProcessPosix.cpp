@@ -1,10 +1,10 @@
-#include "Platform/posix/ProcessPosix.h"
 
 #if defined(__unix__) || defined(__linux__) || defined(__APPLE__)
 #define POSIX 
 #endif
 
 #ifdef POSIX
+#include "Platform/posix/ProcessPosix.h"
 
 namespace aby::sys::posix {
 

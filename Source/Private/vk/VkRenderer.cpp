@@ -18,12 +18,12 @@ namespace aby::vk {
         m_Frames{},
         m_Swapchain(ctx->surface(), ctx->devices(), ctx->window(), m_Frames),
         m_2D(ctx, m_Swapchain, { 
-            App::bin() / "Shaders/Vertex.glsl",
-            App::bin() / "Shaders/Fragment.glsl" 
+            ctx->app()->bin() / "Shaders/Vertex.glsl",
+            ctx->app()->bin() / "Shaders/Fragment.glsl" 
         }),
         m_3D(ctx, m_Swapchain, { 
-            App::bin() / "Shaders/Vertex.glsl",
-            App::bin() / "Shaders/Fragment.glsl" 
+            ctx->app()->bin() / "Shaders/Vertex.glsl",
+            ctx->app()->bin() / "Shaders/Fragment.glsl" 
         }),
         m_RecycledSemaphores{},
         m_Img(0)

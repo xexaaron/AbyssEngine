@@ -33,6 +33,7 @@ namespace aby {
 		switch (ctx->backend()) {
 			case EBackend::VULKAN: {
 				auto shader = vk::Shader::create(
+					ctx->app(),
 					static_cast<vk::Context*>(ctx)->devices(),
 					path,
 					type

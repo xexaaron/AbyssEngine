@@ -32,14 +32,16 @@ namespace aby::ui {
         void set_zindex(std::int32_t zindex);
         void set_visible(bool visible);
 
-        bool is_visible() const;
-        bool is_invalid() const;
-
+        bool             is_visible() const;
+        bool             is_invalid() const;
         const Transform& transform() const;
-        const Style& style() const;
-        std::int32_t zindex() const;
-        Weak<Object> parent() const;
-        Weak<Object> parent();
+        const glm::vec2& position() const;
+        const glm::vec2& size() const;
+        const Anchor&    anchor() const;
+        const Style&     style() const;
+        std::int32_t     zindex() const;
+        Weak<Object>     parent() const;
+        Weak<Object>     parent();
     protected:
         void invalidate_self();
         friend class Canvas;

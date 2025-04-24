@@ -1,10 +1,14 @@
 #include "vk/VkRenderModule.h"
+#include "Utility/TagParser.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <unordered_set>
+
+
+
 
 namespace aby::vk {
 
@@ -214,56 +218,121 @@ namespace aby::vk {
             ++acc;
         }
     }
-    void RenderModule::draw_text(const Text& text) {
-        Ref<Font> font_obj = m_Ctx->fonts().at({ EResource::FONT, text.font });
-        float texture = static_cast<float>(font_obj->texture().handle());
-        Ref<Texture> tex_obj = m_Ctx->textures().at(font_obj->texture());
-        auto& acc = this->quads();
-        const auto& glyphs = font_obj->glyphs();
 
-        glm::vec2 text_size = font_obj->measure(text.text) * text.scale;
-        glm::vec3 current_position = { text.pos.x, text.pos.y, 0.f }; 
-        glm::vec4 color = text.color;
-
-        static const std::unordered_set<char32_t> escape_chars = {
-            0x27, 0x22, 0x3f, 0x5c, 0x07, 0x08,
-            0x0c, 0x0a, 0x0d, 0x09, 0x0b,
+    namespace {
+        static const std::unordered_set<char32_t> TEXT_ESCAPE_CHARACTERS = {
+            0x27, // '''
+            0x22, // '"'
+            0x3f, // '?'
+            0x5c, // '\'
+            0x07, // '\a'
+            0x08, // '\b'
+            0x0c, // '\f'
+            0x0a, // '\n'
+            0x0d, // '\r'
+            0x09, // '\t'
+            0x0b, // '\v'
         };
 
-        for (char32_t c : text.text) {
+        glm::mat4 compute_text_transform(const ft::Glyph& g, const glm::vec2& current_position, float text_scale, float text_size_y) {
+            // Compute size and position
+            glm::vec3 size = { g.size.x * text_scale, g.size.y * text_scale, 0.f };
+            glm::vec3 pos = {
+                (current_position.x + g.bearing.x * text_scale) + (size.x / 2),
+                (current_position.y + (text_size_y - g.bearing.y) * text_scale) + (size.y / 2),
+                0.f
+            };
+            return glm::translate(UNIT_MATRIX, pos) * glm::scale(UNIT_MATRIX, size);
+        }
+
+    }
+
+    void RenderModule::draw_text(const Text& text) {
+        Ref<Font>    font_obj = m_Ctx->fonts().at({ EResource::FONT, text.font });
+        float        texture = static_cast<float>(font_obj->texture().handle());
+        Ref<Texture> tex_obj = m_Ctx->textures().at(font_obj->texture());
+        auto&        acc = this->quads();
+        const auto&  glyphs = font_obj->glyphs();
+
+        glm::vec2   text_size        = font_obj->measure(text.text) * text.scale;
+        glm::vec3   current_position = { text.pos.x, text.pos.y, 0.f }; 
+        glm::vec4   color            = text.color;
+        std::string stripped_text    = text.prefix + text.text;
+        auto        text_decors      = util::parse_and_strip_tags(stripped_text);
+
+        std::size_t cursor = 0;
+
+        for (auto& decor : text_decors) {
+            if (decor.type != util::ETextDecor::HIGHLIGHT)
+                continue;
+            
+            if (!font_obj->is_mono())
+                throw std::runtime_error("TODO: Implement ETextDecoration::HIGHLIGHT for non mono fonts");
+
+            auto underline_start = glm::vec2{ 
+                current_position.x + (font_obj->char_width() * decor.range.start),
+                current_position.y - 2.f
+            };
+
+            auto underline_end = glm::vec2{
+                current_position.x + (font_obj->char_width() * (decor.range.end + 1)),
+                current_position.y
+            };
+            Quad quad({ (underline_end - underline_start).x, text_size.y + 4.f }, underline_start, { 0.1, 0.1, 1.0, 1.f });
+            draw_quad(quad);
+        }
+
+        for (char32_t c : stripped_text) {
             // Skip escape characters
-            if (escape_chars.contains(c)) {
-                if (c == U'\t') {
+            if (TEXT_ESCAPE_CHARACTERS.contains(c)) {
+                switch (c) {
+                case U'\t': {
                     current_position.x += (glyphs.at(U' ').advance * text.scale * 4);
+                    break;
+                }
                 }
                 continue;
             }
-
-            // Ensure glyph exists
             auto it = glyphs.find(c);
-            if (it == glyphs.end()) continue;
-            const auto& g = it->second;
-
-            // Compute size and position
-            glm::vec3 size = { g.size.x * text.scale, g.size.y * text.scale, 0.f };
-            glm::vec3 pos = {
-                (current_position.x + g.bearing.x * text.scale) + (size.x / 2),
-                (current_position.y + (text_size.y - g.bearing.y) * text.scale) + (size.y / 2),
-                0.f
-            };
-
-            // Apply transformations
-            glm::mat4 transform = glm::translate(UNIT_MATRIX, pos) * glm::scale(UNIT_MATRIX, size);
-
-            // Vertex processing
+            if (it == glyphs.end()) {
+                continue;
+            }
+            const auto& glyph = it->second;
+            glm::mat4 transform = compute_text_transform(glyph, current_position, text.scale, text_size.y);
             for (std::size_t i = 0; i < 4; i++) {
                 glm::vec3 position(transform * VERTEX_POSITIONS[i]);
-                glm::vec3 texinfo(g.texcoords[i], texture);
+                glm::vec3 texinfo(glyph.texcoords[i], texture);
                 acc = Vertex(position, color, texinfo);
                 ++acc;
             }
 
-            current_position.x += g.advance * text.scale;
+            for (auto& decor : text_decors) {
+                if (cursor >= decor.range.start && cursor <= decor.range.end) {
+                    switch (decor.type) {
+                    case util::ETextDecor::UNDERLINE: {
+                            auto decor_it = glyphs.find('_');
+                            if (decor_it == glyphs.end()) {
+                                IF_DBG(ABY_WARN("Font Glyph for character '{:#x}' not found", (int32_t)c));
+                                continue;
+                            }
+                            const auto& decor_glyph = decor_it->second;
+                            glm::mat4 decor_transform = compute_text_transform(decor_glyph, { current_position.x, current_position.y }, text.scale, text_size.y);
+                            for (std::size_t i = 0; i < 4; i++) {
+                                glm::vec3 position(decor_transform * VERTEX_POSITIONS[i]);
+                                glm::vec3 texinfo(decor_glyph.texcoords[i], texture);
+                                acc = Vertex(position, color, texinfo);
+                                ++acc;
+                            }
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            current_position.x += glyph.advance * text.scale;
+            cursor++;
         }
     }
 

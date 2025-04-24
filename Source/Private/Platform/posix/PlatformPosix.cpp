@@ -1,8 +1,6 @@
-#include "Platform/posix/PlatformPosix.h"
-
 
 #ifdef POSIX
-
+#include "Platform/posix/PlatformPosix.h"
 #include <unistd.h>
 #include <pthread.h>
 

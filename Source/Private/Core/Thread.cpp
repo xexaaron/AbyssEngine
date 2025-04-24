@@ -4,6 +4,7 @@
 #include "Platform/Platform.h"
 
 
+//#define ASYNC_RESOURCE_LOADING
 
 
 namespace aby {

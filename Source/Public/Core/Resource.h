@@ -37,7 +37,6 @@ namespace aby {
         } else {
             static_assert(false, "T != EResource Enumeration");
         }
-        return EResource::NONE;
     }
 
     class Resource {
@@ -46,8 +45,8 @@ namespace aby {
     public:
         Resource() : m_Type(EResource::NONE), m_Handle(0) {}
         Resource(EResource type, Handle handle) : m_Type(type), m_Handle(handle) {}
-        Resource(const Resource& other) = default;
-        Resource(Resource&& other) noexcept = default;
+        Resource(const Resource&) = default;
+        Resource(Resource&&) noexcept = default;
 
         EResource type() const { return m_Type; }
         Handle    handle() const { return m_Handle; }
@@ -55,8 +54,8 @@ namespace aby {
         explicit operator bool() const {
             return (m_Type != EResource::NONE);
         }
-        Resource& operator=(const Resource& other) = default;
-        Resource& operator=(Resource&& other) noexcept = default;
+        Resource& operator=(const Resource&) = default;
+        Resource& operator=(Resource&&) noexcept = default;
         bool operator==(const Resource& other) const {
             return ((m_Type == other.m_Type) && (m_Handle == other.m_Handle));
         }

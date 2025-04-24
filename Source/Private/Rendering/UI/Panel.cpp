@@ -45,7 +45,6 @@ namespace aby::ui {
             bInvalid = Image::on_invalidate();
         }
         ParentWidget::on_invalidate();
-
         return bInvalid;
     }
 

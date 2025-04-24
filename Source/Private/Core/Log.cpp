@@ -60,5 +60,16 @@ namespace aby {
         return std::format("[{0:%F}][{0:%T}]", std::chrono::floor<std::chrono::seconds>(now));
     }
 
+    glm::vec4 Logger::log_color_to_vec4(ELogColor color) {
+        switch (color) {
+            using enum ELogColor;
+        case Yellow: return { 1.0f, 1.0f, 0.0f, 1.0f };  // RGB(255, 255, 0)
+        case Cyan:   return { 0.0f, 1.0f, 1.0f, 1.0f };  // RGB(0, 255, 255)
+        case Grey:   return { 0.7f, 0.7f, 0.7f, 1.0f };  // RGB(128, 128, 128)
+        case Red:    return { 1.0f, 0.0f, 0.0f, 1.0f };  // RGB(255, 0, 0)
+        default:     return { 1.0f, 1.0f, 1.0f, 1.0f };  // Default to white
+        }
+    }
+
 
 }

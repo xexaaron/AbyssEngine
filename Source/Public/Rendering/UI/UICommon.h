@@ -60,6 +60,7 @@ namespace aby::ui {
         S    = BIT(2),
         W    = BIT(3),
     };
+
     DECLARE_ENUM_OPS(EResize);
 }
 
@@ -107,10 +108,17 @@ namespace aby::ui {
         ETextAlignment alignment = ETextAlignment::CENTER;
     };
 
+
+    struct TextCursor {
+        std::size_t pos     = std::string::npos;
+        char        cursor  = '_';
+    };
+
     struct InputTextOptions {
-        std::size_t prefix       = 0;     // How much of the text is a prefix and therefore should not be deletable.
-        bool submit_clears_focus = false; // Does pressing enter/submitting make the input text box lose focus.
-        bool submit_clears_text  = true;  // Does pressing enter/submitting clear the text (not including prefix).
+        bool        submit_clears_focus = false; // Does pressing enter/submitting make the input text box lose focus.
+        bool        submit_clears_text  = true;  // Does pressing enter/submitting clear the text (not including prefix).
+        bool        cursor              = true;  // Is a cursor shown when the textbox is focused.
+        bool        unused              = false; // padding for now, might get turned into an option later.
     };
 
 

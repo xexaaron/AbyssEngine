@@ -37,8 +37,6 @@ namespace aby {
 
 namespace aby {
 
-
-
     class Window {
     public:
         explicit Window(const WindowInfo& info);

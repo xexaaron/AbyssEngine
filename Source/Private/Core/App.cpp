@@ -7,14 +7,14 @@
 // Static data
 namespace aby {
     
-    fs::path App::s_Path = sys::get_exec_path();
+    fs::path App::m_ExePath = "";
 
     fs::path App::bin() {
-        return s_Path.parent_path();
+        return m_ExePath.parent_path();
     }
 
     const fs::path& App::exe() {
-        return s_Path;
+        return m_ExePath;
     }
 
     fs::path App::cache() {
@@ -178,7 +178,10 @@ namespace aby {
         restart.detach();
         this->quit();
     }
+
 }
+
+
 
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
@@ -187,15 +190,23 @@ namespace aby {
 #define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)  
 #define new DEBUG_NEW  // Override `new` to track allocations
 
+namespace aby {
+    std::vector<std::string> setup(int argc, char** argv) {
+        App::m_ExePath = argv[0];
+        std::vector<std::string> args(argc, "");
+        for (int i = 0; i < argc; i++) {
+            args[i] = argv[i];
+        }
+        return args;
+    }
+   
+}
 int main(int argc, char* argv[]) {
 #if _MSC_VER && !defined(NDEBUG) 
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
 #endif
-    std::vector<std::string> args(argc, "");
-    for (int i = 0; i < argc; i++) {
-        args[i] = argv[i];
-    }
+    auto args = aby::setup(argc, argv);
     aby::App& app = aby::main(args);
     app.run();
     return 0;

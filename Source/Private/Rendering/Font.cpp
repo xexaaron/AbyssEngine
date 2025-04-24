@@ -30,38 +30,27 @@ namespace ft {
             ::FT_Done_Face(face);
         }
 
-        std::unordered_map<char32_t, aby::Font::Glyph> load_glyph_range(char32_t start, char32_t end, const std::filesystem::path& path, const std::string& name, std::uint32_t pt, const glm::vec2& dpi, const std::filesystem::path& cache, float& text_height) {
-            std::unordered_map<char32_t, aby::Font::Glyph> out;
-            if (std::filesystem::exists(cache)) {
-                auto glyph_file = cache_path(start, end, name, pt, ".bin");
-                if (!std::filesystem::exists(glyph_file)) {
-                    FT_Face face = create_face(path, pt, dpi);
-                    float max_ascent = static_cast<float>(face->size->metrics.ascender) / 64.0f;
-                    float max_descent = static_cast<float>(face->size->metrics.descender) / 64.0f;
-                    text_height = max_ascent - max_descent;  // Descent is negative in FreeType
-                    text_height *= 0.5f;
-                    out = load_glyph_range_ttf(start, end, face, cache);
-                    cache_glyphs(start, end, name, pt, out, text_height);
-                    destroy_face(face);
-                }
-                else {
-                    out = load_glyph_range_bin(start, end, glyph_file, text_height);
-                }
+        FontData load_glyph_range(aby::App* app, char32_t start, char32_t end, const std::filesystem::path& path, std::uint32_t pt, const glm::vec2& dpi) {
+            auto name       = path.filename().string();
+            auto glyph_file = cache_path(app, start, end, name, pt, ".bin");
+            auto png_file   = cache_path(app, start, end, name, pt, ".png");
+            
+            FontData out;
+            if (std::filesystem::exists(png_file) && std::filesystem::exists(glyph_file)) {
+                out = load_glyph_range_bin(start, end, glyph_file);
             }
             else {
                 FT_Face face = create_face(path, pt, dpi);
-                float max_ascent = static_cast<float>(face->size->metrics.ascender) / 64.0f;
-                float max_descent = static_cast<float>(face->size->metrics.descender) / 64.0f;
-                text_height = max_ascent - max_descent;  // Descent is negative in FreeType
-                text_height *= 0.5f;
-                out = load_glyph_range_ttf(start, end, face, cache);
-                cache_glyphs(start, end, name, pt, out, text_height);
+                out = load_glyph_range_ttf(start, end, face, png_file);
+                cache_glyphs(app, start, end, name, pt, out);
                 destroy_face(face);
             }
+            out.png  = aby::Texture::create(&app->ctx(), png_file);
+            out.name = name;
             return out;
         }
 
-        std::unordered_map<char32_t, aby::Font::Glyph> load_glyph_range_ttf(char32_t start, char32_t end, FT_FaceRec_* face, const std::filesystem::path& cache) {
+        FontData load_glyph_range_ttf(char32_t start, char32_t end, FT_FaceRec_* face, const std::filesystem::path& png_file) {
             constexpr glm::ivec2 ATLAS_SIZE = { 512, 512 };  // Texture Atlas Size (Fixed or dynamically sized as needed)
 
             std::uint32_t tex_width = ATLAS_SIZE.x;
@@ -72,7 +61,13 @@ namespace ft {
             int pen_x = 0;
             int pen_y = 0;
 
-            std::unordered_map<char32_t, aby::Font::Glyph> out;
+            float max_ascent = static_cast<float>(face->size->metrics.ascender) / 64.0f;
+            float max_descent = static_cast<float>(face->size->metrics.descender) / 64.0f;
+            FontData out{
+                .glyphs  = {},
+                .text_height = (max_ascent - max_descent) * 0.5f,
+                .is_mono = static_cast<bool>(face->face_flags & FT_FACE_FLAG_FIXED_WIDTH),
+            };
 
             for (char32_t c = start; c < end; ++c) {
                 int pad = 1;
@@ -90,7 +85,7 @@ namespace ft {
                 glm::vec2 uv_min = { static_cast<float>(pen_x) / tex_width, static_cast<float>(pen_y) / tex_height };
                 glm::vec2 uv_max = { static_cast<float>(pen_x + bmp->width) / tex_width, static_cast<float>(pen_y + bmp->rows) / tex_height };
                 glm::vec4 uvs = { uv_min.x, uv_min.y, uv_max.x, uv_max.y };
-                out[c] = aby::Font::Glyph{
+                out.glyphs[c] = Glyph{
                     .advance = static_cast<std::uint32_t>(glyph->advance.x >> 6u),
                     .offset = pen_y * tex_width + pen_x,
                     .bearing = { glyph->bitmap_left, glyph->bitmap_top },
@@ -122,42 +117,60 @@ namespace ft {
                 png_data[i * 4 + 3] = 0xff;      // Alpha channel (fully opaque)
             }
 
-            std::string cache_path_str = cache.string();
-            ::stbi_write_png(cache_path_str.c_str(), tex_width, tex_height, 4, png_data.data(), tex_width * 4);
+            std::string png_file_str = png_file.string();
+            ::stbi_write_png(png_file_str.c_str(), tex_width, tex_height, 4, png_data.data(), tex_width * 4);
             
             return out;
         }
-
 
         // Glyph Cache Format
         // File: ${m_Name}_${character_start_range}_${character_end_range}_${m_SizePt}.bin
         // Layout:
         //      std::size_t glyph_count. (Not always character_end_range - character_start_range)
+        //      float       text_height.
+        //      bool        is_monospaced.
         //      { 
         //          char32_t    character
         //          Glyph       glyph    
         //      }...
         // 
         //
-        std::unordered_map<char32_t, aby::Font::Glyph> load_glyph_range_bin(char32_t start, char32_t end, const std::filesystem::path& cache, float& text_height) {
+        FontData load_glyph_range_bin(char32_t start, char32_t end, const std::filesystem::path& cache) {
             aby::Serializer serializer(aby::SerializeOpts{ .file = cache, .mode = aby::ESerializeMode::READ });
             std::size_t glyph_count = 0;
+            FontData out;
+
             serializer.read(glyph_count);
-            serializer.read(text_height);
-            std::unordered_map<char32_t, aby::Font::Glyph> out;
-            out.reserve(glyph_count);
+            serializer.read(out.text_height);
+            serializer.read(out.is_mono);
+
+            out.glyphs.reserve(glyph_count);
             for (std::size_t i = 0; i < glyph_count; i++) {
                 char32_t character;
-                aby::Font::Glyph glyph;
+                Glyph glyph;
                 serializer.read(character);
                 serializer.read(glyph);
-                out.emplace(character, glyph);
+                out.glyphs.emplace(character, glyph);
             }
+
             return out;
         }
 
-        std::filesystem::path cache_path(char32_t start, char32_t end, const std::string& name, std::uint32_t pt, const std::filesystem::path& ext) {
-            auto dir = aby::App::cache() / "Fonts";
+        void cache_glyphs(aby::App* app, char32_t start, char32_t end, const std::string& name, std::uint32_t pt, const FontData& data) {
+            std::filesystem::path bin_cache_path = cache_path(app, start, end, name, pt, ".bin");
+            aby::Serializer serializer(aby::SerializeOpts{ .file = bin_cache_path, .mode = aby::ESerializeMode::WRITE });
+            serializer.write(data.glyphs.size());
+            serializer.write(data.text_height);
+            serializer.write(data.is_mono);
+            for (const auto& [character, glyph] : data.glyphs) {
+                serializer.write(character);
+                serializer.write(glyph);
+            }
+            serializer.save();
+        }
+
+        std::filesystem::path cache_path(aby::App* app, char32_t start, char32_t end, const std::string& name, std::uint32_t pt, const std::filesystem::path& ext) {
+            auto dir = app->cache() / "Fonts";
             if (!std::filesystem::exists(dir)) {
                 std::filesystem::create_directories(dir);
             }
@@ -165,18 +178,6 @@ namespace ft {
                 std::to_string(pt) + ext.string();
 
             return dir / path;
-        }
-
-        void cache_glyphs(char32_t start, char32_t end, const std::string& name, std::uint32_t pt, const std::unordered_map<char32_t, aby::Font::Glyph>& glyphs, float text_height) {
-            std::filesystem::path bin_cache_path = cache_path(start, end, name, pt, ".bin");
-            aby::Serializer serializer(aby::SerializeOpts{ .file = bin_cache_path, .mode = aby::ESerializeMode::WRITE });
-            serializer.write(glyphs.size());
-            serializer.write(text_height);
-            for (const auto& [character, glyph] : glyphs) {
-                serializer.write(character);
-                serializer.write(glyph);
-            }
-            serializer.save();
         }
 
         operator ::FT_Library& () {
@@ -212,15 +213,9 @@ namespace aby {
 
     Font::Font(Context* ctx, const fs::path& path, const glm::vec2& dpi, std::uint32_t pt) :
         m_SizePt(pt),
-        m_TextHeight(0),
-        m_Texture{},
-        m_Name(path.filename().string()),
-        m_Glyphs{}
+        m_Data(ft::Library::get().load_glyph_range(ctx->app(), 32, 128, path, pt, dpi))
     {
-        std::pair<char32_t, char32_t> ascii{ 32, 128 };
-        auto png  = ft::Library::get().cache_path(ascii.first, ascii.second, m_Name, pt, ".png");
-        m_Glyphs  = ft::Library::get().load_glyph_range(ascii.first, ascii.second, path, m_Name, pt, dpi, png, m_TextHeight);
-        m_Texture = Texture::create(ctx, png);
+
     }
 
     Font::~Font() {
@@ -232,33 +227,47 @@ namespace aby {
     }
 
     Resource Font::texture() const {
-        return m_Texture;
+        return m_Data.png;
     }
 
-    std::string Font::name() const {
-        return m_Name;
+    std::string_view Font::name() const {
+        return m_Data.name;
     }
 
     const Font::Glyphs& Font::glyphs() const {
-        return m_Glyphs;
+        return m_Data.glyphs;
     }
     
+    bool Font::is_mono() const {
+        return m_Data.is_mono;
+    }
+    float Font::text_height() const {
+        return m_Data.text_height;
+    }
+
+    float Font::char_width() const {
+        ABY_ASSERT(m_Data.is_mono, "Font is not monospaced! Do not call Font::char_width()");
+        return m_Data.glyphs.at(U'a').size.x;
+    }
+
+
     glm::vec2 Font::measure(const std::string& text) const {
-        glm::vec2 size(0, m_TextHeight);
+        glm::vec2 size(0, m_Data.text_height);
+        if (m_Data.is_mono) {
+            size.x = text.length() * m_Data.glyphs.at(U'a').size.x;
+            return size;
+        }
         for (std::size_t i = 0; i < text.size(); i++) {
             char32_t c = text[i];
-            if (auto it = m_Glyphs.find(c); it != m_Glyphs.end()) {
+            if (auto it = m_Data.glyphs.find(c); it != m_Data.glyphs.end()) {
                 const auto& g = it->second;
                 size.x += g.advance;
-                // size.y = std::max(size.y, g.size.y);
             }
         }
         return size;
     }
 
-    float Font::text_height() const {
-        return m_TextHeight;
-    }
+   
 
 
 }
