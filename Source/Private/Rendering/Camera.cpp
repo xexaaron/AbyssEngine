@@ -8,6 +8,7 @@ namespace aby {
     ICamera::ICamera(const Config& cfg, const glm::vec3& pos) :
         m_Pitch(0.f),
         m_Yaw(0.f),
+        m_Roll(0.f),
         m_AspectRatio(cfg.AspectRatio),
         m_FOV(cfg.FOV),
         m_NearClip(cfg.NearClip),
@@ -57,11 +58,24 @@ namespace aby {
     const glm::vec2& ICamera::viewport_size() const { return m_ViewportSize; }
     glm::vec3 ICamera::up() const { return glm::rotate(orientation(), glm::vec3(0.0f, 1.0f, 0.0f)); }
     glm::vec3 ICamera::right() const { return glm::rotate(orientation(), glm::vec3(1.0f, 0.0f, 0.0f)); }
-    glm::vec3 ICamera::forward() const { return glm::rotate(orientation(), glm::vec3(0.0f, 0.0f, -1.0f)); }
+    glm::vec3 ICamera::forward() const { return glm::rotate(orientation(), glm::vec3(0.0f, 0.0f, 1.0f)); }
     const glm::vec3& ICamera::position() const { return  m_Position; }
-    glm::quat ICamera::orientation() const { return glm::quat(glm::vec3(-m_Pitch, -m_Yaw, 0.0f)); }
+    glm::quat ICamera::orientation() const { return glm::quat(glm::vec3(-m_Pitch, -m_Yaw, -m_Roll)); }
     glm::mat4 ICamera::view_projection() const { return  m_Projection * m_ViewMatrix; }
     
+    void ICamera::debug() const {
+        ABY_DBG("Camera:");
+        ABY_DBG(" -- Position: {}", m_Position);
+        ABY_DBG(" -- Rotation: (yaw:{}, pitch:{}, roll:{})", m_Yaw, m_Pitch, 0.f);
+        ABY_DBG(" -- Viewport: {}", m_ViewportSize);
+    }
+    void ICamera::look_at(const glm::vec3& target) {
+        glm::vec3 direction = glm::normalize(target - m_Position);
+        m_Yaw = glm::degrees(std::atan2(direction.x, direction.z));
+        m_Pitch = glm::degrees(std::asin(direction.y));
+        update_view();
+    }
+
 }
 
 namespace aby {
@@ -149,8 +163,9 @@ namespace aby {
 
 namespace aby {
     FreeCamera::FreeCamera(const Config& cfg) :
-        ICamera(cfg, glm::vec3(0.f, 200.f, 0.f))
+        ICamera(cfg, glm::vec3(200.f, 200.f, 200.f))
     {
+        look_at({ 0.f, 0.f, 0.f });
         update_view();
     }
 
@@ -192,6 +207,12 @@ namespace aby {
         if (window->is_key_pressed(Button::KEY_D)) {
             m_Position += right() * move_speed;
         }
+        if (window->is_key_pressed(Button::KEY_Q)) {
+            m_Roll += rotation_speed() * time; // or any time delta
+        }
+        if (window->is_key_pressed(Button::KEY_E)) {
+            m_Roll -= rotation_speed() * time;
+        }
     }
 
     ECamera FreeCamera::type() const {
@@ -201,7 +222,7 @@ namespace aby {
     void FreeCamera::update_view() {
         m_ViewMatrix = glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(orientation());
         m_ViewMatrix = glm::inverse(m_ViewMatrix);
-        //m_ViewMatrix[1][1] *= -1;
+        m_ViewMatrix[1][1] *= -1;
     }
 
 }

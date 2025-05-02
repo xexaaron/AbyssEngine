@@ -22,6 +22,7 @@ namespace aby::ui {
 
         virtual std::size_t add_child(Ref<Widget> child);
         virtual void remove_child(std::size_t idx);
+        Ref<Widget> get_child(std::size_t idx);
         virtual void for_each(const for_each_fn& fn);
         void for_each(const for_each_fn_i& fn);
         void recurse(const for_each_fn& fn);

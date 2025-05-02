@@ -207,8 +207,7 @@ namespace aby::vk {
     void RenderModule::draw_quad(const Quad& quad) {
         auto& acc = this->quads();
 
-        glm::vec3 size = { quad.size.x, quad.size.y, 1.f };
-        glm::mat4 transform = glm::translate(UNIT_MATRIX, quad.v.pos) * glm::scale(UNIT_MATRIX, size);
+        glm::mat4 transform = glm::translate(UNIT_MATRIX, quad.v.pos) * glm::scale(UNIT_MATRIX, quad.size);
 
         for (std::size_t i = 0; i < std::size(VERTEX_POSITIONS); i++) {
             glm::vec3 pos(transform * VERTEX_POSITIONS[i]);

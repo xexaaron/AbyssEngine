@@ -33,13 +33,12 @@ namespace aby {
 
     struct Quad {
         Quad(const glm::vec2& size, const glm::vec2& pos, const glm::vec4& col = { 1, 1, 1, 1 }, float texture = 0.f, const glm::vec2& uvs = { 1, 1 }) :
-            v(glm::vec3(pos + (size / glm::vec2(2, 2)), 0.f), col, texture, uvs), size(size) {
-        }
-        Quad(const glm::vec2& size = {}, const glm::vec3& pos = {}, const glm::vec4& col = { 1, 1, 1, 1 }, float texture = 0.f, const glm::vec2& uvs = { 1, 1 }) :
-            v(glm::vec3(pos.x + (size.x / 2), pos.y + (size.y / 2), 0.f), col, texture, uvs), size(size) { }
+            v(glm::vec3(pos + (size / glm::vec2(2, 2)), 0.f), col, texture, uvs), size(size, 1.f) {}
+        Quad(const glm::vec3& size = {}, const glm::vec3& pos = {}, const glm::vec4& col = { 1, 1, 1, 1 }, float texture = 0.f, const glm::vec2& uvs = { 1, 1 }) :
+            v(pos, col, texture, uvs), size(size) {}
 
         Vertex v;
-        glm::vec2 size;
+        glm::vec3 size;
     };
 
     struct Text {

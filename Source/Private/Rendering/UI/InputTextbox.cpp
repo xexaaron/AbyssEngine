@@ -30,7 +30,6 @@ namespace aby::ui {
 			if (bFocused) {
 				Text text = m_Text;
 				text.text = m_Cursor.format();
-				//std::cout << "Cursor: " << m_Cursor.position() << " " << text.text << std::endl;
 				app->renderer().draw_text(text);
 			}
 			else {
@@ -183,7 +182,8 @@ namespace aby::ui {
 	CursorString::CursorString(std::string& str, size_t init_cursor_pos) :
 		m_Buffer(&str),
 		m_Cursor(init_cursor_pos),
-		m_Highlight(UINT32_MAX, UINT32_MAX)
+		m_HighlightStart(std::string::npos),
+		m_HighlightEnd(std::string::npos)
 	{
 		if (m_Cursor > m_Buffer->size()) {
 			m_Cursor = m_Buffer->size();
@@ -193,8 +193,8 @@ namespace aby::ui {
 	void CursorString::move_right(std::size_t count, bool highlight) {
 		std::size_t size = m_Buffer->size();
 
-		if (highlight) {
-			m_Highlight.x = m_Cursor;
+		if (highlight && !this->is_highlighted()) {
+			m_HighlightStart = m_Cursor;
 		}
 
 		while (count != 0 && m_Cursor < size) {
@@ -203,18 +203,17 @@ namespace aby::ui {
 		}
 
 		if (highlight) {
-			m_Highlight.y = m_Cursor;
+			m_HighlightEnd = m_Cursor;
 		}
 
 		if (!highlight) {
-			m_Highlight.x = UINT32_MAX;
-			m_Highlight.y = UINT32_MAX;
+			this->reset_highlight();
 		}
 	}
 
 	void CursorString::move_left(std::size_t count, bool highlight) {
-		if (highlight) {
-			m_Highlight.y = m_Cursor;
+		if (highlight && !this->is_highlighted()) {
+			m_HighlightEnd = m_Cursor;
 		}
 
 		while (count != 0 && m_Cursor > 0) {
@@ -223,11 +222,10 @@ namespace aby::ui {
 		}
 
 		if (highlight) {
-			m_Highlight.x = m_Cursor;
+			m_HighlightStart = m_Cursor;
 		}
 		if (!highlight) {
-			m_Highlight.x = UINT32_MAX;
-			m_Highlight.y = UINT32_MAX;
+			this->reset_highlight();
 		}
 	}
 	void CursorString::move_end(bool highlight) {
@@ -278,10 +276,18 @@ namespace aby::ui {
 
 	void CursorString::delete_at() {
 		m_Cursor = std::clamp(m_Cursor, 0LLU, m_Buffer->size());
-		if (m_Cursor > 0) {
-			m_Buffer->erase(m_Cursor - 1, 1);
-			m_Cursor--;
+		if (this->is_highlighted()) {
+			m_Buffer->erase(m_Buffer->begin() + m_HighlightStart, m_Buffer->begin() + m_HighlightEnd);
+			m_Cursor = m_HighlightStart;
+			this->reset_highlight();
 		}
+		else {
+			if (m_Cursor > 0) {
+				m_Buffer->erase(m_Cursor - 1, 1);
+				m_Cursor--;
+			}
+		}
+		
 	}
 
 	void CursorString::insert_at(char character) {
@@ -290,8 +296,16 @@ namespace aby::ui {
 		m_Cursor++; 
 	}
 
+	void CursorString::reset_highlight() {
+		m_HighlightStart = std::string::npos;
+		m_HighlightEnd   = std::string::npos;
+	}
+
+
 	bool CursorString::is_highlighted() const {
-		return (m_Highlight.x != UINT32_MAX && m_Highlight.y != UINT32_MAX) && (m_Highlight.x != m_Highlight.y);
+		bool out_of_bounds = (m_HighlightStart != std::string::npos && m_HighlightEnd != std::string::npos);
+		bool nequal = (m_HighlightStart != m_HighlightEnd);
+		return out_of_bounds && nequal;
 	}
 
 	bool CursorString::is_cursor_at_end() const {
@@ -307,8 +321,8 @@ namespace aby::ui {
 		std::vector<util::Insertion> ins;
 
 		if (this->is_highlighted()) {
-			ins.push_back({ m_Highlight.x, "<hl>" });
-			ins.push_back({ m_Highlight.y, "</hl>" });
+			ins.push_back({ m_HighlightStart, "<hl>" });
+			ins.push_back({ m_HighlightEnd, "</hl>" });
 		}
 		if (this->is_cursor_at_end()) {
 			formatted.append("<ul> </ul>");

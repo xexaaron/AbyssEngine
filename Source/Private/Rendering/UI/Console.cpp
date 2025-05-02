@@ -172,7 +172,9 @@ namespace aby::ui {
 	}
 
 	bool Console::on_mouse_released(MouseReleasedEvent& event) {
-		m_State.focused      = event.hit(m_Transform.position, m_Transform.size);
+		m_State.focused = m_State.hovered;
+		if (!m_State.focused) { return false; }
+
 		auto input_transform = m_Objs.input->transform();
 		bool input_focused   = event.hit(input_transform.position, input_transform.size);
 		m_Objs.input->set_focused(input_focused);
@@ -181,6 +183,11 @@ namespace aby::ui {
 			if (auto pos = m_Objs.input->hit_text(event.pos()); pos != std::string::npos)
 				m_Objs.input->set_cursor_pos(pos);
 		
+		return false;
+	}
+
+	bool Console::on_mouse_moved(MouseMovedEvent& event) {
+		m_State.hovered = event.hit(m_Transform.position, m_Transform.size);
 		return false;
 	}
 
@@ -217,9 +224,12 @@ namespace aby::ui {
 		dsp.bind(this, &Console::on_mouse_scrolled);
 		dsp.bind(this, &Console::on_key_pressed);
 		dsp.bind(this, &Console::on_mouse_released);
+		dsp.bind(this, &Console::on_mouse_moved);
 		m_Objs.input->on_event(app, event);
 		m_Objs.menu->on_event(app, event);
 		LayoutContainer::on_event(app, event);
+
+
 	}
 
 	void Console::on_destroy(App* app)  {
@@ -247,7 +257,7 @@ namespace aby::ui {
 	}
 
 	bool Console::on_mouse_scrolled(MouseScrolledEvent& event) {
-		if (m_State.focused) {
+		if (m_State.hovered) {
 			if (m_Children.size() > m_Constraints.max_items) {
 				if (event.offset_y() > 0) { // Scroll up
 					scroll_up();

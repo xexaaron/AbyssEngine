@@ -38,6 +38,7 @@ namespace aby {
 		void set_rotation_speed(float speed = 0.8f);
 		void set_zoom_speed(float speed = 1.0f);
 		void set_viewport(const glm::vec2& viewport_size);
+		void look_at(const glm::vec3& target);
 
 		virtual ECamera type() const = 0;
 
@@ -56,6 +57,8 @@ namespace aby {
 		const glm::vec3& position() const;
 		glm::mat4 view_projection() const;
 		glm::quat orientation() const;
+
+		void debug() const;
 	protected:
 		explicit ICamera(const Config& cfg = {}, const glm::vec3& pos = glm::vec3(0.f));
 		void update_projection();
@@ -63,6 +66,7 @@ namespace aby {
 	protected:
 		float	  m_Pitch;
 		float     m_Yaw;
+		float	  m_Roll;
 		float	  m_AspectRatio;
 		float	  m_FOV;
 		float	  m_NearClip;

@@ -221,7 +221,7 @@ namespace aby::vk {
         m_3D.pipeline().bind(cmd);
         vkCmdSetViewport(cmd, 0, 1, &vp);
         vkCmdSetScissor(cmd, 0, 1, &scissor);
-        vkCmdSetCullMode(cmd, VK_CULL_MODE_BACK_BIT);
+        vkCmdSetCullMode(cmd, VK_CULL_MODE_NONE);
         vkCmdSetFrontFace(cmd, VK_FRONT_FACE_CLOCKWISE);
         vkCmdSetPrimitiveTopology(cmd, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
         flush(m_3D, ERenderPrimitive::ALL);

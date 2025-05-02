@@ -85,6 +85,11 @@ namespace aby::ui {
         m_Invalidated = std::move(new_invalidated);
     }
 
+    Ref<Widget> ParentWidget::get_child(std::size_t idx) {
+        ABY_ASSERT(idx < m_Children.size(), "Out of bounds");
+        return m_Children[idx];
+    }
+
     std::span<Ref<Widget>> ParentWidget::children() {
         return std::span(m_Children.begin(), m_Children.size());
     }

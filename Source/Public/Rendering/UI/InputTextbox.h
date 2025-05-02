@@ -17,9 +17,9 @@ namespace aby::ui {
 		void move_end(bool highlight = false);
 		void move_front(bool highlight = false);
 
-
 		void delete_at();
 		void insert_at(char character);
+		void reset_highlight();
 
 		bool is_cursor_at_end() const;
 		bool is_highlighted() const;
@@ -28,7 +28,8 @@ namespace aby::ui {
 	private:
         std::string* m_Buffer;
         std::size_t  m_Cursor;
-		glm::u32vec2 m_Highlight;
+		std::size_t  m_HighlightStart;
+		std::size_t  m_HighlightEnd;
     };
 
 	class InputTextbox : public Button {
