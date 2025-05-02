@@ -14,11 +14,11 @@ namespace aby::vk {
 		void create(DeviceManager& manager);
 		void destroy(DeviceManager& manager);
 
-		VkSemaphore     Acquire;
-		VkSemaphore     Release;
-		VkFence         QueueSubmit;
-		VkCommandBuffer CmdBuffer;
-		VkCommandPool   CmdPool;
+		VkSemaphore     acquire;
+		VkSemaphore     release;
+		VkFence         queue_submit;
+		VkCommandBuffer cmd_buffer;
+		VkCommandPool   cmd_pool;
 	};
 
 	class Swapchain {

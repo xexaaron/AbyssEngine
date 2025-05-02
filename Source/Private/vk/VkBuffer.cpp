@@ -2,9 +2,6 @@
 #include "vk/VkAllocator.h"
 #include "Core/Log.h"
 
-
-
-
 namespace aby::vk {
 
     Buffer::Buffer(std::size_t bytes, VkBufferUsageFlags flags, DeviceManager& manager) : 
@@ -112,7 +109,7 @@ namespace aby::vk {
         return m_Buffer;
     }
 
-   
+
 }
 
 namespace aby::vk {
@@ -283,6 +280,138 @@ namespace aby::vk {
 
 namespace aby::vk {
 
+    VertexAccumulator::VertexAccumulator() :
+        m_Count(0),
+        m_Capacity(0),
+        m_VertexSize(0),
+        m_Ptr(nullptr),
+        m_Base(nullptr) {
+    }
+
+    VertexAccumulator::VertexAccumulator(const VertexClass& vertex_class) :
+        m_Count(0),
+        m_Capacity(vertex_class.max_vertices()),
+        m_VertexSize(vertex_class.vertex_size()),
+        m_Ptr(new std::byte[m_Capacity * m_VertexSize]),
+        m_Base(m_Ptr) {
+    }
+
+    VertexAccumulator::~VertexAccumulator() {
+        delete[] m_Base;
+    }
+
+    void VertexAccumulator::set_class(const VertexClass& vertex_class) {
+        this->reset();
+        m_Capacity = vertex_class.max_vertices();
+        m_VertexSize = vertex_class.vertex_size();
+        delete[] m_Base;
+        m_Ptr = new std::byte[m_Capacity * m_VertexSize];
+        m_Base = m_Ptr;
+    }
+
+    void VertexAccumulator::reset() {
+        m_Count = 0;
+        m_Ptr = m_Base;
+    }
+
+    std::size_t VertexAccumulator::offset() const {
+        return m_VertexSize * m_Count;
+    }
+
+    std::size_t VertexAccumulator::vertex_size() const {
+        return m_VertexSize;
+    }
+
+    std::size_t VertexAccumulator::capacity() const {
+        return m_Capacity;
+    }
+
+    std::size_t VertexAccumulator::count() const {
+        return m_Count;
+    }
+
+    std::size_t VertexAccumulator::bytes() const {
+        return m_VertexSize * m_Count;
+    }
+
+    void* VertexAccumulator::data() const {
+        return m_Base;
+    }
+
+    VertexAccumulator& VertexAccumulator::operator++() {
+        m_Count++;
+        m_Ptr = m_Ptr + m_VertexSize;
+        return *this;
+    }
+    void VertexAccumulator::print(std::ostream& os, const ShaderDescriptor& descriptor) const {
+        os << "{\n";
+
+        for (std::size_t i = 0; i < m_Count; i++) {
+            auto ptr = reinterpret_cast<std::byte*>(m_Base);
+            auto position = (i * m_VertexSize);
+            auto begin = ptr + position;
+            auto end = begin + m_VertexSize;
+            auto vertex = std::span<std::byte>(begin, end);
+            auto offset = 0;
+
+            os << "  { ";
+
+            for (const auto& input : descriptor.inputs) {
+                auto data = vertex.subspan(offset, input.stride);
+                offset += input.stride;
+                switch (input.format) {
+                case VK_FORMAT_R32_SFLOAT:
+                    os << *reinterpret_cast<const float*>(data.data());
+                    break;
+                case VK_FORMAT_R32G32_SFLOAT:
+                    os << *reinterpret_cast<const glm::vec2*>(data.data());
+                    break;
+                case VK_FORMAT_R32G32B32_SFLOAT:
+                    os << *reinterpret_cast<const glm::vec3*>(data.data());
+                    break;
+                case VK_FORMAT_R32G32B32A32_SFLOAT:
+                    os << *reinterpret_cast<const glm::vec4*>(data.data());
+                    break;
+                case VK_FORMAT_R32_SINT:
+                    os << *reinterpret_cast<const int*>(data.data());
+                    break;
+                case VK_FORMAT_R32G32_SINT:
+                    os << *reinterpret_cast<const glm::ivec2*>(data.data());
+                    break;
+                case VK_FORMAT_R32G32B32_SINT:
+                    os << *reinterpret_cast<const glm::ivec3*>(data.data());
+                    break;
+                case VK_FORMAT_R32G32B32A32_SINT:
+                    os << *reinterpret_cast<const glm::ivec4*>(data.data());
+                    break;
+                case VK_FORMAT_R32_UINT:
+                    os << *reinterpret_cast<const uint32_t*>(data.data());
+                    break;
+                case VK_FORMAT_R32G32_UINT:
+                    os << *reinterpret_cast<const glm::uvec2*>(data.data());
+                    break;
+                case VK_FORMAT_R32G32B32_UINT:
+                    os << *reinterpret_cast<const glm::uvec3*>(data.data());
+                    break;
+                case VK_FORMAT_R32G32B32A32_UINT:
+                    os << *reinterpret_cast<const glm::uvec4*>(data.data());
+                    break;
+                default:
+                    ABY_ASSERT(false, "Unsupported VkFormat");
+                    break;
+                }
+                if (i != m_Count - 1) {
+                    os << ", ";
+                }
+            }
+            os << "}\n";
+        }
+        os << "}\n";
+    }
+}
+
+namespace aby::vk {
+
     IndexBuffer::IndexBuffer(const void* data, size_t bytes, DeviceManager& manager) :
         Buffer(data, bytes, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, manager)
     {
@@ -299,3 +428,5 @@ namespace aby::vk {
     }
 
 }
+
+

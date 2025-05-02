@@ -43,25 +43,19 @@ namespace aby {
     public:
         using Handle = std::uint32_t;
     public:
-        Resource() : m_Type(EResource::NONE), m_Handle(0) {}
-        Resource(EResource type, Handle handle) : m_Type(type), m_Handle(handle) {}
+        Resource();
+        Resource(EResource type, Handle handle);
         Resource(const Resource&) = default;
         Resource(Resource&&) noexcept = default;
 
-        EResource type() const { return m_Type; }
-        Handle    handle() const { return m_Handle; }
+        EResource type() const;
+        Handle    handle() const;
 
-        explicit operator bool() const {
-            return (m_Type != EResource::NONE);
-        }
+        explicit operator bool() const;
         Resource& operator=(const Resource&) = default;
         Resource& operator=(Resource&&) noexcept = default;
-        bool operator==(const Resource& other) const {
-            return ((m_Type == other.m_Type) && (m_Handle == other.m_Handle));
-        }
-        bool operator!=(const Resource& other) const {
-            return !this->operator==(other);
-        }
+        bool operator==(const Resource& other) const;
+        bool operator!=(const Resource& other) const;
     private:
         EResource m_Type;
         Handle m_Handle;
@@ -91,7 +85,7 @@ namespace aby {
         template <typename Value>
         using Map = std::unordered_map<Handle, Value>;
 
-        inline void assert_contains(Resource resource) const {
+        void assert_contains(Resource resource) const {
             ABY_ASSERT(resource.type() == TypeToEResource<T>(), "Resource type mismatch");
             ABY_ASSERT(m_Resources.contains(resource.handle()), "Resource(Type: {}, Handle: {}) not found!",
                 static_cast<std::underlying_type_t<EResource>>(resource.type()),

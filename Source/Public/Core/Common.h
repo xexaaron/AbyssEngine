@@ -210,64 +210,6 @@ namespace aby {
         VRESIZE,
     };
 
-    template <typename Value, typename Fn>
-    auto map_vector(const std::vector<Value>& vec, Fn&& get_key) {
-        using Key = std::invoke_result_t<Fn, const Value&>;
-        std::multimap<Key, Value> result;
-        for (const auto& element : vec) {
-            result.insert({ get_key(element), element });
-        }
-        return result;
-    }
-
-    template <typename T, T Seed = 0, T Min = std::numeric_limits<T>::min(), T Max = std::numeric_limits<T>::max()> requires (std::is_arithmetic_v<T>)
-    class Random {
-    public:
-        static T gen() noexcept {
-            static std::mt19937_64 generator;
-            static std::once_flag flag;
-
-            std::call_once(flag, [&]() {
-                if constexpr (Seed != 0) {
-                    generator.seed(Seed);
-                }
-                else {
-                    generator.seed(std::random_device{}());
-                }
-            });
-
-            if constexpr (std::is_floating_point_v<T>) {
-                std::uniform_real_distribution<T> distribution(Min, Max);
-                return distribution(generator);
-            }
-            else if constexpr (std::is_integral_v<T>) {
-                std::uniform_int_distribution<T> distribution(Min, Max);
-                return distribution(generator);
-            }
-        }
-    };
-
-    class UUID {
-    public:
-        UUID() : m_Value(Random<uint64_t, 2083231>::gen()) {}
-        UUID(const UUID& other) = default;
-        UUID(UUID&& other) noexcept = default;
-
-        operator std::uint64_t() const {
-            return m_Value;
-        }
-
-        UUID& operator=(const UUID& other) = default;
-
-        bool operator==(const UUID& other) const {
-            return m_Value == other.m_Value;
-        }
-        bool operator!=(const UUID& other) const {
-            return !this->operator==(other);
-        }
-
-    private:
-        uint64_t m_Value;
-    };
+  
 
 }

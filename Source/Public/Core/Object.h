@@ -52,9 +52,9 @@ namespace aby {
 		* @return true:  If deserialization occurred.
 		* @return false: If deserialization did not occur.
 		*/
-		virtual bool on_deserialize(Serializer& serializer) { return false;  }
+		virtual bool on_deserialize(Serializer& serializer);
 
-		UUID uuid() const { return m_ID; }
+		util::UUID uuid() const;
 
 		template <typename T> requires (std::is_base_of_v<Object, T>)
 		T* as() {
@@ -65,14 +65,10 @@ namespace aby {
 
 		Object& operator=(const Object&) = default;
 		
-		bool operator==(const Object& other) const {
-			return m_ID == other.m_ID;
-		}
-		bool operator!=(const Object& other) const  {
-			return !this->operator==(other);
-		}
+		bool operator==(const Object& other) const;
+		bool operator!=(const Object & other) const;
 	private:
-		UUID m_ID;
+		util::UUID m_ID;
 	private:
 		friend class App;
 	};

@@ -69,61 +69,22 @@ namespace aby::vk {
 
     class VertexAccumulator {
     public:
-        VertexAccumulator() :
-            m_Count(0),
-            m_Capacity(0),
-            m_VertexSize(0),
-            m_Ptr(nullptr),
-            m_Base(nullptr) {
-        }
-        VertexAccumulator(const VertexClass& vertex_class) :
-            m_Count(0),
-            m_Capacity(vertex_class.max_vertices()),
-            m_VertexSize(vertex_class.vertex_size()),
-            m_Ptr(new std::byte[m_Capacity * m_VertexSize]),
-            m_Base(m_Ptr) {
-        }
-        ~VertexAccumulator() {
-            delete[] m_Base;
-        }
+        VertexAccumulator();
+        VertexAccumulator(const VertexClass& vertex_class);
+        ~VertexAccumulator();
 
-        void set_class(const VertexClass& vertex_class) {
-            this->reset();
-            m_Capacity   = vertex_class.max_vertices();
-            m_VertexSize = vertex_class.vertex_size();
-            delete[] m_Base;
-            m_Ptr = new std::byte[m_Capacity * m_VertexSize];
-            m_Base = m_Ptr;
-        }
-        void reset() {
-            m_Count = 0;
-            m_Ptr = m_Base;
-        }
+        void set_class(const VertexClass& vertex_class);
+        void reset();
 
-        std::size_t offset() const {
-            return m_VertexSize * m_Count;
-        }
-        std::size_t vertex_size() const {
-            return m_VertexSize;
-        }
-        std::size_t capacity() const {
-            return m_Capacity;
-        }
-        std::size_t count() const {
-            return m_Count;
-        }
-        std::size_t bytes() const {
-            return m_VertexSize * m_Count;
-        }
-        void* data() const {
-            return m_Base;
-        }
+        std::size_t offset() const;
+        std::size_t vertex_size() const;
+        std::size_t capacity() const;
+        std::size_t count() const;
+        std::size_t bytes() const;
+        void* data() const;
 
-        VertexAccumulator& operator++() {
-            m_Count++;
-            m_Ptr = m_Ptr + m_VertexSize;
-            return *this;
-        }
+        VertexAccumulator& operator++();
+        
         template <typename T>
         VertexAccumulator& operator=(const T& data) {
             ABY_ASSERT(sizeof(T) == m_VertexSize, "incompatible vertex size", typeid(T).name(), sizeof(T), m_VertexSize);
@@ -132,71 +93,7 @@ namespace aby::vk {
             return *this;
         }
 
-        void print(std::ostream& os, const ShaderDescriptor& descriptor) const {
-            os << "{\n";
-
-            for (std::size_t i = 0; i < m_Count; i++) {
-                auto ptr = reinterpret_cast<std::byte*>(m_Base);
-                auto position = (i * m_VertexSize);
-                auto begin = ptr + position;
-                auto end = begin + m_VertexSize;
-                auto vertex = std::span<std::byte>(begin, end);
-                auto offset = 0;
-
-                os << "  { ";
-
-                for (const auto& input : descriptor.inputs) {
-                    auto data = vertex.subspan(offset, input.stride);
-                    offset += input.stride;
-                    switch (input.format) {
-                        case VK_FORMAT_R32_SFLOAT:
-                            os << *reinterpret_cast<const float*>(data.data());
-                            break;
-                        case VK_FORMAT_R32G32_SFLOAT:
-                            os << *reinterpret_cast<const glm::vec2*>(data.data());
-                            break;
-                        case VK_FORMAT_R32G32B32_SFLOAT:
-                            os << *reinterpret_cast<const glm::vec3*>(data.data());
-                            break;
-                        case VK_FORMAT_R32G32B32A32_SFLOAT:
-                            os << *reinterpret_cast<const glm::vec4*>(data.data());
-                            break;
-                        case VK_FORMAT_R32_SINT:
-                            os << *reinterpret_cast<const int*>(data.data());
-                            break;
-                        case VK_FORMAT_R32G32_SINT:
-                            os << *reinterpret_cast<const glm::ivec2*>(data.data());
-                            break;
-                        case VK_FORMAT_R32G32B32_SINT:
-                            os << *reinterpret_cast<const glm::ivec3*>(data.data());
-                            break;
-                        case VK_FORMAT_R32G32B32A32_SINT:
-                            os << *reinterpret_cast<const glm::ivec4*>(data.data());
-                            break;
-                        case VK_FORMAT_R32_UINT:
-                            os << *reinterpret_cast<const uint32_t*>(data.data());
-                            break;
-                        case VK_FORMAT_R32G32_UINT:
-                            os << *reinterpret_cast<const glm::uvec2*>(data.data());
-                            break;
-                        case VK_FORMAT_R32G32B32_UINT:
-                            os << *reinterpret_cast<const glm::uvec3*>(data.data());
-                            break;
-                        case VK_FORMAT_R32G32B32A32_UINT:
-                            os << *reinterpret_cast<const glm::uvec4*>(data.data());
-                            break;
-                        default:
-                            ABY_ASSERT(false, "Unsupported VkFormat");
-                            break;
-                    }
-                    if (i != m_Count - 1) {
-                        os << ", ";
-                    }
-                }
-                os << "}\n";
-            }
-            os << "}\n";
-        }
+        void print(std::ostream& os, const ShaderDescriptor& descriptor) const;
     private:
         std::size_t m_Count;
         std::size_t m_Capacity;

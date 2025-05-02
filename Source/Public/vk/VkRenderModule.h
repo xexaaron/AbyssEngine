@@ -35,13 +35,8 @@ namespace aby::vk {
         std::size_t vertex_count() const;
         const vk::PrimitiveDescriptor& descriptor() const;
 
-        RenderPrimitive& operator++() {
-            ++m_VertexAccumulator;
-            if (m_VertexAccumulator.count() % m_Descriptor.VerticesPer == 0) {
-                m_IndexCount += m_Descriptor.IndicesPer;
-            }
-            return *this;
-        }
+        RenderPrimitive& operator++();
+
         template <typename T>
         RenderPrimitive& operator=(const T& data) {
             m_VertexAccumulator = data;

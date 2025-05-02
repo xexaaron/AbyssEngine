@@ -8,8 +8,6 @@
 #include <unordered_set>
 
 
-
-
 namespace aby::vk {
 
     RenderPrimitive::RenderPrimitive(Ref<vk::Context> ctx, const ShaderDescriptor& vertex_descriptor, const PrimitiveDescriptor& primitive_descriptor) :
@@ -94,6 +92,13 @@ namespace aby::vk {
         m_IndexCount = 0;
     }
 
+    RenderPrimitive& RenderPrimitive::operator++() {
+        ++m_VertexAccumulator;
+        if (m_VertexAccumulator.count() % m_Descriptor.VerticesPer == 0) {
+            m_IndexCount += m_Descriptor.IndicesPer;
+        }
+        return *this;
+    }
 
 }
 
@@ -207,12 +212,12 @@ namespace aby::vk {
     void RenderModule::draw_quad(const Quad& quad) {
         auto& acc = this->quads();
 
-        glm::mat4 transform = glm::translate(UNIT_MATRIX, quad.v.pos) * glm::scale(UNIT_MATRIX, quad.size);
+        glm::mat4 transform = glm::translate(UNIT_MATRIX, quad.pos) * glm::scale(UNIT_MATRIX, quad.size);
 
         for (std::size_t i = 0; i < std::size(VERTEX_POSITIONS); i++) {
             glm::vec3 pos(transform * VERTEX_POSITIONS[i]);
-            glm::vec3 texinfo(COORDS[i], quad.v.texinfo.z);
-            Vertex v(pos, quad.v.col, texinfo);
+            glm::vec3 texinfo(COORDS[i], quad.texinfo.z);
+            Vertex v(pos, quad.col, texinfo);
             acc = v;
             ++acc;
         }

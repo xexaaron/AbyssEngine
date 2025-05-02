@@ -95,6 +95,8 @@ set(CPP_SOURCES
     Source/Private/Core/Thread.cpp
     Source/Private/Utility/Inserter.cpp
     Source/Private/Utility/TagParser.cpp
+    Source/Private/Utility/Random.cpp
+    Source/Private/Rendering/Vertex.cpp
     Source/Private/Rendering/Font.cpp
     Source/Private/Rendering/Context.cpp
     Source/Private/Rendering/Renderer.cpp
@@ -154,6 +156,7 @@ set(HEADER_FILES
     Source/Public/Core/Thread.h
     Source/Public/Utility/Inserter.h
     Source/Public/Utility/TagParser.h
+    Source/Public/Utility/Random.h
     Source/Public/Rendering/Font.h
     Source/Public/Rendering/Context.h
     Source/Public/Rendering/Renderer.h

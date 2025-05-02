@@ -9,17 +9,17 @@ namespace aby {
         m_Pitch(0.f),
         m_Yaw(0.f),
         m_Roll(0.f),
-        m_AspectRatio(cfg.AspectRatio),
-        m_FOV(cfg.FOV),
-        m_NearClip(cfg.NearClip),
-        m_FarClip(cfg.FarClip),
+        m_AspectRatio(cfg.aspect_ratio),
+        m_FOV(cfg.fov),
+        m_NearClip(cfg.near_clip),
+        m_FarClip(cfg.far_clip),
         m_RotationSpeed(0.8f),
         m_ZoomSpeed(1.0f),
         m_InitialMousePosition(glm::vec2(0.f)),
         m_ViewportSize(glm::vec2(0.f)),
         m_Position(pos),
         m_ViewMatrix(glm::mat4(1.0f)),
-        m_Projection(glm::perspective(glm::radians(cfg.FOV), cfg.AspectRatio, cfg.AspectRatio, cfg.FarClip))
+        m_Projection(glm::perspective(glm::radians(cfg.fov), cfg.aspect_ratio, cfg.aspect_ratio, cfg.far_clip))
     {
     }
 
@@ -224,5 +224,12 @@ namespace aby {
         m_ViewMatrix = glm::inverse(m_ViewMatrix);
         m_ViewMatrix[1][1] *= -1;
     }
+
+}
+
+namespace aby {
+
+    ICamera::Config::Config(float fov, float aspect_ratio, float near_clip, float far_clip) :
+        fov(fov), aspect_ratio(aspect_ratio), near_clip(near_clip), far_clip(far_clip) {}
 
 }

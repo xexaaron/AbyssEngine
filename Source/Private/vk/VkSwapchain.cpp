@@ -201,19 +201,19 @@ namespace aby::vk {
 namespace aby::vk {
 
     Frame::Frame() :
-        Acquire(VK_NULL_HANDLE),
-        Release(VK_NULL_HANDLE),
-        QueueSubmit(VK_NULL_HANDLE),
-        CmdBuffer(VK_NULL_HANDLE),
-        CmdPool(VK_NULL_HANDLE) {
+        acquire(VK_NULL_HANDLE),
+        release(VK_NULL_HANDLE),
+        queue_submit(VK_NULL_HANDLE),
+        cmd_buffer(VK_NULL_HANDLE),
+        cmd_pool(VK_NULL_HANDLE) {}
 
-    }
     Frame::Frame(DeviceManager& manager) :
-        Acquire(VK_NULL_HANDLE),
-        Release(VK_NULL_HANDLE),
-        QueueSubmit(VK_NULL_HANDLE),
-        CmdBuffer(VK_NULL_HANDLE),
-        CmdPool(VK_NULL_HANDLE) {
+        acquire(VK_NULL_HANDLE),
+        release(VK_NULL_HANDLE),
+        queue_submit(VK_NULL_HANDLE),
+        cmd_buffer(VK_NULL_HANDLE),
+        cmd_pool(VK_NULL_HANDLE)
+    {
         create(manager);
     }
 
@@ -225,7 +225,7 @@ namespace aby::vk {
             .pNext = nullptr,
             .flags = VK_FENCE_CREATE_SIGNALED_BIT
         };
-        VK_CHECK(vkCreateFence(logical, &info, IAllocator::get(), &QueueSubmit));
+        VK_CHECK(vkCreateFence(logical, &info, IAllocator::get(), &queue_submit));
 
         VkCommandPoolCreateInfo cmd_pool_info{
             .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
@@ -233,43 +233,43 @@ namespace aby::vk {
             .flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
             .queueFamilyIndex = manager.graphics().FamilyIdx
         };
-        VK_CHECK(vkCreateCommandPool(logical, &cmd_pool_info, IAllocator::get(), &CmdPool));
+        VK_CHECK(vkCreateCommandPool(logical, &cmd_pool_info, IAllocator::get(), &cmd_pool));
 
         VkCommandBufferAllocateInfo cmd_buf_info{
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
             .pNext = nullptr,
-            .commandPool = CmdPool,
+            .commandPool = cmd_pool,
             .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
             .commandBufferCount = 1
         };
-        VK_CHECK(vkAllocateCommandBuffers(logical, &cmd_buf_info, &CmdBuffer));
+        VK_CHECK(vkAllocateCommandBuffers(logical, &cmd_buf_info, &cmd_buffer));
     }
 
     void Frame::destroy(DeviceManager& manager) {
         auto logical = manager.logical();
-        if (QueueSubmit != VK_NULL_HANDLE)
+        if (queue_submit != VK_NULL_HANDLE)
         {
-            vkDestroyFence(logical, QueueSubmit, IAllocator::get());
+            vkDestroyFence(logical, queue_submit, IAllocator::get());
         }
 
-        if (CmdBuffer != VK_NULL_HANDLE)
+        if (cmd_buffer != VK_NULL_HANDLE)
         {
-            vkFreeCommandBuffers(logical, CmdPool, 1, &CmdBuffer);
-            CmdBuffer = VK_NULL_HANDLE;
+            vkFreeCommandBuffers(logical, cmd_pool, 1, &cmd_buffer);
+            cmd_buffer = VK_NULL_HANDLE;
         }
 
-        if (CmdPool != VK_NULL_HANDLE)
+        if (cmd_pool != VK_NULL_HANDLE)
         {
-            vkDestroyCommandPool(logical, CmdPool, IAllocator::get());
+            vkDestroyCommandPool(logical, cmd_pool, IAllocator::get());
         }
 
-        if (Acquire != VK_NULL_HANDLE)
+        if (acquire != VK_NULL_HANDLE)
         {
-            vkDestroySemaphore(logical, Acquire, IAllocator::get());
+            vkDestroySemaphore(logical, acquire, IAllocator::get());
         }
-        if (Release != VK_NULL_HANDLE)
+        if (release != VK_NULL_HANDLE)
         {
-            vkDestroySemaphore(logical, Release, IAllocator::get());
+            vkDestroySemaphore(logical, release, IAllocator::get());
         }
     }
 

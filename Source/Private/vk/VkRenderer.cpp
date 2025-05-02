@@ -69,7 +69,7 @@ namespace aby::vk {
     }
 
     void Renderer::flush(RenderModule& module, ERenderPrimitive primitive) {
-        auto* cmd = m_Frames[m_Img].CmdBuffer;
+        auto* cmd = m_Frames[m_Img].cmd_buffer;
         module.flush(cmd, m_Ctx->devices());
     }
 
@@ -137,7 +137,7 @@ namespace aby::vk {
     }
 
     void Renderer::render(std::uint32_t img) {
-        VkCommandBuffer cmd = m_Frames[img].CmdBuffer;
+        VkCommandBuffer cmd = m_Frames[img].cmd_buffer;
         VkCommandBufferBeginInfo begin_info{
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
             .pNext = nullptr,
@@ -245,13 +245,13 @@ namespace aby::vk {
         );
         VK_CHECK(vkEndCommandBuffer(cmd));
 
-        if (m_Frames[img].Release == VK_NULL_HANDLE) {
+        if (m_Frames[img].release == VK_NULL_HANDLE) {
             VkSemaphoreCreateInfo semaphore_info{ 
                 .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
                 .pNext = nullptr,
                 .flags = 0,
             };
-            VK_CHECK(vkCreateSemaphore(m_Ctx->devices().logical(), &semaphore_info, IAllocator::get(), &m_Frames[img].Release));
+            VK_CHECK(vkCreateSemaphore(m_Ctx->devices().logical(), &semaphore_info, IAllocator::get(), &m_Frames[img].release));
         }
 
         VkPipelineStageFlags wait_stage{ VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT };
@@ -260,15 +260,15 @@ namespace aby::vk {
             .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
             .pNext = nullptr,
             .waitSemaphoreCount = 1,
-            .pWaitSemaphores = &m_Frames[img].Acquire,
+            .pWaitSemaphores = &m_Frames[img].acquire,
             .pWaitDstStageMask = &wait_stage,
             .commandBufferCount = 1,
             .pCommandBuffers = &cmd,
             .signalSemaphoreCount = 1,
-            .pSignalSemaphores = &m_Frames[img].Release
+            .pSignalSemaphores = &m_Frames[img].release
         };
 
-        VK_CHECK(vkQueueSubmit(m_Ctx->devices().graphics().Queue, 1, &info, m_Frames[img].QueueSubmit));
+        VK_CHECK(vkQueueSubmit(m_Ctx->devices().graphics().Queue, 1, &info, m_Frames[img].queue_submit));
     }
 
     void Renderer::on_event(Event& event) {
@@ -326,8 +326,8 @@ namespace aby::vk {
             return std::make_pair(res, UINT32_MAX);
         }
 
-        auto queue_submit = m_Frames[img].QueueSubmit;
-        auto cmd_pool = m_Frames[img].CmdPool;
+        auto queue_submit = m_Frames[img].queue_submit;
+        auto cmd_pool = m_Frames[img].cmd_pool;
 
         if (queue_submit != VK_NULL_HANDLE) {
             vkWaitForFences(logical, 1, &queue_submit, true, UINT64_MAX);
@@ -338,12 +338,12 @@ namespace aby::vk {
             vkResetCommandPool(logical, cmd_pool, 0);
         }
 
-        VkSemaphore old_semaphore = m_Frames[img].Acquire;
+        VkSemaphore old_semaphore = m_Frames[img].acquire;
         if (old_semaphore != VK_NULL_HANDLE) {
             m_RecycledSemaphores.push_back(old_semaphore);
         }
 
-        m_Frames[img].Acquire = acquire_semaphore;
+        m_Frames[img].acquire = acquire_semaphore;
 
         return std::make_pair(VK_SUCCESS, img);
     }
@@ -354,7 +354,7 @@ namespace aby::vk {
             .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
             .pNext = nullptr,
             .waitSemaphoreCount = 1,
-            .pWaitSemaphores = &m_Frames[img].Release,
+            .pWaitSemaphores = &m_Frames[img].release,
             .swapchainCount = 1,
             .pSwapchains = &swapchain,
             .pImageIndices = &img,

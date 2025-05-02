@@ -11,6 +11,7 @@
 #include <queue>
 #include <glm/glm.hpp>
 #include "Core/Common.h"
+#include "Utility/Random.h"
 
 namespace aby {
 
@@ -134,14 +135,14 @@ namespace std {
     };
 
     template <>
-    struct formatter<aby::UUID> {
+    struct formatter<aby::util::UUID> {
         template<class ParseContext>
         constexpr typename ParseContext::iterator parse(ParseContext& ctx) {
             return ctx.begin();
         }
 
         template <typename FmtContext>
-        typename FmtContext::iterator format(const aby::UUID& uuid, FmtContext& ctx) const {
+        typename FmtContext::iterator format(const aby::util::UUID& uuid, FmtContext& ctx) const {
             return format_to(ctx.out(), "{}", uuid.operator std::uint64_t());
         }
     };

@@ -15,16 +15,12 @@ namespace aby {
 	class ICamera : public Object {
 	public:
 		struct Config {
-			float FOV;
-			float AspectRatio;
-			float NearClip;
-			float FarClip;
+			Config(float fov = 30.f, float aspect_ratio = 1.778f, float near_clip = 0.1f, float far_clip = 1000.f);
 
-			Config(float fov = 30.f, float aspect_ratio = 1.778f,
-				float near_clip = 0.1f, float far_clip = 1000.f) :
-				FOV(fov), AspectRatio(aspect_ratio), NearClip(near_clip),
-				FarClip(far_clip) {
-			}
+			float fov;
+			float aspect_ratio;
+			float near_clip;
+			float far_clip;
 		};
 
 		virtual ~ICamera() = default;
