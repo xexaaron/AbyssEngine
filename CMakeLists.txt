@@ -3,6 +3,8 @@ project(Abyss)
 
 include(${CMAKE_SOURCE_DIR}/tools/cmake/Functions.cmake)
 
+# Setup Build Options
+
 set(CMAKE_DISABLE_PREDEFINED_TARGETS TRUE)
 set(CMAKE_CXX_STANDARD 23)
 set(ENGINE ${PROJECT_NAME}Engine)
@@ -27,12 +29,7 @@ else()
     set(COMPILE_OPTS -Wall -Wextra -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-unused-function)
 endif()
 
-
-set(VULKAN_DIR $ENV{VULKAN_SDK} CACHE STRING "" FORCE)
-set(VULKAN_INCLUDE_DIR "${VULKAN_DIR}/include")
-set(VULKAN_LIBRARY_DIR "${VULKAN_DIR}/lib")
-set(VULKAN_BIN_DIR "${VULKAN_DIR}/bin")
-set(SHADER_C_INCLUDE_DIR "${VULKAN_INCLUDE_DIR}/shaderc")
+# Setup GLFW
 
 set(GLFW_DIR "Vendor/glfw")
 set(GLFW_INCLUDE_DIR "${GLFW_DIR}/include")
@@ -48,13 +45,18 @@ endif()
 add_subdirectory(${GLFW_DIR})
 set_vendor_properties(glfw "Dependencies/glfw")
 
+# Setup STB
+
 set(STB_INCLUDE_DIR "Vendor/stb")
 set(STB_IMPL "${STB_INCLUDE_DIR}/stb.cpp")
+
+# Setup GLM
 
 set(GLM_DIR "$ENV{VULKAN_SDK}")
 set(GLM_INCLUDE_DIR ${GLM_DIR})
 set(GLM_DEFINITIONS GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE  GLM_FORCE_LEFT_HANDED)
 
+# Setup Freetype
 set(FREETYPE_DIR "Vendor/freetype")
 set(FREETYPE_INCLUDE_DIR "${FREETYPE_DIR}/include")
 set(FREETYPE_DEVEL_DIR "${FREETYPE_DIR}/devel")
@@ -67,6 +69,13 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
 set(FREETYPE_INCLUDE_DIRS ${FREETYPE_DIR} ${FREETYPE_DEVEL_DIR})
 
 
+# Setup Vulkan
+
+set(VULKAN_DIR $ENV{VULKAN_SDK} CACHE STRING "" FORCE)
+set(VULKAN_INCLUDE_DIR "${VULKAN_DIR}/include")
+set(VULKAN_LIBRARY_DIR "${VULKAN_DIR}/lib")
+set(VULKAN_BIN_DIR "${VULKAN_DIR}/bin")
+set(SHADER_C_INCLUDE_DIR "${VULKAN_INCLUDE_DIR}/shaderc")
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     get_filename_component(VULKAN_LIB_PATH "${VULKAN_LIBRARY_DIR}/vulkan-1.lib" ABSOLUTE)
@@ -82,6 +91,7 @@ else()
     set(PLATFORM_LIBS "")
 endif()
 
+# List Sources
 
 set(CPP_SOURCES
     Source/Private/Core/Log.cpp
@@ -142,7 +152,6 @@ set(CPP_SOURCES
     ${STB_IMPL}
 )
 
-# Add header files and group them in the "Include" folder
 set(HEADER_FILES
     Source/Public/Core/Log.h
     Source/Public/Core/Common.h
@@ -202,67 +211,22 @@ set(HEADER_FILES
     Source/Public/Platform/Process.h
 )
 
-file(GLOB CORE_HEADERS "Source/Public/Core/*.h")
-source_group("Public/Core" FILES ${CORE_HEADERS}) 
-
-file(GLOB UTILITY_HEADERS "Source/Public/Utility/*.h")
-source_group("Public/Utility" FILES ${UTILITY_HEADERS})
-
-file(GLOB RENDERING_HEADERS "Source/Public/Rendering/*.h")
-source_group("Public/Rendering" FILES ${RENDERING_HEADERS})
-
-file(GLOB UI_HEADERS "Source/Public/Rendering/UI/*.h")
-source_group("Public/Rendering/UI" FILES ${UI_HEADERS}) 
-
-file(GLOB VK_HEADERS "Source/Public/vk/*.h")
-source_group("Public/vk" FILES ${VK_HEADERS})
-
-file(GLOB WIN32_HEADERS "Source/Public/Platform/win32/*.h")
-source_group("Public/Platform/win32" FILES ${WIN32_HEADERS}) 
-
-file(GLOB POSIX_HEADERS "Source/Public/Platform/posix/*.h")
-source_group("Public/Platform/posix" FILES ${POSIX_HEADERS}) 
-
-file(GLOB PLATFORM_HEADERS "Source/Public/Platform/*.h")
-source_group("Public/Platform" FILES ${PLATFORM_HEADERS}) 
-
-file(GLOB_RECURSE SHADER_SOURCES "Source/Shaders/*.*")
-source_group("Resources/Shaders" FILES ${SHADER_SOURCES})
-
-file(GLOB_RECURSE TEXTURE_SOURCES "Source/Textures/*.*")
-source_group("Resources/Textures" FILES ${TEXTURE_SOURCES})
-
-file(GLOB_RECURSE FONT_SOURCES "Source/Fonts/*.*")
-source_group("Resources/Fonts" FILES ${FONT_SOURCES})
-
+# Setup virtual folders (Functions.cmake)
+make_source_groups(
+    Core
+    Platform
+    Platform/posix
+    Platform/win32
+    Rendering
+    Rendering/UI
+    Utility
+    vk
+)
 source_group("Private" FILES ${STB_IMPL} "Source/main.cpp")
-
-file(GLOB CORE_SOURCES "Source/Private/Core/*.cpp")
-source_group("Private/Core" FILES ${CORE_SOURCES}) 
-
-file(GLOB UTILITY_SOURCES "Source/Private/Utility/*.cpp")
-source_group("Private/Utility" FILES ${UTILITY_SOURCES})
-
-file(GLOB RENDERING_SOURCES "Source/Private/Rendering/*.cpp")
-source_group("Private/Rendering" FILES ${RENDERING_SOURCES})
-
-file(GLOB UI_SOURCES "Source/Private/Rendering/UI/*.cpp")
-source_group("Private/Rendering/UI" FILES ${UI_SOURCES}) 
-
-file(GLOB WIN32_SOURCES "Source/Private/Platform/win32/*.cpp")
-source_group("Private/Platform/win32" FILES ${WIN32_SOURCES}) 
-
-file(GLOB PLATFORM_SOURCES "Source/Private/Platform/*.cpp")
-source_group("Private/Platform" FILES ${PLATFORM_SOURCES}) 
-
-file(GLOB POSIX_SOURCES "Source/Private/Platform/posix/*.cpp")
-source_group("Private/Platform/posix" FILES ${POSIX_SOURCES}) 
-
-file(GLOB VK_SOURCES "Source/Private/vk/*.cpp")
-source_group("Private/vk" FILES ${VK_SOURCES})
-
 set(COMMON_INCLUDE_DIRS "Source/Public" ${GLFW_INCLUDE_DIR} ${STB_INCLUDE_DIR} ${GLM_INCLUDE_DIR})
 set(RESOURCES ${SHADER_SOURCES} ${TEXTURE_SOURCES} ${FONT_SOURCES})
+
+# Subprojects and compile defintions
 
 add_subproject("localize")
 add_subproject("tests")
@@ -278,6 +242,8 @@ target_include_directories(${EDITOR} PUBLIC Source/Public ${COMMON_INCLUDE_DIRS}
 set_target_properties(${ENGINE} PROPERTIES FOLDER "Abyss")
 set_target_properties(${EDITOR} PROPERTIES FOLDER "Abyss")
 
+# Build Projects
+
 target_link_libraries(${ENGINE} PRIVATE
     ${VULKAN_LIB_PATH}
     ${SHADER_C_LIB_PATH}
@@ -292,6 +258,8 @@ target_link_libraries(${EDITOR} PRIVATE ${ENGINE})
 add_dependencies(${ENGINE} freetype glfw)
 add_dependencies(${EDITOR} ${ENGINE})
 
+# Copy Resources
+
 add_custom_command(TARGET ${EDITOR} POST_BUILD 
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CMAKE_SOURCE_DIR}/Source/Textures"
@@ -304,6 +272,8 @@ add_custom_command(TARGET ${EDITOR} POST_BUILD
             "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/Shaders"
     COMMENT "Copy resources"
 )
+
+# Copy DLLs 
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(FREETYPE_DLL_IN  "${CMAKE_BINARY_DIR}/Vendor/freetype/${CMAKE_BUILD_TYPE}/freetype${DEBUG_SUFFIX}.dll")

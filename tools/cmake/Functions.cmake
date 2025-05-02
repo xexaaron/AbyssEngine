@@ -24,3 +24,24 @@ function(set_vendor_properties library folder)
             FOLDER ${folder}
     )
 endfunction()
+
+
+function(make_source_group folder)
+    set(pub_source_dir "Source/Public/${folder}")
+    set(pub_source_group "Public/${folder}")
+    set(private_source_dir "Source/Private/${folder}")
+    set(private_source_group "Private/${folder}")
+
+    file(GLOB headers "${pub_source_dir}/*.h")
+    source_group("${pub_source_group}" FILES ${headers})
+
+    file(GLOB sources "${private_source_dir}/*.cpp")
+    source_group("${private_source_group}" FILES ${sources})
+endfunction()
+
+# Usage: make_source_groups(folder, folder, ...)
+function(make_source_groups)
+    foreach(folder IN LISTS ARGN)
+        make_source_group(${folder})
+    endforeach()
+endfunction()
