@@ -143,7 +143,7 @@ namespace std {
 
         template <typename FmtContext>
         typename FmtContext::iterator format(const aby::util::UUID& uuid, FmtContext& ctx) const {
-            return format_to(ctx.out(), "{}", uuid.operator std::uint64_t());
+            return format_to(ctx.out(), "{}", uuid.operator u64());
         }
     };
 

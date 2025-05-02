@@ -11,10 +11,10 @@
 namespace aby::vk {
 
     struct PrimitiveDescriptor {
-        std::uint32_t MaxVertices;
-        std::uint32_t MaxIndices;
-        std::uint32_t IndicesPer;
-        std::uint32_t VerticesPer;
+        u32 MaxVertices;
+        u32 MaxIndices;
+        u32 IndicesPer;
+        u32 VerticesPer;
     };
 
     class RenderPrimitive {
@@ -26,7 +26,7 @@ namespace aby::vk {
         void bind(VkCommandBuffer cmd, DeviceManager& manager);
         void draw(VkCommandBuffer cmd);
 
-        void set_index_data(const std::uint32_t* indices, DeviceManager& manager);
+        void set_index_data(const u32* indices, DeviceManager& manager);
 
         bool should_flush() const;
         bool should_flush(std::size_t requested_primitives) const;
@@ -71,7 +71,7 @@ namespace aby::vk {
         void destroy();
         void reset();
         void flush(VkCommandBuffer cmd, DeviceManager& manager, ERenderPrimitive primitive = ERenderPrimitive::ALL);
-        void set_uniforms(const void* data, std::size_t bytes, std::uint32_t binding = 0);
+        void set_uniforms(const void* data, std::size_t bytes, u32 binding = 0);
         void draw_triangle(const Triangle& triangle);
         void draw_quad(const Quad& quad);
         void draw_text(const Text& text);

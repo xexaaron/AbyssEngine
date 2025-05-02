@@ -56,7 +56,7 @@ namespace aby::ui {
         bInvalid = invalid;
     }
 
-    void Widget::set_zindex(std::int32_t zindex) {
+    void Widget::set_zindex(i32 zindex) {
         m_ZIndex = zindex;
         bInvalid = true;
     }
@@ -96,7 +96,7 @@ namespace aby::ui {
         return m_Style;
     }
 
-    std::int32_t Widget::zindex() const {
+    i32 Widget::zindex() const {
         return m_ZIndex;
     }
 

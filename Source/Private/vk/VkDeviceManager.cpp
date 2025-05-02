@@ -119,7 +119,7 @@ namespace aby::vk {
             .pQueueCreateInfos = &queue_create_info,
             .enabledLayerCount = 0,
             .ppEnabledLayerNames = nullptr,
-            .enabledExtensionCount = static_cast<std::uint32_t>(extensions.size()),
+            .enabledExtensionCount = static_cast<u32>(extensions.size()),
             .ppEnabledExtensionNames = extensions.data(),
             .pEnabledFeatures = nullptr,
         };
@@ -153,7 +153,7 @@ namespace aby::vk {
        
     }
 
-    std::uint32_t DeviceManager::max_texture_slots() const {
+    u32 DeviceManager::max_texture_slots() const {
         return m_MaxTextureSlots;
     }
 

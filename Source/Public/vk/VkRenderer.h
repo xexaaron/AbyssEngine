@@ -24,7 +24,7 @@ namespace aby::vk {
         void draw_quad_3d(const Quad& quad) override;
         void draw_quad_2d(const Quad& quad) override;
     protected: 
-        void render(std::uint32_t img);
+        void render(u32 img);
         void start_batch(RenderModule& module);
         void flush(RenderModule& module, ERenderPrimitive primitive);
         void flush_if(RenderModule& module, bool flush, ERenderPrimitive primitive);
@@ -32,10 +32,10 @@ namespace aby::vk {
         void draw_quad(RenderModule& module, const Quad& quad);
     private:
         bool on_resize(WindowResizeEvent& event);
-        bool on_resize(std::uint32_t w, std::uint32_t h);
+        bool on_resize(u32 w, u32 h);
         void recreate_swapchain();
-        std::pair<VkResult, std::uint32_t> acquire_next_img();
-        VkResult present_img(std::uint32_t img);
+        std::pair<VkResult, u32> acquire_next_img();
+        VkResult present_img(u32 img);
     private:
         Ref<vk::Context> m_Ctx;
         std::vector<Frame> m_Frames;
@@ -43,7 +43,7 @@ namespace aby::vk {
         RenderModule m_2D;
         RenderModule m_3D;
         std::vector<VkSemaphore> m_RecycledSemaphores;
-        std::uint32_t m_Img;
+        u32 m_Img;
     };
 
 }

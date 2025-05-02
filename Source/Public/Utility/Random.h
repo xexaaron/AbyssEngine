@@ -1,3 +1,4 @@
+#include "Core/Common.h"
 #include <numeric>
 #include <limits>
 #include <random>
@@ -38,7 +39,7 @@ namespace aby::util {
         UUID(const UUID&) = default;
         UUID(UUID&&) noexcept = default;
 
-        operator std::uint64_t() const;
+        operator u64() const;
 
         UUID& operator=(const UUID&) = default;
         bool operator==(const UUID& other) const;

@@ -56,10 +56,10 @@ namespace aby::vk::helper {
 // ShaderCompiler
 namespace aby::vk {
 
-    std::vector<std::uint32_t> ShaderCompiler::compile(App* app, DeviceManager& devices, const fs::path& path, EShader type) {
+    std::vector<u32> ShaderCompiler::compile(App* app, DeviceManager& devices, const fs::path& path, EShader type) {
         auto cached = cache_dir(app, path);
         if (fs::exists(cached)) {
-            std::vector<std::uint32_t> out;
+            std::vector<u32> out;
             std::ifstream in(cached, std::ios::in | std::ios::binary);
             in.seekg(0, std::ios::end);
             auto size = in.tellg();
@@ -95,7 +95,7 @@ namespace aby::vk {
         std::string source(ss.str());
 
         auto module = compiler.CompileGlslToSpv(source, helper::get_shader_type(type), path.string().c_str(), options);
-        std::vector<std::uint32_t> out(module.cbegin(), module.cend());
+        std::vector<u32> out(module.cbegin(), module.cend());
 
         if (module.GetCompilationStatus() != shaderc_compilation_status_success) {
             ABY_ERR("{}", module.GetErrorMessage());
@@ -103,7 +103,7 @@ namespace aby::vk {
         }
         std::ofstream ofs(cached, std::ios::out | std::ios::binary);
         if (ofs.is_open()) {
-            ofs.write(reinterpret_cast<char*>(out.data()), out.size() * sizeof(std::uint32_t));
+            ofs.write(reinterpret_cast<char*>(out.data()), out.size() * sizeof(u32));
             if (!ofs) {
                 ABY_ERR("Failed to write to file: {}", cached.string());
                 return {};
@@ -129,7 +129,7 @@ namespace aby::vk {
         return cache_dir / file.filename();
     }
 
-    ShaderDescriptor ShaderCompiler::reflect(const std::vector<std::uint32_t>&binary_data) {
+    ShaderDescriptor ShaderCompiler::reflect(const std::vector<u32>&binary_data) {
         ShaderDescriptor descriptor;
 
         spirv_cross::Compiler compiler(binary_data);
@@ -175,7 +175,7 @@ namespace aby::vk {
                 sampler.name,
                 compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet),
                 compiler.get_decoration(sampler.id, spv::DecorationBinding),
-                type.self == spv::OpTypeArray ? static_cast<std::uint32_t>(type.array.size()) : 1
+                type.self == spv::OpTypeArray ? static_cast<u32>(type.array.size()) : 1
             });
         }
 
@@ -294,7 +294,7 @@ namespace aby::vk {
             .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
             .pNext = nullptr,
             .flags = 0,
-            .codeSize = m_Data.size() * sizeof(std::uint32_t),
+            .codeSize = m_Data.size() * sizeof(u32),
             .pCode = m_Data.data(),
         };
         VK_CHECK(vkCreateShaderModule(m_Logical, &smci, IAllocator::get(), &m_Module));
@@ -459,14 +459,14 @@ namespace aby::vk {
 
         VK_CHECK(vkCreateDescriptorPool(logical, &ci, IAllocator::get(), &m_Pool));
         
-        auto descriptor_set_count = static_cast<std::uint32_t>(descriptor_set_layouts.size());
+        auto descriptor_set_count = static_cast<u32>(descriptor_set_layouts.size());
 
         VkDescriptorSetVariableDescriptorCountAllocateInfoEXT alloc_count_info{};
         auto max_binding = MAX_BINDLESS_RESOURCES - 1;
-        std::vector<std::uint32_t> max_bindings(descriptor_set_count, max_binding);
+        std::vector<u32> max_bindings(descriptor_set_count, max_binding);
         alloc_count_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT;
         alloc_count_info.pNext = nullptr;
-        alloc_count_info.descriptorSetCount = static_cast<std::uint32_t>(max_bindings.size());
+        alloc_count_info.descriptorSetCount = static_cast<u32>(max_bindings.size());
         alloc_count_info.pDescriptorCounts  = max_bindings.data();
 
 
@@ -555,7 +555,7 @@ namespace aby::vk {
         frag_shader->destroy();
     }
 
-    void ShaderModule::set_uniforms(const void* data, std::size_t bytes, std::uint32_t binding) {
+    void ShaderModule::set_uniforms(const void* data, std::size_t bytes, u32 binding) {
         std::size_t expected_size = 0;
         auto vert_shader = std::static_pointer_cast<vk::Shader>(m_Ctx->shaders().at(m_Vertex));
         for (auto& uniform : vert_shader->descriptor().uniforms) {
@@ -580,7 +580,7 @@ namespace aby::vk {
         vkUnmapMemory(logical, m_UniformMemory);
     }
 
-    void ShaderModule::update_descriptor_set(std::uint32_t binding, std::size_t bytes) {
+    void ShaderModule::update_descriptor_set(u32 binding, std::size_t bytes) {
         auto logical = m_Ctx->devices().logical();
         std::vector<VkWriteDescriptorSet> writes;
         if (bytes == 0) {
@@ -604,7 +604,7 @@ namespace aby::vk {
             .pTexelBufferView = nullptr
         };
         writes.push_back(write_uniforms);
-        vkUpdateDescriptorSets(logical, static_cast<std::uint32_t>(writes.size()), writes.data(), 0, nullptr);
+        vkUpdateDescriptorSets(logical, static_cast<u32>(writes.size()), writes.data(), 0, nullptr);
     }
 
     Resource ShaderModule::vert() const {
@@ -689,7 +689,7 @@ namespace aby::vk {
 }
 
 namespace aby::vk {
-    VertexClass::VertexClass(const ShaderDescriptor& descriptor, std::size_t max_vertices, std::uint32_t binding) :
+    VertexClass::VertexClass(const ShaderDescriptor& descriptor, std::size_t max_vertices, u32 binding) :
         m_Binding(binding),
         m_VertexSize(0),
         m_MaxVertices(max_vertices)

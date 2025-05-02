@@ -375,7 +375,7 @@ namespace aby::ui {
 		}
 	}
 
-	std::uint32_t Console::calc_max_items() const {
+	u32 Console::calc_max_items() const {
 		return std::max(0, static_cast<int>((m_Transform.size.y - (m_Constraints.item_height * 2)) / m_Constraints.item_height));
 	}
 

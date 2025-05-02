@@ -47,7 +47,7 @@ namespace aby::vk {
     
     class VertexClass {
     public:
-        VertexClass(const ShaderDescriptor& descriptor, std::size_t max_vertices, std::uint32_t binding = 0);
+        VertexClass(const ShaderDescriptor& descriptor, std::size_t max_vertices, u32 binding = 0);
         
         std::size_t binding() const;
         std::size_t vertex_size() const;
@@ -98,8 +98,8 @@ namespace aby::vk {
         static Ref<ShaderModule> create(vk::Context* ctx, const fs::path& vert, const fs::path& frag);
         void destroy();
 
-        void set_uniforms(const void* data, std::size_t bytes, std::uint32_t binding = 0);
-        void update_descriptor_set(std::uint32_t binding, std::size_t bytes);
+        void set_uniforms(const void* data, std::size_t bytes, u32 binding = 0);
+        void update_descriptor_set(u32 binding, std::size_t bytes);
         void update_uniform_memory(const void* data, std::size_t bytes);
 
         Resource vert() const;
@@ -134,10 +134,10 @@ namespace aby::vk {
 
     class ShaderCompiler {
     public:
-        static std::vector<std::uint32_t> compile(App* app, DeviceManager& devices, const fs::path& path, EShader type = EShader::FROM_EXT);
+        static std::vector<u32> compile(App* app, DeviceManager& devices, const fs::path& path, EShader type = EShader::FROM_EXT);
         static EShader get_type_from_ext(const fs::path& ext);
         static fs::path cache_dir(App* app, const fs::path& file = "");
-        static ShaderDescriptor reflect(const std::vector<std::uint32_t>& binary_data);
+        static ShaderDescriptor reflect(const std::vector<u32>& binary_data);
     private:
     };
 }

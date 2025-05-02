@@ -23,7 +23,7 @@ namespace std {
 
 namespace aby {
 	
-	Shader::Shader(const std::vector<std::uint32_t>& data, EShader type) : 
+	Shader::Shader(const std::vector<u32>& data, EShader type) : 
 		m_Type(type), m_Data(data)
 	{
 		
@@ -50,7 +50,7 @@ namespace aby {
 		return m_Type;
 	}
 
-	std::span<const std::uint32_t> Shader::data() const {
+	std::span<const u32> Shader::data() const {
 		return std::span(m_Data.begin(), m_Data.size());
 	}
 

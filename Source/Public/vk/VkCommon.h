@@ -1,4 +1,5 @@
 #pragma once
+#include "Core/Common.h"
 #include <vulkan/vulkan.h>
 #include <iostream>
 #include <cstdint>
@@ -42,8 +43,8 @@
 namespace aby::vk {
 
     constexpr static std::size_t   MAX_FRAMES_IN_FLIGHT     = 2;
-    constexpr static std::uint32_t MAX_BINDLESS_RESOURCES   = 16536;
-    constexpr static std::uint32_t BINDLESS_TEXTURE_BINDING = 10;
+    constexpr static u32 MAX_BINDLESS_RESOURCES   = 16536;
+    constexpr static u32 BINDLESS_TEXTURE_BINDING = 10;
 
 
     namespace helper {
@@ -66,7 +67,7 @@ namespace aby::vk {
         std::vector<const char*> are_layers_avail(const std::vector<const char*>& req_layers);
         std::vector<VkLayerProperties> get_layers();
 
-        std::uint32_t find_mem_type(std::uint32_t filter, VkMemoryPropertyFlags properties, VkPhysicalDevice physical);
+        u32 find_mem_type(u32 filter, VkMemoryPropertyFlags properties, VkPhysicalDevice physical);
         void transition_image_layout(
             VkCommandBuffer       cmd,
             VkImage               image,

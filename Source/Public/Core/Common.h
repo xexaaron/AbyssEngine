@@ -4,7 +4,6 @@
 #include <map>
 #include <vector>
 #include <limits>
-#include <random>
 #include <type_traits>
 #include <mutex>
 #include <utility>
@@ -130,7 +129,17 @@ extern "C" __declspec(dllimport) void __stdcall DebugBreak();
 
 namespace fs = std::filesystem;
 
+
 namespace aby {
+
+    using i8  = std::int8_t;
+    using i16 = std::int16_t;
+    using i32 = std::int32_t;
+    using i64 = std::int64_t;
+    using u8  = std::uint8_t;
+    using u16 = std::uint16_t;
+    using u32 = std::uint32_t;
+    using u64 = std::uint64_t;
 
     template <typename T>
     using Ref = std::shared_ptr<T>;
@@ -176,13 +185,14 @@ namespace aby {
         template <typename... Args>
         explicit CreateRefEnabler(Args&&... args) : T(std::forward<Args>(args)...) {}
     };
+
 }
 
 namespace aby {
     struct AppVersion {
-        std::uint32_t major = 0;
-        std::uint32_t minor = 0;
-        std::uint32_t patch = 0;
+       u32 major = 0;
+       u32 minor = 0;
+       u32 patch = 0;
     };
 
     enum class EBackend {

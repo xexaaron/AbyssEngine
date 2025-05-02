@@ -68,9 +68,9 @@ namespace aby::vk {
         }
 
         ci.pApplicationInfo = &ai;
-        ci.enabledExtensionCount = static_cast<std::uint32_t>(extensions.size());
+        ci.enabledExtensionCount = static_cast<u32>(extensions.size());
         ci.ppEnabledExtensionNames = extensions.data();
-        ci.enabledLayerCount = static_cast<std::uint32_t>(layers.size());
+        ci.enabledLayerCount = static_cast<u32>(layers.size());
         ci.ppEnabledLayerNames = layers.data();
         VK_CHECK(vkCreateInstance(&ci, IAllocator::get(), &m_Inst));
         ABY_DBG("vk::Instance::create");

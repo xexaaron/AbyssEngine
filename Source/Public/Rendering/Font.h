@@ -5,10 +5,10 @@
 #include <unordered_map>
 #include <fstream>
 
-namespace ft {
+namespace aby::ft {
     struct Glyph {
-        std::uint32_t advance;
-        std::uint32_t offset;
+        u32 advance;
+        u32 offset;
         glm::vec2     bearing;
         glm::vec2     size;
         glm::vec2     texcoords[4];
@@ -31,21 +31,21 @@ namespace aby {
     public:
         using Glyphs = std::unordered_map<char32_t, ft::Glyph>;
     public:
-        static Resource create(Context* ctx, const fs::path& path, std::uint32_t pt = 14);
+        static Resource create(Context* ctx, const fs::path& path, u32 pt = 14);
         ~Font();
         
         Resource         texture() const;
         std::string_view name() const;
-        std::uint32_t    size() const;
+        u32    size() const;
         const Glyphs&    glyphs() const;
         bool             is_mono() const;
         float            text_height() const;
         float            char_width() const;
         glm::vec2        measure(const std::string& text) const;
     protected:
-        Font(Context* ctx, const fs::path& path, const glm::vec2& dpi, std::uint32_t pt = 14);
+        Font(Context* ctx, const fs::path& path, const glm::vec2& dpi, u32 pt = 14);
     private:
-        std::uint32_t m_SizePt;
+        u32 m_SizePt;
         ft::FontData  m_Data;
     };
 

@@ -13,7 +13,7 @@ namespace aby {
     class Font;
     class Context;
 
-    enum class EResource : std::uint32_t {
+    enum class EResource : u32 {
         NONE    = 0,
         SHADER,
         TEXTURE,
@@ -41,7 +41,7 @@ namespace aby {
 
     class Resource {
     public:
-        using Handle = std::uint32_t;
+        using Handle = u32;
     public:
         Resource();
         Resource(EResource type, Handle handle);

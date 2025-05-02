@@ -1,4 +1,5 @@
 #pragma once
+#include "Core/Common.h"
 #include <glm/glm.hpp>
 #include <string>
 
@@ -38,12 +39,12 @@ namespace aby {
     };
 
     struct Text {
-        Text(const std::string& text, const glm::vec2& pos, const glm::vec4& color = { 1, 1, 1, 1 }, float scale = 1.f, std::uint32_t font = 0);
+        Text(const std::string& text, const glm::vec2& pos, const glm::vec4& color = { 1, 1, 1, 1 }, float scale = 1.f, u32 font = 0);
 
         glm::vec3     pos;
         float         scale;
         glm::vec4     color;
-        std::uint32_t font;
+        u32           font;
         std::string   text;
         std::string   prefix;
     };

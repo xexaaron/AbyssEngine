@@ -136,7 +136,7 @@ namespace aby::vk {
 
     }
 
-    void Renderer::render(std::uint32_t img) {
+    void Renderer::render(u32 img) {
         VkCommandBuffer cmd = m_Frames[img].cmd_buffer;
         VkCommandBufferBeginInfo begin_info{
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
@@ -280,7 +280,7 @@ namespace aby::vk {
         return on_resize(event.w(), event.h());
     }
 
-    bool Renderer::on_resize(std::uint32_t w, std::uint32_t h) {
+    bool Renderer::on_resize(u32 w, u32 h) {
         if (w == 0 || h == 0) {
             return false;
         }
@@ -302,9 +302,9 @@ namespace aby::vk {
         return true;
     }
 
-    std::pair<VkResult, std::uint32_t> Renderer::acquire_next_img() {
+    std::pair<VkResult, u32> Renderer::acquire_next_img() {
         auto* logical = m_Ctx->devices().logical();
-        std::uint32_t img = UINT32_MAX;
+        u32 img = UINT32_MAX;
         
         VkSemaphore acquire_semaphore;
         if (m_RecycledSemaphores.empty()) {
@@ -348,7 +348,7 @@ namespace aby::vk {
         return std::make_pair(VK_SUCCESS, img);
     }
 
-    VkResult Renderer::present_img(std::uint32_t img) {
+    VkResult Renderer::present_img(u32 img) {
         auto swapchain = m_Swapchain.operator VkSwapchainKHR();
         VkPresentInfoKHR present{
             .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,

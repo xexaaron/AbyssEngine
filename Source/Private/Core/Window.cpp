@@ -121,11 +121,11 @@ namespace aby {
             return reinterpret_cast<void*>(glfwGetX11Window(m_Window));
     #endif
     }
-    std::uint32_t Window::width() const {
+    u32 Window::width() const {
         return m_Data.width;
     }
 
-    std::uint32_t Window::height() const {
+    u32 Window::height() const {
         return m_Data.height;
     }
 
@@ -149,11 +149,11 @@ namespace aby {
         glfwSetWindowTitle(m_Window, m_Data.title.c_str());
     }
 
-    void Window::set_size(std::uint32_t w, std::uint32_t h) {
+    void Window::set_size(u32 w, u32 h) {
         glfwSetWindowSize(m_Window, static_cast<int>(w), static_cast<int>(h));
     }
 
-    void Window::set_position(std::uint32_t x, std::uint32_t y) {
+    void Window::set_position(u32 x, u32 y) {
         glfwSetWindowPos(m_Window, static_cast<int>(x), static_cast<int>(y));
     }
 
@@ -260,8 +260,8 @@ namespace aby {
             double xpos, ypos;
             glfwGetCursorPos(win, &xpos, &ypos);
             glm::u32vec2 pos(
-                static_cast<std::uint32_t>(xpos),
-                static_cast<std::uint32_t>(ypos)
+                static_cast<u32>(xpos),
+                static_cast<u32>(ypos)
             );
             switch (action) {
                 case GLFW_PRESS:

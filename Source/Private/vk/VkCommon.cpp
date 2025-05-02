@@ -97,7 +97,7 @@ namespace aby::vk::helper {
     }
 
     std::vector<VkLayerProperties> get_layers() {
-        std::uint32_t layer_count = 0;
+        u32 layer_count = 0;
         VK_CHECK(vkEnumerateInstanceLayerProperties(&layer_count, nullptr));
         std::vector<VkLayerProperties> layers(layer_count);
         VK_CHECK(vkEnumerateInstanceLayerProperties(&layer_count, layers.data()));
@@ -122,7 +122,7 @@ namespace aby::vk::helper {
         return missing_layers;
     }
 
-    std::uint32_t find_mem_type(std::uint32_t filter, VkMemoryPropertyFlags properties, VkPhysicalDevice physical) {
+    u32 find_mem_type(u32 filter, VkMemoryPropertyFlags properties, VkPhysicalDevice physical) {
         VkPhysicalDeviceMemoryProperties memProperties;
         vkGetPhysicalDeviceMemoryProperties(physical, &memProperties);
 

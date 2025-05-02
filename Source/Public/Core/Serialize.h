@@ -21,7 +21,7 @@ namespace aby {
 
 		void save();
 		void reset();
-		void seek(std::int64_t offset);
+		void seek(i64 offset);
 
 		void set_mode(ESerializeMode mode);
 
@@ -50,14 +50,14 @@ namespace aby {
 		T& read(T& buffer) {
 			ABY_ASSERT(m_Opts.mode == ESerializeMode::READ, "Cannot read when mode is set to write");
 			if constexpr (std::is_same_v<T, std::string>) {
-				std::int64_t length = 0;
+				i64 length = 0;
 				std::memcpy(&length, &m_Data[m_Offset], sizeof(length));
 				m_Offset += sizeof(length);
 				buffer.assign(reinterpret_cast<const char*>(&m_Data[m_Offset]), length);
 				m_Offset += length;
 			}
 			else if constexpr (std::is_same_v<T, const char*>) {
-				std::int64_t length = 0;
+				i64 length = 0;
 				constexpr std::byte null{0};
 				while (m_Offset + length < m_Data.size() && m_Data[m_Offset + length] != null) {
 					++length;
@@ -78,7 +78,7 @@ namespace aby {
 		void create_file();
 	private:
 		SerializeOpts m_Opts;
-		std::int64_t m_Offset;
+		i64 m_Offset;
 		std::vector<std::byte> m_Data;
 	};
 

@@ -42,7 +42,7 @@ namespace aby::vk {
         init(ctx);
     }
 
-    Texture::Texture(vk::Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, std::uint32_t channels) :
+    Texture::Texture(vk::Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels) :
         aby::Texture(size, data, channels),
         m_Logical(ctx->devices().logical()),
         m_Format(VK_FORMAT_UNDEFINED),

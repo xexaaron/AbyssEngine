@@ -49,7 +49,7 @@ namespace aby::ui {
 		bool on_mouse_moved(MouseMovedEvent& event);
 	protected:
 		glm::vec2 calc_item_pos(std::size_t item) const;
-		std::uint32_t calc_max_items() const;
+		u32 calc_max_items() const;
 		void try_pop();
 		Ref<Textbox> create_msg(const LogMsg& msg);
 		void add_msg(Ref<Textbox> textbox);
@@ -75,7 +75,7 @@ namespace aby::ui {
 		};
 		struct Config {
 			std::size_t  callback;
-			std::int32_t scroll_amt;
+			i32 scroll_amt;
 		};
 		App*		m_App;
 		Constraints	m_Constraints;

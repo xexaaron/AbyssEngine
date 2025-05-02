@@ -3,7 +3,7 @@
 namespace aby::util {
     UUID::UUID() : m_Value(Random<uint64_t, 2083231>::gen()) {}
 
-    UUID::operator std::uint64_t() const {
+    UUID::operator u64() const {
         return m_Value;
     }
 

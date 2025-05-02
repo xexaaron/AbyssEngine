@@ -49,11 +49,11 @@ namespace aby::vk {
         return m_Images;
     }
 
-    std::uint32_t Swapchain::width() const {
+    u32 Swapchain::width() const {
         return m_Extent.width;
     }
 
-    std::uint32_t Swapchain::height() const {
+    u32 Swapchain::height() const {
         return m_Extent.height;
     }
 

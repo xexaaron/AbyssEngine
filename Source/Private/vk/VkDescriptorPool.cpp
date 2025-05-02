@@ -51,7 +51,7 @@ namespace aby::vk {
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = m_Pool;
-        allocInfo.descriptorSetCount = static_cast<std::uint32_t>(layouts.size());
+        allocInfo.descriptorSetCount = static_cast<u32>(layouts.size());
         allocInfo.pSetLayouts = layouts.data();
        
         VkDescriptorSet descriptorSet;

@@ -14,7 +14,7 @@ namespace aby::vk {
         m_VertexClass(vertex_descriptor, primitive_descriptor.MaxVertices, 0),
         m_VertexAccumulator(m_VertexClass),
         m_VertexBuffer(m_VertexClass, ctx->devices()),
-        m_IndexBuffer(primitive_descriptor.MaxIndices * sizeof(std::uint32_t), ctx->devices()),
+        m_IndexBuffer(primitive_descriptor.MaxIndices * sizeof(u32), ctx->devices()),
         m_Descriptor(primitive_descriptor),
         m_IndexCount(0)
     {
@@ -40,9 +40,9 @@ namespace aby::vk {
         return m_VertexAccumulator.count();
     }
 
-    void RenderPrimitive::set_index_data(const std::uint32_t* indices, DeviceManager& manager) {
+    void RenderPrimitive::set_index_data(const u32* indices, DeviceManager& manager) {
         ABY_ASSERT(m_Descriptor.IndicesPer != m_Descriptor.VerticesPer, "No index buffer will be used to draw this primitive");
-        m_IndexBuffer.set_data(indices, sizeof(std::uint32_t) * m_Descriptor.MaxIndices, manager);
+        m_IndexBuffer.set_data(indices, sizeof(u32) * m_Descriptor.MaxIndices, manager);
     }
 
     bool RenderPrimitive::empty() const {
@@ -79,11 +79,11 @@ namespace aby::vk {
 
 
     void RenderPrimitive::draw_indexed(VkCommandBuffer cmd) {
-        vkCmdDrawIndexed(cmd, static_cast<std::uint32_t>(m_IndexCount), 1u, 0u, 0u, 0u);
+        vkCmdDrawIndexed(cmd, static_cast<u32>(m_IndexCount), 1u, 0u, 0u, 0u);
     }
 
     void RenderPrimitive::draw_nonindexed(VkCommandBuffer cmd) {
-        vkCmdDraw(cmd, static_cast<std::uint32_t>(this->vertex_count()), 1u, 0u, 0u);
+        vkCmdDraw(cmd, static_cast<u32>(this->vertex_count()), 1u, 0u, 0u);
     }
 
 
@@ -196,7 +196,7 @@ namespace aby::vk {
         }
     }
 
-    void RenderModule::set_uniforms(const void* data, std::size_t bytes, std::uint32_t binding) {
+    void RenderModule::set_uniforms(const void* data, std::size_t bytes, u32 binding) {
         m_Module->set_uniforms(data, bytes, binding);
     }
 

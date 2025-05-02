@@ -10,7 +10,7 @@ namespace aby {
         m_Data.clear();
         m_Offset = 0;
     }
-    void Serializer::seek(std::int64_t offset) {
+    void Serializer::seek(i64 offset) {
         m_Offset += offset;
         ABY_ASSERT(m_Offset >= 0, "Out of range");
         ABY_ASSERT(m_Offset < static_cast<int64_t>(m_Data.size()), "Out of range");

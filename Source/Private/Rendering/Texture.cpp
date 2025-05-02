@@ -72,7 +72,7 @@ namespace aby {
         }
         return {};
     }
-    Resource Texture::create(Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, std::uint32_t channels) {
+    Resource Texture::create(Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels) {
         ABY_ASSERT(ctx, "(aby::Context*)ctx is invalid!");
         switch (ctx->backend()) {
             case EBackend::VULKAN:
@@ -144,7 +144,7 @@ namespace aby {
         }
     }
     
-    Texture::Texture(const glm::u32vec2& size, const std::vector<std::byte>& data, std::uint32_t channels) :
+    Texture::Texture(const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels) :
         m_Size(size),
         m_Channels(channels), 
         m_Data(data) 
@@ -173,7 +173,7 @@ namespace aby {
         return m_Size;
     }
 
-    std::uint32_t Texture::channels() const {
+    u32 Texture::channels() const {
         return m_Channels;
     }
 

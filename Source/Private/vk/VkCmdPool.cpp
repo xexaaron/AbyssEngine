@@ -4,11 +4,11 @@
 
 namespace aby::vk {
 
-	CmdPool::CmdPool(VkDevice logical, std::uint32_t queue_family_idx) {
+	CmdPool::CmdPool(VkDevice logical, u32 queue_family_idx) {
 		create(logical, queue_family_idx);
 	}
 
-	void CmdPool::create(VkDevice logical, std::uint32_t queue_family_idx) {
+	void CmdPool::create(VkDevice logical, u32 queue_family_idx) {
         VkCommandPoolCreateInfo cmd_pool_info = {
             .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
             .pNext = nullptr,

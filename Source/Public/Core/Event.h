@@ -358,10 +358,10 @@ namespace aby {
 
 	class WindowResizeEvent : public Event {
 	public:
-		WindowResizeEvent(std::uint32_t w, std::uint32_t h, std::uint32_t old_w, std::uint32_t old_h);
+		WindowResizeEvent(u32 w, u32 h, u32 old_w, u32 old_h);
 
-		std::uint32_t w() const;
-		std::uint32_t h() const;
+		u32 w() const;
+		u32 h() const;
 		glm::u32vec2 size() const;
 		glm::u32vec2 old_size() const;
 		std::string to_string() const override;

@@ -18,7 +18,7 @@ namespace aby::ui {
 
     void ParentWidget::on_invalidate() {
         bool needs_re_sort = false;
-        std::int32_t last_zindex = std::numeric_limits<std::int32_t>::min();
+        i32 last_zindex = std::numeric_limits<i32>::min();
 
         for (auto index : m_Invalidated) {
             if (index >= m_Children.size()) continue;

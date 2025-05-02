@@ -20,12 +20,12 @@ namespace aby {
 		static Resource create(Context* ctx, const fs::path& path, EShader type = EShader::FROM_EXT);
 
 		EShader type() const;
-		std::span<const std::uint32_t> data() const;
+		std::span<const u32> data() const;
 	protected:
-		Shader(const std::vector<std::uint32_t>& data, EShader type);
+		Shader(const std::vector<u32>& data, EShader type);
 	protected:
 		EShader m_Type = EShader::MAX_ENUM;
-		std::vector<std::uint32_t> m_Data;
+		std::vector<u32> m_Data;
 	};
 }
 

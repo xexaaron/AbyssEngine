@@ -29,7 +29,7 @@ namespace aby::ui {
         void set_parent(Ref<Object> parent);
         void set_anchor(Anchor anchor);
         void set_invalid(bool invalid);
-        void set_zindex(std::int32_t zindex);
+        void set_zindex(i32 zindex);
         void set_visible(bool visible);
 
         bool             is_visible() const;
@@ -39,7 +39,7 @@ namespace aby::ui {
         const glm::vec2& size() const;
         const Anchor&    anchor() const;
         const Style&     style() const;
-        std::int32_t     zindex() const;
+        i32              zindex() const;
         Weak<Object>     parent() const;
         Weak<Object>     parent();
     protected:
@@ -50,7 +50,7 @@ namespace aby::ui {
         Style m_Style;
         bool bInvalid;
         bool bVisible;
-        std::int32_t m_ZIndex;
+        i32 m_ZIndex;
         Weak<Object> m_Parent;
     };
 

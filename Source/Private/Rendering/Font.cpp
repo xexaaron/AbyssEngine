@@ -7,7 +7,7 @@
 
 #define FT_CHECK(err, ...) ABY_ASSERT(err == FT_Error(0), "[freetype] ({}): {}", err, FT_Error_String(err))
 
-namespace ft {
+namespace aby::ft {
 
     class Library {
     public:
@@ -16,7 +16,7 @@ namespace ft {
             return instance;
         }
 
-        FT_Face create_face(const std::filesystem::path& path, std::uint32_t pt, const glm::vec2& dpi) {
+        FT_Face create_face(const std::filesystem::path& path, u32 pt, const glm::vec2& dpi) {
             FT_Face face = nullptr;
             std::string path_str = path.string();
             FT_CHECK(::FT_New_Face(m_Library, path_str.c_str(), FT_Long(0), &face));
@@ -30,7 +30,7 @@ namespace ft {
             ::FT_Done_Face(face);
         }
 
-        FontData load_glyph_range(aby::App* app, char32_t start, char32_t end, const std::filesystem::path& path, std::uint32_t pt, const glm::vec2& dpi) {
+        FontData load_glyph_range(aby::App* app, char32_t start, char32_t end, const std::filesystem::path& path, u32 pt, const glm::vec2& dpi) {
             auto name       = path.filename().string();
             auto glyph_file = cache_path(app, start, end, name, pt, ".bin");
             auto png_file   = cache_path(app, start, end, name, pt, ".png");
@@ -53,8 +53,8 @@ namespace ft {
         FontData load_glyph_range_ttf(char32_t start, char32_t end, FT_FaceRec_* face, const std::filesystem::path& png_file) {
             constexpr glm::ivec2 ATLAS_SIZE = { 512, 512 };  // Texture Atlas Size (Fixed or dynamically sized as needed)
 
-            std::uint32_t tex_width = ATLAS_SIZE.x;
-            std::uint32_t tex_height = ATLAS_SIZE.y;
+            u32 tex_width = ATLAS_SIZE.x;
+            u32 tex_height = ATLAS_SIZE.y;
 
             std::vector<char> pixels(tex_width * tex_height, 0); // Initialize pixel buffer with 0 (black)
 
@@ -86,7 +86,7 @@ namespace ft {
                 glm::vec2 uv_max = { static_cast<float>(pen_x + bmp->width) / tex_width, static_cast<float>(pen_y + bmp->rows) / tex_height };
                 glm::vec4 uvs = { uv_min.x, uv_min.y, uv_max.x, uv_max.y };
                 out.glyphs[c] = Glyph{
-                    .advance = static_cast<std::uint32_t>(glyph->advance.x >> 6u),
+                    .advance = static_cast<u32>(glyph->advance.x >> 6u),
                     .offset = pen_y * tex_width + pen_x,
                     .bearing = { glyph->bitmap_left, glyph->bitmap_top },
                     .size = { bmp->width, bmp->rows },
@@ -156,7 +156,7 @@ namespace ft {
             return out;
         }
 
-        void cache_glyphs(aby::App* app, char32_t start, char32_t end, const std::string& name, std::uint32_t pt, const FontData& data) {
+        void cache_glyphs(aby::App* app, char32_t start, char32_t end, const std::string& name, u32 pt, const FontData& data) {
             std::filesystem::path bin_cache_path = cache_path(app, start, end, name, pt, ".bin");
             aby::Serializer serializer(aby::SerializeOpts{ .file = bin_cache_path, .mode = aby::ESerializeMode::WRITE });
             serializer.write(data.glyphs.size());
@@ -169,7 +169,7 @@ namespace ft {
             serializer.save();
         }
 
-        std::filesystem::path cache_path(aby::App* app, char32_t start, char32_t end, const std::string& name, std::uint32_t pt, const std::filesystem::path& ext) {
+        std::filesystem::path cache_path(aby::App* app, char32_t start, char32_t end, const std::string& name, u32 pt, const std::filesystem::path& ext) {
             auto dir = app->cache() / "Fonts";
             if (!std::filesystem::exists(dir)) {
                 std::filesystem::create_directories(dir);
@@ -200,7 +200,7 @@ namespace ft {
 
 namespace aby {
 
-    Resource Font::create(Context* ctx, const fs::path& path, std::uint32_t pt) {
+    Resource Font::create(Context* ctx, const fs::path& path, u32 pt) {
         return ctx->load_thread().add_task(EResource::FONT, [ctx, path, pt]() {
             Timer timer;
             auto font = CreateRefEnabler<Font>::create(ctx, path, ctx->window()->dpi(), pt);
@@ -211,7 +211,7 @@ namespace aby {
         });
     }
 
-    Font::Font(Context* ctx, const fs::path& path, const glm::vec2& dpi, std::uint32_t pt) :
+    Font::Font(Context* ctx, const fs::path& path, const glm::vec2& dpi, u32 pt) :
         m_SizePt(pt),
         m_Data(ft::Library::get().load_glyph_range(ctx->app(), 32, 128, path, pt, dpi))
     {
@@ -222,7 +222,7 @@ namespace aby {
     }
 
 
-    std::uint32_t Font::size() const {
+    u32 Font::size() const {
         return m_SizePt;
     }
 

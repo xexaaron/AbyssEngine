@@ -19,8 +19,8 @@ namespace aby {
 
     struct WindowData {
         std::string   title;
-        std::uint32_t width  = 800;
-        std::uint32_t height = 600;
+        u32 width  = 800;
+        u32 height = 600;
         EWindowFlags  flags  = EWindowFlags::NONE;
         ECursor       cursor = ECursor::ARROW;
         std::function<void(Event&)> callback = {};
@@ -55,8 +55,8 @@ namespace aby {
 
         void set_cursor(ECursor cursor);
         void set_title(const std::string& title);
-        void set_size(std::uint32_t w, std::uint32_t h);
-        void set_position(std::uint32_t x, std::uint32_t y);
+        void set_size(u32 w, u32 h);
+        void set_position(u32 x, u32 y);
         void set_vsync(bool vsync);
         void set_minimized(bool minimized);
         void set_maximized(bool maximized);
@@ -68,8 +68,8 @@ namespace aby {
         void*         native() const;
         GLFWwindow*   glfw() const;
         double        scale() const;
-        std::uint32_t width() const;
-        std::uint32_t height() const;
+        u32 width() const;
+        u32 height() const;
         glm::u32vec2  size() const;
         glm::fvec2    mouse_pos() const;
         int           refresh_rate() const;

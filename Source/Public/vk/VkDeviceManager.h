@@ -8,7 +8,7 @@
 namespace aby::vk {
 
     struct DeviceQueue {
-        std::uint32_t FamilyIdx = UINT32_MAX;
+        u32 FamilyIdx = UINT32_MAX;
         VkQueue Queue = VK_NULL_HANDLE;
     };
 
@@ -29,14 +29,14 @@ namespace aby::vk {
         VkDevice logical();
         const DeviceQueue& graphics() const;
 
-        std::uint32_t max_texture_slots() const;
+        u32 max_texture_slots() const;
     protected:
         static VkPhysicalDevice choose_best_device(VkInstance inst);
     private:
         VkPhysicalDevice m_Physical;
         VkDevice m_Logical;
         DeviceQueue m_Graphics;
-        std::uint32_t m_MaxTextureSlots;
+        u32 m_MaxTextureSlots;
     };
 
 }

@@ -32,8 +32,8 @@ namespace aby::vk {
 		std::vector<VkImageView>& views();
 		std::vector<VkImage>& images();
 
-		std::uint32_t width() const;
-		std::uint32_t height() const;
+		u32 width() const;
+		u32 height() const;
 		glm::u32vec2  size() const;
 		VkFormat format() const;
 		operator VkSwapchainKHR();

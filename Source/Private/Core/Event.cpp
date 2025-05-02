@@ -87,13 +87,13 @@ namespace aby {
 	const char* MouseReleasedEvent::name() const {
 		return "MOUSE_RELEASED";
 	}
-	WindowResizeEvent::WindowResizeEvent(std::uint32_t w, std::uint32_t h, std::uint32_t old_w, std::uint32_t old_h) :
+	WindowResizeEvent::WindowResizeEvent(u32 w, u32 h, u32 old_w, u32 old_h) :
 		m_NewSize(w, h), m_OldSize(old_w, old_h) {
 	}
-	std::uint32_t WindowResizeEvent::w() const {
+	u32 WindowResizeEvent::w() const {
 		return m_NewSize.x;
 	}
-	std::uint32_t WindowResizeEvent::h() const {
+	u32 WindowResizeEvent::h() const {
 		return m_NewSize.y;
 	}
 	glm::u32vec2 WindowResizeEvent::size() const {

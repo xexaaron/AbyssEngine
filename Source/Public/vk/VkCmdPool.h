@@ -6,10 +6,10 @@ namespace aby::vk {
 	class CmdPool {
 	public:
 		CmdPool() = default;
-		CmdPool(VkDevice logical, std::uint32_t queue_family_idx);
+		CmdPool(VkDevice logical, u32 queue_family_idx);
 
 		void destroy(VkDevice logical);
-		void create(VkDevice logical, std::uint32_t queue_family_idx);
+		void create(VkDevice logical, u32 queue_family_idx);
 		explicit operator VkCommandPool();
 		explicit operator const VkCommandPool() const;
 	private:

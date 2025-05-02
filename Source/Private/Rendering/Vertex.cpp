@@ -47,7 +47,7 @@ namespace aby {
 
 namespace aby {
 
-    Text::Text(const std::string& text, const glm::vec2& pos, const glm::vec4& color, float scale, std::uint32_t font) :
+    Text::Text(const std::string& text, const glm::vec2& pos, const glm::vec4& color, float scale, u32 font) :
         pos(pos, 0.f), scale(scale), color(color), font(font), text(text) {}
 
 }

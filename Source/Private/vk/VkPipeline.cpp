@@ -31,8 +31,8 @@ namespace aby::vk {
 		ibds.reserve(input_binding_stride.size());
 		for (const auto& [binding, stride] : input_binding_stride) {
 			VkVertexInputBindingDescription ibd = {
-				.binding   = static_cast<std::uint32_t>(binding),
-				.stride    = static_cast<std::uint32_t>(stride),
+				.binding   = static_cast<u32>(binding),
+				.stride    = static_cast<u32>(stride),
 				.inputRate = VK_VERTEX_INPUT_RATE_VERTEX,
 			};
 			ibds.push_back(ibd);
@@ -55,9 +55,9 @@ namespace aby::vk {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
 			.pNext = nullptr,
 			.flags = 0,
-			.vertexBindingDescriptionCount   = static_cast<std::uint32_t>(ibds.size()),
+			.vertexBindingDescriptionCount   = static_cast<u32>(ibds.size()),
 			.pVertexBindingDescriptions      = ibds.data(),
-			.vertexAttributeDescriptionCount = static_cast<std::uint32_t>(iads.size()),
+			.vertexAttributeDescriptionCount = static_cast<u32>(iads.size()),
 			.pVertexAttributeDescriptions    = iads.data(),
 		};
 
@@ -138,7 +138,7 @@ namespace aby::vk {
 		VkGraphicsPipelineCreateInfo pipeline_ci{
 			.sType				 = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 			.pNext				 = &pipeline_rendering_info,
-			.stageCount			 = static_cast<std::uint32_t>(stages.size()),
+			.stageCount			 = static_cast<u32>(stages.size()),
 			.pStages			 = stages.data(),
 			.pVertexInputState	 = &vertex_input,
 			.pInputAssemblyState = &input_asm,
@@ -174,7 +174,7 @@ namespace aby::vk {
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			m_Shaders->layout(),      // Pipeline layout
 			0,						  // First set index
-			static_cast<std::uint32_t>(descriptors.size()),					      // Number of sets
+			static_cast<u32>(descriptors.size()),					      // Number of sets
 			descriptors.data(),			  // The allocated descriptor set
 			0,
 			nullptr
