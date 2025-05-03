@@ -7,3 +7,6 @@
 [submodule "Vendor/freetype"]
 	path = Vendor/freetype
 	url = https://github.com/freetype/freetype
+[submodule "Vendor/CmdLine"]
+	path = Vendor/CmdLine
+	url = https://github.com/xexaaron/CmdLine.git
