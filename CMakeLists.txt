@@ -19,6 +19,11 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 else()
     set(DEBUG_SUFFIX "")
 endif()
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(PLATFORM_SUFFIX ".exe")
+else()
+    set(PLATFORM_SUFFIX "")
+endif()
 
 if (MSVC)
     # W4                    warn level 4
@@ -231,6 +236,8 @@ set(RESOURCES ${SHADER_SOURCES} ${TEXTURE_SOURCES} ${FONT_SOURCES})
 add_subproject("localize")
 add_subproject("tests")
 add_subproject("watchdog")
+add_subproject("tool")
+
 add_library(${ENGINE} ${CPP_SOURCES} ${HEADER_FILES} ${RESOURCES})
 add_executable(${EDITOR} Source/main.cpp ${RESOURCES})
 target_compile_options(${ENGINE} PRIVATE ${COMPILE_OPTS})
@@ -270,6 +277,9 @@ add_custom_command(TARGET ${EDITOR} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CMAKE_SOURCE_DIR}/Source/Shaders"
             "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/Shaders"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/tool${PLATFORM_SUFFIX}"
+            "${CMAKE_CURRENT_LIST_DIR}/tool${PLATFORM_SUFFIX}"
     COMMENT "Copy resources"
 )
 

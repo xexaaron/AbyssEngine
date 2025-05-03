@@ -28,7 +28,7 @@ namespace aby {
     };
 
     struct Quad {
-        Quad(const glm::vec2& size, const glm::vec2& pos, const glm::vec4& col = { 1, 1, 1, 1 }, float texture = 0.f, const glm::vec2& uvs = { 1, 1 });
+        Quad(const glm::vec2& size, const glm::vec2& pos = {}, const glm::vec4& col = { 1, 1, 1, 1 }, float texture = 0.f, const glm::vec2& uvs = { 1, 1 });
         Quad(const glm::vec3& size = {}, const glm::vec3& pos = {}, const glm::vec4& col = { 1, 1, 1, 1 }, float texture = 0.f, const glm::vec2& uvs = { 1, 1 });
 
         glm::vec3 pos;

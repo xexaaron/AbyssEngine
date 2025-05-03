@@ -1,5 +1,0 @@
-{
-   suppress
-   Memcheck:Param
-   obj:/usr/lib/x86_64-linux-gnu/libvulkan_lvp.so
-}

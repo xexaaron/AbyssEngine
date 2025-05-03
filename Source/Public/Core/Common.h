@@ -129,7 +129,6 @@ extern "C" __declspec(dllimport) void __stdcall DebugBreak();
 
 namespace fs = std::filesystem;
 
-
 namespace aby {
 
     using i8  = std::int8_t;
@@ -219,7 +218,5 @@ namespace aby {
         HRESIZE,
         VRESIZE,
     };
-
-  
 
 }
