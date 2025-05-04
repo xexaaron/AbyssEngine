@@ -21,6 +21,9 @@ namespace editor {
             auto console = Editor::create_console();
             m_Canvas->add_child(console);
             m_App.add_object(m_Canvas);
+            auto canvas_style = aby::ui::Style::dark_mode();
+            canvas_style.background.color.a = 0.f;
+            m_Canvas->set_style(canvas_style);
         }
 
         aby::App& app() {

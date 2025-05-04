@@ -3,4 +3,6 @@ nav:
   - Home: "index.md"
   - Object: "pages/Object.md"
   - Resource: "pages/Resource.md" 
+  - Shaders: "pages/Shaders.md"
+  - Text: "pages/Text.md" 
 theme: readthedocs

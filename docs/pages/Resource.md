@@ -2,9 +2,9 @@
 
 Resources are objects like Shaders, Fonts, and Textures that are represented
 by a resource type and a handle or key, into a map that contains the actual
-object. 
+object.
 
-This documentation will be referring to the actual object and the type/handle structure 
+This documentation will be referring to the actual object and the type/handle structure
 interchangeably.
 
 ## Creation
@@ -61,8 +61,3 @@ MyObject::on_create(App* app, bool) {
     Ref<Texture> texture = textures.at(m_Texture);
 }
 ```
-
-
-
-
-

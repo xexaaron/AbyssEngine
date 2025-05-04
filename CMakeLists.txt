@@ -230,7 +230,7 @@ make_source_groups(
 source_group("Private" FILES ${STB_IMPL} "Source/main.cpp")
 set(COMMON_INCLUDE_DIRS "Source/Public" ${GLFW_INCLUDE_DIR} ${STB_INCLUDE_DIR} ${GLM_INCLUDE_DIR})
 set(RESOURCES ${SHADER_SOURCES} ${TEXTURE_SOURCES} ${FONT_SOURCES})
-
+source_group("Resources" FILES ${RESOURCES})
 # Subprojects and compile defintions
 
 add_subproject("localize")
