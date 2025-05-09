@@ -49,8 +49,8 @@ namespace aby::ui {
             auto scale = new_size / old_size;
             m_Transform.size.x *= scale.x;
             m_Transform.position *= scale;
-            return false;
         }
+        return false;
     }
 
 
