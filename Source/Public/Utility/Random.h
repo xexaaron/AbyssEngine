@@ -40,7 +40,8 @@ namespace aby::util {
         UUID(UUID&&) noexcept = default;
 
         operator u64() const;
-
+        operator std::string() const;
+        
         UUID& operator=(const UUID&) = default;
         bool operator==(const UUID& other) const;
         bool operator!=(const UUID& other) const;

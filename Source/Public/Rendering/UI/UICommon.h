@@ -11,22 +11,17 @@ namespace aby::ui {
     
     enum class EAnchor {
         NONE          = 0,
-        TOP_LEFT      = NONE, 
-        TOP_MIDDLE    = 1,    
-        TOP_RIGHT     = 2,    
-        MIDDLE_LEFT   = 3,
-        MIDDLE        = 4,
-        MIDDLE_RIGHT  = 5,
-        BOTTOM_LEFT   = 6,
-        BOTTOM_MIDDLE = 7,
-        BOTTOM_RIGHT  = 8,
+        TOP_LEFT      = 1, 
+        TOP_CENTER    = 2,    
+        TOP_RIGHT     = 3,    
+        CENTER_LEFT   = 4,
+        CENTER        = 5,
+        CENTER_RIGHT  = 6,
+        BOTTOM_LEFT   = 7,
+        BOTTOM_CENTER = 8,
+        BOTTOM_RIGHT  = 9,
     };
-    
-    enum class EScaleMode {
-        SCALE_TO_FIT = 0,
-        FIT_TO_SCALE = 1,
-    };
-
+  
     enum class EDirection {
         HORIZONTAL = 0, // x
         VERTICAL   = 1, // y
@@ -83,12 +78,14 @@ namespace aby::ui {
         glm::vec4 color = { 0.f, 0.f, 0.f, 1.f };
         float     width = 0.f;
     };
-    struct Style {
-        Background background = {}; // If opacity is not 1 then border will draw 4 lines instead of a rect.
-        Border     border     = {}; 
 
-        static Style dark_mode();  // Default dark mode style.
-        static Style light_mode(); // Default light mode style.
+    struct ImageStyle {
+        Border    border;
+        glm::vec4 color;
+        Resource  texture;
+
+        static ImageStyle dark_mode();   // Default dark mode style.
+        static ImageStyle light_mode();  // Default light mode style.
     };
 
     struct ButtonStyle {
@@ -108,19 +105,17 @@ namespace aby::ui {
         ETextAlignment alignment = ETextAlignment::CENTER;
     };
 
-
     struct TextCursor {
         std::size_t pos     = std::string::npos;
         char        cursor  = '_';
     };
 
     struct InputTextOptions {
-        bool        submit_clears_focus = false; // Does pressing enter/submitting make the input text box lose focus.
-        bool        submit_clears_text  = true;  // Does pressing enter/submitting clear the text (not including prefix).
-        bool        cursor              = true;  // Is a cursor shown when the textbox is focused.
-        bool        unused              = false; // padding for now, might get turned into an option later.
+        bool submit_clears_focus = false; // Does pressing enter/submitting make the input text box lose focus.
+        bool submit_clears_text  = true;  // Does pressing enter/submitting clear the text (not including prefix).
+        bool cursor              = true;  // Is a cursor shown when the textbox is focused.
+        bool unused              = false; // padding for now, might get turned into an option later.
     };
-
 
     struct ResizeResult {
         float distance;
@@ -150,4 +145,8 @@ namespace aby::ui {
         glm::vec2 start   = { 0, 0 };       // The start position of the mouse.
         glm::vec2 end     = { 0, 0 };       // The end position of the mouse.
     };
+}
+
+namespace std {
+    string to_string(aby::ui::EAnchor);
 }

@@ -7,7 +7,7 @@ namespace aby::ui {
     }
 
     Button::Button(const Transform& transform, const ButtonStyle& style, const TextInfo& text_info, bool text_copyable) :
-        Textbox(transform, Style{ style.released, style.border }, text_info),
+        Textbox(transform, ImageStyle{ style.border, style.released.color, style.released.texture  }, text_info),
         m_Default(style.released),
         m_Hovered(style.hovered),
         m_Pressed(style.pressed),
@@ -15,7 +15,8 @@ namespace aby::ui {
         bTextCopyable(text_copyable),
         m_State(EButtonState::DEFAULT)
     {
-
+        m_Name = "Button";
+        bScalesWithWindow = false;
     }
 
     void Button::on_create(App* app, bool deserialized) {
@@ -25,6 +26,20 @@ namespace aby::ui {
 
     void Button::on_tick(App* app, Time deltatime) {
         if (!bVisible) return;
+        switch (m_State) {
+            case EButtonState::DEFAULT:
+                m_Background = m_Default.color;
+                m_Texture = m_Default.texture;
+                break;
+            case EButtonState::HOVERED:
+                m_Background = m_Hovered.color;
+                m_Texture = m_Hovered.texture;
+                break;
+            case EButtonState::PRESSED:
+                m_Background = m_Pressed.color;
+                m_Texture = m_Pressed.texture;
+                break;
+        }
         Textbox::on_tick(app, deltatime);
     }
 
@@ -68,9 +83,7 @@ namespace aby::ui {
             }
             if (m_State != EButtonState::DEFAULT) {
                 m_State = EButtonState::DEFAULT;
-                invalidate_self();
             }
-           
         }
         else {
             if (bTextCopyable && event.hit(m_Text.pos, m_TextSize)) {
@@ -83,7 +96,6 @@ namespace aby::ui {
                 m_Window->set_cursor(ECursor::HAND);
             }
             on_hovered();
-            invalidate_self();
         }
         return false;
     }
@@ -93,7 +105,6 @@ namespace aby::ui {
         if (hit) {
             m_State = EButtonState::PRESSED;
             on_pressed();
-            invalidate_self();
         }
         return hit; // Stop if we intercepted the hit.
     }
@@ -110,37 +121,17 @@ namespace aby::ui {
             else {
                 m_State = EButtonState::DEFAULT;
             }
-            invalidate_self();
         }
 
         return hit; // Stop propagation if released inside
     }
 
-    bool Button::on_invalidate() {
-        if (bInvalid) {
-            switch (m_State) {
-                case EButtonState::DEFAULT:
-                    m_Style.background = m_Default;
-                    break;
-                case EButtonState::HOVERED:
-                    m_Style.background = m_Hovered;
-                    break;
-                case EButtonState::PRESSED:
-                    m_Style.background = m_Pressed;
-                    break;
-            }
-
-            return Textbox::on_invalidate();
-        }
-        return false;
-    }
-
     ButtonStyle Button::button_style() const {
         return ButtonStyle{
-            .hovered  = { m_Hovered.color, m_Style.background.texture },
-            .pressed  = { m_Pressed.color, m_Style.background.texture },
-            .released = { m_Default.color, m_Style.background.texture },
-            .border   = m_Style.border
+            .hovered  = { m_Hovered.color, m_Texture },
+            .pressed  = { m_Pressed.color, m_Texture },
+            .released = { m_Default.color, m_Texture },
+            .border   = m_Border
         };
     }
 

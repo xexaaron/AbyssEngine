@@ -2,117 +2,100 @@
 #include "Core/Log.h"
 
 namespace aby::ui {
-    Ref<Image> Image::create(const Transform& transform, const Style& style, Ref<Widget> parent) {
-        return create_ref<Image>(transform, style, parent);
+    Ref<Image> Image::create(const Transform& transform, const ImageStyle& style) {
+        return create_ref<Image>(transform, style);
     }
 
-    Image::Image(const Transform& transform, const Style& style, Ref<Widget> parent) :
-        Widget(transform, style, parent),
-        m_BorderCt(0) 
+    Image::Image(const Transform& transform, const ImageStyle& style) :
+        Widget(transform),
+        bUnifiedBorder((style.color.a != 1.f)),
+        m_Texture(style.texture),
+        m_Background(style.color),
+        m_Border(style.border)
     {
+        m_Name = "Image";
     }
 
     void Image::on_tick(App* app, Time deltatime) {
         if (!bVisible) return;
-        for (std::size_t i = 0; i < m_BorderCt; i++) {
-            app->renderer().draw_quad_2d(m_Border[i]);
-        }
-        app->renderer().draw_quad_2d(m_Image);
-    }
 
-    bool Image::on_invalidate() {
-        if (m_Transform.anchor.position != EAnchor::NONE) {
-            m_Transform.position = m_Transform.anchor.offset;
-            auto parent = m_Parent.lock();
-            ABY_ASSERT(parent, "aby::ui::Image has no parent to be anchor to");
-            auto parent_widget = parent->as<Widget>();
-            auto parent_size = parent_widget->transform().size;
-            switch (m_Transform.anchor.position) {
-                case EAnchor::NONE:
-                    std::unreachable();
-                case EAnchor::TOP_MIDDLE:
-                    m_Transform.position.x += (parent_size.x / 2) - (m_Transform.size.x / 2);
-                    break;
-                case EAnchor::TOP_RIGHT:
-                    m_Transform.position.x += (parent_size.x) - (m_Transform.size.x);
-                    break;
-                case EAnchor::MIDDLE_LEFT:
-                    m_Transform.position.y += (parent_size.y / 2) - (m_Transform.size.y / 2);
-                    break;
-                case EAnchor::MIDDLE:
-                    m_Transform.position.x += (parent_size.x / 2) - (m_Transform.size.x / 2);
-                    m_Transform.position.y += (parent_size.y / 2) - (m_Transform.size.y / 2);
-                    break;
-                case EAnchor::MIDDLE_RIGHT:
-                    m_Transform.position.x += (parent_size.x) - (m_Transform.size.x);
-                    m_Transform.position.y += (parent_size.y / 2) - (m_Transform.size.y / 2);
-                    break;
-                case EAnchor::BOTTOM_LEFT:
-                    m_Transform.position.y += (parent_size.y) - (m_Transform.size.y);
-                    break;
-                case EAnchor::BOTTOM_MIDDLE:
-                    m_Transform.position.x += (parent_size.x / 2) - (m_Transform.size.x /2);
-                    m_Transform.position.y += (parent_size.y) - (m_Transform.size.y);
-                    break;
-                case EAnchor::BOTTOM_RIGHT:
-                    m_Transform.position.x += (parent_size.x) - (m_Transform.size.x);
-                    m_Transform.position.y += (parent_size.y) - (m_Transform.size.y);
-                    break;
-                default:
-                    std::unreachable();
-            }
+        if (bUnifiedBorder) {
+            Quad border(
+                m_Transform.size,
+                m_Transform.position,
+                m_Border.color,
+                0.f
+            );
+            app->renderer().draw_quad_2d(border);
+        }
+        else {
+            Quad top(
+                glm::vec2(m_Transform.size.x, m_Border.width),
+                m_Transform.position,
+                m_Border.color,
+                0.f
+            );
+            Quad bottom(
+                glm::vec2(m_Transform.size.x, m_Border.width),
+                m_Transform.position + glm::vec2(0.f, m_Transform.size.y - m_Border.width),
+                m_Border.color,
+                0.f
+            );
+            Quad left(
+                glm::vec2(m_Border.width, m_Transform.size.y),
+                m_Transform.position,
+                m_Border.color,
+                0.f
+            );
+            Quad right(
+                glm::vec2(m_Border.width, m_Transform.size.y),
+                m_Transform.position + glm::vec2(m_Transform.size.x - m_Border.width, 0.f),
+                m_Border.color,
+                0.f
+            );
+            app->renderer().draw_quad_2d(top);
+            app->renderer().draw_quad_2d(bottom);
+            app->renderer().draw_quad_2d(left);
+            app->renderer().draw_quad_2d(right);
+
         }
 
-        m_Image = Quad(
-            m_Transform.size - glm::vec2(m_Style.border.width * 2.f),
-            m_Transform.position + glm::vec2(m_Style.border.width),
-            m_Style.background.color,
-            static_cast<float>(m_Style.background.texture.handle())
+        Quad img(
+            m_Transform.size - (m_Border.width * 2.f),
+            m_Transform.position + m_Border.width,
+            m_Background,
+            static_cast<float>(m_Texture.handle()),
+            {1, 1}
         );
-        
-        if (m_Style.border.width > 0.f) {
-            if (m_Style.background.color.a <= 0.f) {
-                m_Border[0] = Quad(
-                    glm::vec2(m_Transform.size.x, m_Style.border.width),
-                    m_Transform.position,
-                    m_Style.border.color,
-                    0.f
-                );
-                // Bottom border
-                m_Border[1] = Quad(
-                    glm::vec2(m_Transform.size.x, m_Style.border.width),
-                    m_Transform.position + glm::vec2(0.f, m_Transform.size.y - m_Style.border.width),
-                    m_Style.border.color,
-                    0.f
-                );
-                // Left border
-                m_Border[2] = Quad(
-                    glm::vec2(m_Style.border.width, m_Transform.size.y),
-                    m_Transform.position,
-                    m_Style.border.color,
-                    0.f
-                );
-                // Right border
-                m_Border[3] = Quad(
-                    glm::vec2(m_Style.border.width, m_Transform.size.y),
-                    m_Transform.position + glm::vec2(m_Transform.size.x - m_Style.border.width, 0.f),
-                    m_Style.border.color,
-                    0.f
-                );
-                m_BorderCt = 4;
-            }
-            else {
-                m_Border[0] = Quad(
-                    m_Transform.size,
-                    m_Transform.position,
-                    m_Style.border.color,
-                    0.f
-                );
-                m_BorderCt = 1;
+        app->renderer().draw_quad_2d(img);
 
-            }
-        }
-       
-        return false;
+        Super::on_tick(app, deltatime);
     }
+
+    void Image::set_border(const Border& border) {
+        m_Border = border;
+    }
+
+    void Image::set_background(const glm::vec4& background) {
+        m_Background   = background;
+        bUnifiedBorder = background.a != 1.f;
+    }
+
+    void Image::set_style(const ImageStyle& style) {
+        m_Texture      = style.texture;
+        m_Background   = style.color;
+        bUnifiedBorder = style.color.a != 1.f;
+        m_Border       = style.border;
+    }
+
+    void Image::set_texture(Resource texture) {
+        m_Texture = texture;
+    }
+
+    const Border& Image::border() const {
+        return m_Border;
+    }
+
+
+
 }

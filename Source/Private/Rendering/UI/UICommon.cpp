@@ -3,32 +3,21 @@
 
 namespace aby::ui {
 
-    Style Style::dark_mode() {
-        return Style{
-            .background = Background{
-                .color = {0.15f, 0.15f, 0.15f, 1.f },
-                .texture = {}
-            },
-            .border = {
-                .color = { 0.1f, 0.1f, 0.1f, 1.f },
-                .width = 2.f
-            }
+    ImageStyle ImageStyle::dark_mode() {
+        return ImageStyle{
+            .border  = { { 0.1f, 0.1f, 0.1f, 0.5f}, 2.0f },
+            .color   = { 0.15f, 0.15f, 0.15f, 1.f },
+            .texture = {}
         };
     }
 
-    Style Style::light_mode() {
-        return Style{
-            .background = Background{
-                .color = {1.0f, 1.0f, 1.0f, 1.f }, 
-                .texture = {}
-            },
-            .border = {
-                .color = {0.8f, 0.8f, 0.8f, 1.f }, 
-                .width = 2.f
-            }
+    ImageStyle ImageStyle::light_mode() {
+        return ImageStyle{
+            .border  = { { 0.6f, 0.6f, 0.6f, 1.f }, 2.0f },
+            .color   = { 0.90f, 0.90f, 0.90f, 1.f },
+            .texture = {}
         };
     }
-
 
     ButtonStyle ButtonStyle::dark_mode() {
         return ButtonStyle{
@@ -40,10 +29,10 @@ namespace aby::ui {
     }
     ButtonStyle ButtonStyle::light_mode() {
         return ButtonStyle{
-            .hovered = { { 0.85f, 0.85f, 0.85f, 1.f }, {} }, // Light gray when hovered
-            .pressed = { { 0.70f, 0.70f, 0.70f, 1.f }, {} }, // Darker gray when pressed
+            .hovered  = { { 0.85f, 0.85f, 0.85f, 1.f }, {} }, // Light gray when hovered
+            .pressed  = { { 0.70f, 0.70f, 0.70f, 1.f }, {} }, // Darker gray when pressed
             .released = { { 0.90f, 0.90f, 0.90f, 1.f }, {} }, // Default light gray
-            .border = { { 0.6f, 0.6f, 0.6f, 1.f }, 2.0f }  // Medium gray border
+            .border   = { { 0.6f, 0.6f, 0.6f, 1.f }, 2.0f }  // Medium gray border
         };
     }
 
@@ -191,4 +180,33 @@ namespace aby::ui {
 
 
 
+}
+namespace std {
+    string to_string(aby::ui::EAnchor a) {
+        switch (a) {
+            using aby::ui::EAnchor;
+            case EAnchor::NONE:
+                return "N/A";
+            case EAnchor::TOP_LEFT:
+                return "Top Left";
+            case EAnchor::TOP_CENTER:
+                return "Top Center";
+            case EAnchor::TOP_RIGHT:
+                return "Top Right";
+            case EAnchor::CENTER_LEFT:
+                return "Center Left";
+            case EAnchor::CENTER:
+                return "Center";
+            case EAnchor::CENTER_RIGHT:
+                return "Center Right";
+            case EAnchor::BOTTOM_LEFT:
+                return "Bottom Left";
+            case EAnchor::BOTTOM_CENTER:
+                return "Bottom Center";
+            case EAnchor::BOTTOM_RIGHT:
+                return "Bottom Right";
+            default:
+                throw std::out_of_range("aby::ui::EAnchor");
+        }
+    }
 }

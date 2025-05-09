@@ -111,6 +111,7 @@ set(CPP_SOURCES
     Source/Private/Utility/Inserter.cpp
     Source/Private/Utility/TagParser.cpp
     Source/Private/Utility/Random.cpp
+    Source/Private/Utility/CursorString.cpp
     Source/Private/Rendering/Vertex.cpp
     Source/Private/Rendering/Font.cpp
     Source/Private/Rendering/Context.cpp
@@ -121,7 +122,6 @@ set(CPP_SOURCES
     Source/Private/Rendering/UI/Widget.cpp
     Source/Private/Rendering/UI/UICommon.cpp
     Source/Private/Rendering/UI/Textbox.cpp
-    Source/Private/Rendering/UI/ParentWidget.cpp
     Source/Private/Rendering/UI/Panel.cpp
     Source/Private/Rendering/UI/LayoutContainer.cpp
     Source/Private/Rendering/UI/Image.cpp
@@ -171,6 +171,7 @@ set(HEADER_FILES
     Source/Public/Utility/Inserter.h
     Source/Public/Utility/TagParser.h
     Source/Public/Utility/Random.h
+    Source/Public/Utility/CursorString.h
     Source/Public/Rendering/Font.h
     Source/Public/Rendering/Context.h
     Source/Public/Rendering/Renderer.h
@@ -182,7 +183,6 @@ set(HEADER_FILES
     Source/Public/Rendering/UI/Widget.h
     Source/Public/Rendering/UI/UICommon.h
     Source/Public/Rendering/UI/Textbox.h
-    Source/Public/Rendering/UI/ParentWidget.h
     Source/Public/Rendering/UI/Panel.h
     Source/Public/Rendering/UI/LayoutContainer.h
     Source/Public/Rendering/UI/Image.h

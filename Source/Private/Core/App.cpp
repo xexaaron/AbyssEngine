@@ -56,12 +56,6 @@ namespace aby {
 
         m_Window->initialize();
 
-        for (auto& object : m_Objects) {
-            if (auto p = std::dynamic_pointer_cast<ui::Widget>(object)) {
-                p->on_invalidate();
-            }
-        }
-
         auto last_time = std::chrono::high_resolution_clock::now();
         float delta_time = 0.0f;
         while (!m_Window->is_open()) {

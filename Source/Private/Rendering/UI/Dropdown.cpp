@@ -14,9 +14,10 @@ namespace aby::ui {
 				.position = { m_Transform.position.x - 2.f, m_Transform.position.y + m_Transform.size.y },
 				.size	  = dropdown_size
 			}, 
-			Style{ 
-				style.released,
-				style.border
+			ImageStyle{
+				style.border,
+				style.released.color,
+				style.released.texture
 			}, 
 			EDirection::VERTICAL, 
 			ELayout::TOP_TO_BOTTOM,
@@ -24,13 +25,12 @@ namespace aby::ui {
 		),
 		m_DropdownSize(dropdown_size)
 	{
-		
+		m_Name = "Dropdown";
 	}
 
 	void Dropdown::on_create(App* app, bool deserialized) {
 		ui::Button::on_create(app, deserialized);
 		m_Container->on_create(app, false);
-		invalidate_self();
 	}
 	
 	void Dropdown::on_tick(App* app, Time deltatime) {
@@ -50,15 +50,6 @@ namespace aby::ui {
 		m_Container->on_tick(app, deltatime);
 	}
 	
-	bool Dropdown::on_invalidate() {
-		bool valid = true;
-		m_Container->set_position({ m_Transform.position.x - 2.f, m_Transform.position.y + m_Transform.size.y });
-		m_Container->set_size(m_DropdownSize);
-		valid &= ui::Button::on_invalidate();
-		valid &= m_Container->on_invalidate();
-		return valid;
-	}
-	
 	void Dropdown::on_event(App* app, Event& event) {
 		ui::Button::on_event(app, event);
 		m_Container->on_event(app, event);
@@ -66,7 +57,6 @@ namespace aby::ui {
 	
 	void Dropdown::on_released() {
 		m_Container->set_visible(!m_Container->is_visible());
-		m_Container->on_invalidate();
 	}
 
 	void Dropdown::on_unhovered() {
@@ -84,16 +74,6 @@ namespace aby::ui {
 
 	bool Dropdown::on_window_resize(WindowResizeEvent& event) {
 		bool res = ui::Button::on_window_resize(event);
-	
 		return res;
 	}
-
-	std::size_t Dropdown::add_child(Ref<Widget> widget) {
-		return m_Container->add_child(widget);
-	}
-	void Dropdown::remove_child(std::size_t idx) {
-		m_Container->remove_child(idx);
-	}
-
-
 }

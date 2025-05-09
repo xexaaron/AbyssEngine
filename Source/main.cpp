@@ -11,7 +11,7 @@ namespace editor {
     public:
         Editor() : 
             m_App(Editor::create_app()),
-            m_Canvas(aby::ui::Canvas::create(aby::ui::Style::dark_mode()))
+            m_Canvas(aby::ui::Canvas::create(aby::ui::ImageStyle::dark_mode()))
         {
             if (!aby::Font::create(&m_App.ctx(), m_App.bin() / "Fonts/IBM_Plex_Mono/IBMPlexMono-Bold.ttf", 12)) {
                 throw std::runtime_error("Could not create Font!");
@@ -19,10 +19,11 @@ namespace editor {
             auto menubar = Editor::create_menubar(m_App, m_Canvas);
             m_Canvas->add_child(menubar);
             auto console = Editor::create_console();
+            console->set_anchor(aby::ui::Anchor{ aby::ui::EAnchor::BOTTOM_LEFT, {} });
             m_Canvas->add_child(console);
             m_App.add_object(m_Canvas);
-            auto canvas_style = aby::ui::Style::dark_mode();
-            canvas_style.background.color.a = 0.f;
+            auto canvas_style = aby::ui::ImageStyle::dark_mode();
+            canvas_style.color.a = 0.f;
             m_Canvas->set_style(canvas_style);
         }
 
@@ -75,10 +76,7 @@ namespace editor {
                     .position = {0, 0},
                     .size = { app.window()->size().x, 30 }
                 },
-                aby::ui::Style{
-                    .background = canvas->style().background,
-                    .border = {.color = { 0.8f, 0.8f, 0.8f, 0.5f }, .width = 2.0f }
-                },
+                aby::ui::ImageStyle::dark_mode(),
                 aby::ui::EDirection::HORIZONTAL,
                 aby::ui::ELayout::AUTO,
                 2.0f
@@ -88,9 +86,9 @@ namespace editor {
             return container;
         }
         static aby::Ref<aby::ui::Console> create_console() {
-            auto console_style = aby::ui::Style::dark_mode();
-            console_style.background.color *= 0.9f;
-            console_style.background.color.a = 1.f;
+            auto console_style = aby::ui::ImageStyle::dark_mode();
+            console_style.color *= 0.9f;
+            console_style.color.a = 1.f;
             return aby::ui::Console::create(console_style);
         }
     private:
@@ -104,6 +102,3 @@ aby::App& aby::main(const std::vector<std::string>& args) {
     static editor::Editor editor;
     return editor.app();
 }
-
-
-

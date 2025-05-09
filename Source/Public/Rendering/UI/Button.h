@@ -11,7 +11,6 @@ namespace aby::ui {
 
         void on_create(App* app, bool deserialized) override;
         void on_tick(App* app, Time deltatime) override;
-        bool on_invalidate() override;
         void on_event(App* app, Event& event) override;
 
         virtual void on_pressed();

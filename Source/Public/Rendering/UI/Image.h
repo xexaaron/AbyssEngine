@@ -6,14 +6,21 @@ namespace aby::ui {
     
     class Image : public Widget {
     public:
-        static Ref<Image> create(const Transform& transform, const Style& style, Ref<Widget> parent = nullptr);
-        Image(const Transform& transform, const Style& style, Ref<Widget> parent = nullptr);
+        static Ref<Image> create(const Transform& transform, const ImageStyle& style);
+        Image(const Transform& transform, const ImageStyle& style);
 
         void on_tick(App* app, Time deltatime) override;
-        bool on_invalidate() override;
+    
+        const Border& border() const;
+
+        void set_texture(Resource texture);
+        void set_border(const Border& border);
+        void set_background(const glm::vec4& background);
+        void set_style(const ImageStyle& style);
     protected:
-        Quad m_Image;
-        std::array<Quad, 4> m_Border;
-        std::size_t m_BorderCt;
+        bool      bUnifiedBorder;
+        Resource  m_Texture;
+        glm::vec4 m_Background;
+        Border    m_Border;
     };
 }

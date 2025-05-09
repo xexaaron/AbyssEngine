@@ -6,6 +6,10 @@ namespace aby::util {
     UUID::operator u64() const {
         return m_Value;
     }
+    
+    UUID::operator std::string() const {
+        return std::to_string(m_Value);
+    }
 
     bool UUID::operator==(const UUID& other) const {
         return m_Value == other.m_Value;

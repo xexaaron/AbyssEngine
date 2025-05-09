@@ -11,11 +11,11 @@
 #endif
 
 namespace aby::ui {
-	Ref<ConsoleInputTextbox> ConsoleInputTextbox::create(Console* console, const Style& style) {
+	Ref<ConsoleInputTextbox> ConsoleInputTextbox::create(Console* console, const ImageStyle& style) {
 		return create_ref<ConsoleInputTextbox>(console, style);
 	}
 
-	ConsoleInputTextbox::ConsoleInputTextbox(Console* console, const Style& style) :
+	ConsoleInputTextbox::ConsoleInputTextbox(Console* console, const ImageStyle& style) :
 		InputTextbox(
 			Transform{},
 			style,
@@ -34,6 +34,7 @@ namespace aby::ui {
 		m_Console(console)
 	{
 		m_Text.prefix = ">>> ";
+		m_Name = "ConsoleInputTextbox";
 	}
 
 	void ConsoleInputTextbox::on_submit(const std::string& msg) {
@@ -45,11 +46,11 @@ namespace aby::ui {
 
 namespace aby::ui {
 
-	Ref<Console> Console::create(const Style& style) {
+	Ref<Console> Console::create(const ImageStyle& style) {
 		return create_ref<Console>(style);
 	}
 
-	Console::Console(const Style& style) :
+	Console::Console(const ImageStyle& style) :
 		LayoutContainer({ .anchor = {.position = EAnchor::BOTTOM_LEFT, .offset = {}} }, style, EDirection::VERTICAL, ELayout::BOTTOM_TO_TOP),
 		m_Constraints{
 			.item_height = 20,
@@ -65,9 +66,9 @@ namespace aby::ui {
 			.opts = Dropdown::create(
 				Transform{ {}, {}, {100, m_Constraints.item_height}},
 				ButtonStyle{
-					.hovered  = { m_Style.background.color * 1.1f, Resource{} },
-					.pressed  = m_Style.background,
-					.released = m_Style.background,
+					.hovered  = { m_Background * 1.1f, Resource{} },
+					.pressed  = m_Background,
+					.released = m_Background,
 					.border   = {}
 				},
 				TextInfo{ "Options", { 1, 1, 1, 1 }, 1.f, ETextAlignment::CENTER },
@@ -90,9 +91,9 @@ namespace aby::ui {
 			.position = { 0, 0 },
 			.size = { 150, m_Constraints.item_height }
 		};
-		Style obj_style{
-			.background = Style::dark_mode().background,
-			.border = {}
+		ImageStyle obj_style{
+			.border  = {},
+			.color   = ButtonStyle::dark_mode().released.color,
 		};
 		TextInfo text_info{
 			.text  = Logger::time_date_now(),
@@ -100,11 +101,12 @@ namespace aby::ui {
 			.scale = 1.f,
 			.alignment = ETextAlignment::CENTER
 		};
-		m_Objs.date_time = Textbox::create(transform, obj_style, text_info);
+		m_Objs.date_time = Textbox::create(transform, obj_style, TextInfo{ text_info });
 		transform.size.x = 80;
 		text_info.text = "60 FPS";
 		m_Objs.fps = Textbox::create(transform, obj_style, text_info);
-		//set_resizability(EResize::N);
+		m_Name = "Console";
+		set_resizability(EResize::N);
 	}
 
 	void Console::on_create(App* app, bool deserialzied) {
@@ -115,17 +117,17 @@ namespace aby::ui {
 		m_Objs.input->set_position({ 0, y - m_Constraints.item_height });
 		m_Objs.input->set_size({ x, m_Constraints.item_height });
 		m_Objs.input->on_create(app, false);
-		m_Objs.opts->add_child(Button::create(
-			Transform{ {}, {}, { m_Objs.opts->transform().size.x, m_Constraints.item_height } },
-			m_Objs.opts->button_style(),
-			TextInfo{
-				.text = "Checkmark",
-				.color = { 1, 1, 1, 1 },
-				.scale = 1.f,
-				.alignment = ETextAlignment::LEFT
-			},
-			false
-		));
+		// m_Objs.opts->children().push_back(Button::create(
+		// 	Transform{ {}, {}, { m_Objs.opts->transform().size.x, m_Constraints.item_height } },
+		// 	m_Objs.opts->button_style(),
+		// 	TextInfo{
+		// 		.text = "Checkmark",
+		// 		.color = { 1, 1, 1, 1 },
+		// 		.scale = 1.f,
+		// 		.alignment = ETextAlignment::LEFT
+		// 	},
+		// 	false
+		// ));
 		m_Objs.menu->set_position(m_Transform.position);
 		m_Objs.menu->set_size({ x, m_Constraints.item_height + 4 });
 		m_Objs.menu->add_child(m_Objs.date_time);
@@ -135,7 +137,6 @@ namespace aby::ui {
 		m_Constraints.max_items = calc_max_items();
 		m_App = app;
 		LayoutContainer::on_create(app, deserialzied);
-		invalidate_self();
 		m_Cfg.callback = Logger::add_callback([this](const LogMsg& msg) {
 			this->add_msg(msg);
 			this->scroll_to_bottom();
@@ -151,7 +152,6 @@ namespace aby::ui {
 		m_Objs.input->set_size({ x, m_Constraints.item_height });
 		m_Objs.menu->set_position(m_Transform.position);
 		m_Objs.menu->set_size({ x, m_Constraints.item_height + 4 });
-		invalidate_self();
 		return false;
 	}
 
@@ -191,23 +191,12 @@ namespace aby::ui {
 		return false;
 	}
 
-	bool Console::on_invalidate() {
-		m_Objs.input->on_invalidate();
-		m_Objs.menu->set_invalid(true);
-		m_Objs.menu->on_invalidate();
-		for (auto& child : m_Objs.menu->children()) {
-			child->on_invalidate();
-		}
-		return LayoutContainer::on_invalidate();
-	}
-
 	void Console::on_tick(App* app, Time time) {
 		if (!bVisible) return;
 
 		LayoutContainer::on_tick(app, time);
 		m_Objs.input->on_tick(app, time);
 		m_Objs.menu->on_tick(app, time);
-
 		static float elapsed = 0.f;
 		elapsed += time.sec();
 		if (elapsed >= 1.f) {
@@ -228,7 +217,6 @@ namespace aby::ui {
 		m_Objs.input->on_event(app, event);
 		m_Objs.menu->on_event(app, event);
 		LayoutContainer::on_event(app, event);
-
 
 	}
 
@@ -265,32 +253,22 @@ namespace aby::ui {
 				else if (event.offset_y() < 0) { // Scroll down
 					scroll_down();
 				}
-				LayoutContainer::for_each([this](Ref<Widget> widget, std::size_t i) {
+				Widget::for_each([this](Ref<Widget> widget, std::size_t i) {
 					widget->set_position(calc_item_pos(i));
-					widget->on_invalidate();
-					});
+				});
 			}
-			invalidate_self();
 		}
 		return false;
 	}
 
-	glm::vec2 Console::calc_item_pos(std::size_t item) const {
-		glm::vec2 pos = {
-			0,
-			((m_Transform.position.y + m_Transform.size.y)) - ((item + 2) * (m_Constraints.item_height))
-		};
-		pos.y = std::clamp(
-			pos.y,
-			m_Transform.position.y + m_Constraints.item_height,
-			m_Transform.position.y + m_Transform.size.y - m_Constraints.item_height
-		);
-		return pos;
-	}
+
+
+
+
 
 	void Console::try_pop() {
 		while (m_Children.size() > m_Constraints.max_logs) {
-			remove_child(0);
+			m_Children.erase(m_Children.begin());
 		}
 	}
 
@@ -302,22 +280,18 @@ namespace aby::ui {
 		auto textbox = create_msg(msg);
 		textbox->on_create(m_App, false);
 		add_child(std::move(textbox));
-		LayoutContainer::for_each([this](Ref<Widget> widget, std::size_t i) {
+		Widget::for_each([this](Ref<Widget> widget, std::size_t i) {
 			widget->set_position(calc_item_pos(i));
-			widget->on_invalidate();
 		});
-		invalidate_self();
 	}
 
 	void Console::add_msg(Ref<Textbox> textbox) {
 		try_pop();
 		textbox->on_create(m_App, false);
 		add_child(std::move(textbox));
-		LayoutContainer::for_each([this](Ref<Widget> widget, std::size_t i) {
+		Widget::for_each([this](Ref<Widget> widget, std::size_t i) {
 			widget->set_position(calc_item_pos(i));
-			widget->on_invalidate();
 		});
-		invalidate_self();
 	}
 
 	Ref<Textbox> Console::create_msg(const LogMsg& msg) {
@@ -335,9 +309,9 @@ namespace aby::ui {
 			.alignment = ETextAlignment::LEFT
 		};
 
-		static Style style{
-			.background = m_Style.background,
+		ImageStyle style{
 			.border = {},
+			.color= m_Background,
 		};
 
 		return Textbox::create(transform, style, info);
@@ -374,12 +348,43 @@ namespace aby::ui {
 			m_State.active_channel->open(cmd);
 		}
 	}
-
-	u32 Console::calc_max_items() const {
-		return std::max(0, static_cast<int>((m_Transform.size.y - (m_Constraints.item_height * 2)) / m_Constraints.item_height));
+	
+	glm::vec2 Console::calc_item_pos(std::size_t item) const {
+		// Initial position of item index 0:
+		// m_Transform.position.y + m_Transform.size.y
+		// Subtract:
+		//		The index of the item add 1 * the height per item.
+		// Offsets it by the space that console input item takes.
+		// Clamp y 
+		// by the position + the height per item offsetting it by the space that the console
+		// menubar takes up.
+		// and 
+		// The full size of the console - the height per item, the space that the console input
+		// item takes.
+		// However the issue lies in that affecting the offset
+		// Doesnt actually seem to change anything in the positions of items.
+		// We are always positioning our max_items below 2 item heights ending at the 
+		// bottom of the console
+		float offset = 1;
+		glm::vec2 pos = {
+			0,
+			(m_Transform.position.y + m_Transform.size.y) - ((item + offset) * (m_Constraints.item_height)) // Shifted by 1 item_height
+		};
+		// pos.y = std::clamp(
+		// 	pos.y,
+		// 	m_Transform.position.y + (offset * m_Constraints.item_height),
+		// 	m_Transform.position.y + m_Transform.size.y - (offset * m_Constraints.item_height)
+		// );
+		return pos;
 	}
 
-	void Console::for_each(const for_each_fn& fn) {
+	u32 Console::calc_max_items() const {
+		// Subtract the space taken by the input box and menu area
+		float avail_height = m_Transform.size.y - m_Constraints.item_height * 2;
+		return std::max(0, static_cast<int>(avail_height / m_Constraints.item_height));
+	}
+
+	void Console::for_each(std::function<void(Ref<Widget>)> fn) {
 		if (m_Children.empty()) {
 			return;
 		}
@@ -391,15 +396,16 @@ namespace aby::ui {
 		}
 	}
 
+
 	void Console::scroll_to_bottom() {
 		if (m_Children.size() > m_Constraints.max_items) {
-			m_State.scroll_pos = m_Children.size() - m_Constraints.max_items + 1;
+			m_State.scroll_pos = m_Children.size() - m_Constraints.max_items;
 		}
 	}
 
 	void Console::scroll_down() {
 		for (std::size_t i = 0; i < m_Cfg.scroll_amt; i++) {
-			if (m_State.scroll_pos < static_cast<int>(m_Children.size()) - m_Constraints.max_items) {
+			if (m_State.scroll_pos < m_Children.size() - m_Constraints.max_items) {
 				m_State.scroll_pos++;
 			}
 			else {
@@ -418,5 +424,7 @@ namespace aby::ui {
 		}
 
 	}
-}
 
+
+
+}

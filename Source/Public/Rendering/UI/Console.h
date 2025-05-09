@@ -11,29 +11,29 @@ namespace aby::ui {
 
 	class ConsoleInputTextbox : public InputTextbox {
 	public:
-		static Ref<ConsoleInputTextbox> create(Console* console, const Style& style);
-		ConsoleInputTextbox(Console* console, const Style& style);
+		static Ref<ConsoleInputTextbox> create(Console* console, const ImageStyle& style);
+		ConsoleInputTextbox(Console* console, const ImageStyle& style);
 		void on_submit(const std::string& msg) override;
 	private:
 		Console* m_Console;
 	};
 
 	class Console : public LayoutContainer {
+	private:
+		using VisbileReverseRange = std::pair<Widget::Children::reverse_iterator, Widget::Children::reverse_iterator>;
 	public:
-		static Ref<Console> create(const Style& style);
+		static Ref<Console> create(const ImageStyle& style);
 
-		Console(const Style& style);
+		Console(const ImageStyle& style);
 		~Console() = default;
 
 		void on_create(App* app, bool deserialized) override;
 		void on_tick(App* app, Time time) override;
 		void on_event(App* app, Event& event) override;
 		void on_destroy(App* app) override;
-		bool on_invalidate() override;
 		void on_resize(EResize direction, float distance) override;
 
 		void add_msg(const LogMsg& msg);
-		void for_each(const for_each_fn& fn) override;
 		void scroll_down();
 		void scroll_up();
 
@@ -41,6 +41,8 @@ namespace aby::ui {
 		void exec_cmd(const std::string& cmd);
 		void exec_aby_cmd(const std::string& cmd);
 		void exec_sys_cmd(const std::string& cmd);
+
+		void for_each(std::function<void(Ref<Widget>)> fn) override;
 	protected:
 		bool on_key_pressed(KeyPressedEvent& event);
 		bool on_window_resize(WindowResizeEvent& event) override;
@@ -85,4 +87,3 @@ namespace aby::ui {
 	};
 
 }
-
