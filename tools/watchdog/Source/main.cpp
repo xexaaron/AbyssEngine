@@ -6,6 +6,8 @@
 
 #pragma comment(user, "Enable 'standard conformant preprocessor' for __VA_OPT__")
 
+#include <CmdLine/CmdLine.h>
+
 #include <iostream>
 #include <string>
 #include <thread>
@@ -123,20 +125,25 @@ namespace aby {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 3) {
-        ABY_ERR("Usage: watchdog <pid/process name> <command>.");
-        ABY_ERR(" <pid/process name> If your monitoring a windowed application use the process name not the pid.");
-        ABY_ERR(" <command>          The (system) command to execute after the monitored application has shutdown");
+    aby::util::CmdLine cmd;
+    aby::util::CmdLine::Opts opts = {
+        .desc = "Monitor an application and execute a system a command when it exits.",
+        .name = "watchdog",
+        .cerr = std::cerr,
+        .help = true,
+        .term_colors = true,
+    };
+
+    std::string pid_or_name;
+    std::string command;
+    if (!cmd.opt("id",  "pid or process name. Windowed apps must used process name.", &pid_or_name, true)
+       .opt("cmd", "system command to execute after monitored app has exited.", &command, true)
+       .parse(argc, argv, opts))
+    {
         return 1;
     }
 
-    std::string pid_or_name = argv[1];
-    std::string command;
-    for (int i = 2; i < argc; ++i) {
-        command += std::string(argv[i]) + " ";
-    }
-
-    bool is_by_name = !isdigit(pid_or_name[0]); // Check if the input is a process name
+    bool is_by_name = !isdigit(pid_or_name[0]);
     int pid = 0;
     if (!is_by_name) {
         pid = std::stoi(pid_or_name);
@@ -147,6 +154,5 @@ int main(int argc, char* argv[]) {
     }
 
     std::system(command.c_str());
-
     return 0;
 }
