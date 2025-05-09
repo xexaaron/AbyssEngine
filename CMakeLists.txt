@@ -44,8 +44,8 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build GLFW examples")
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build GLFW tests")
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build GLFW docs")
 if(CMAKE_HOST_SYSTEM_VERSION MATCHES "microsoft-standard-WSL2")
-    set(GLFW_BUILD_WAYLAND 0)
-    set(GLFW_BUILD_X11 1)
+set(GLFW_BUILD_WAYLAND 0)
+set(GLFW_BUILD_X11 1)
 endif()
 add_subdirectory(${GLFW_DIR})
 set_vendor_properties(glfw "Dependencies/glfw")
@@ -267,6 +267,8 @@ add_dependencies(${EDITOR} ${ENGINE})
 
 # Copy Resources
 
+
+
 add_custom_command(TARGET ${EDITOR} POST_BUILD 
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CMAKE_SOURCE_DIR}/Source/Textures"
@@ -298,3 +300,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         COMMENT "Copy necessary DLLs"
     )
 endif()
+
+# Ensure post build commands run even when not expliclty stating ${EDITOR} as the build target.
+add_custom_target(run_post_build ALL DEPENDS ${EDITOR})
+
