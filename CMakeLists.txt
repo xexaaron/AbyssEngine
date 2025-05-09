@@ -302,4 +302,5 @@ endif()
 
 # Ensure post build commands run even when not expliclty stating ${EDITOR} as the build target.
 add_custom_target(run_post_build ALL DEPENDS ${EDITOR})
+set_target_properties(run_post_build PROPERTIES FOLDER "Abyss/Tools")
 

@@ -114,13 +114,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    // Create and execute the system command
     std::string sys_cmd = tool_path.string() + " " + args;
-    int result = std::system(sys_cmd.c_str());
-    if (result != 0) {
-        std::cerr << "[Tool] [Error] Tool exited with code " << result << std::endl;
-    }
-
+    std::system(sys_cmd.c_str());
     std::cout << '\n';
 
     return 0;
