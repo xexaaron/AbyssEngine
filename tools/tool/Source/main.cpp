@@ -59,6 +59,10 @@ std::string get_tool_names(const std::filesystem::path& exec_root) {
             }
         }
     }
+    if (!first_tool) {
+        tool_names.append(", ");
+    }
+    tool_names.append("clean");
     tool_names.append("]");
     return tool_names;
 }
@@ -66,13 +70,19 @@ std::string get_tool_names(const std::filesystem::path& exec_root) {
 int main(int argc, char** argv) {
     aby::util::CmdLine cmd;
     aby::util::CmdLine::Opts opts{
-        .desc = "\nRun an AbyssEngine tool from the root directory",
+        .desc = "Run an AbyssEngine tool from the root directory",
+        .name = "Tool",
         .cerr = std::cerr, 
-        .help = true
+        .help = true,
+        .term_colors = true,
     };
 
     std::filesystem::path root(argv[0]);
-    auto exec_root = root.parent_path() / EXECUTABLE_FOLDER_NAME / EXECUTABLE_FOLDER;
+    auto exec_root = root.parent_path();
+    auto root_pp_fn = root.parent_path().filename();
+    if (root_pp_fn != EXECUTABLE_FOLDER) {
+        exec_root /= std::filesystem::path(EXECUTABLE_FOLDER_NAME) / EXECUTABLE_FOLDER;
+    }
     std::string tool_names = get_tool_names(exec_root);
     std::string description = "Select a tool to run " + tool_names;
 

@@ -266,7 +266,9 @@ add_dependencies(${ENGINE} freetype glfw)
 add_dependencies(${EDITOR} ${ENGINE})
 
 # Copy Resources
-add_custom_command(TARGET ${EDITOR} POST_BUILD 
+add_custom_command(
+    TARGET ${EDITOR} POST_BUILD
+    DEPENDS tool 
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CMAKE_SOURCE_DIR}/Source/Textures"
             "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/Textures"
@@ -276,7 +278,7 @@ add_custom_command(TARGET ${EDITOR} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CMAKE_SOURCE_DIR}/Source/Shaders"
             "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/Shaders"
-    COMMAND ${CMAKE_COMMAND} -E copy
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/tool${PLATFORM_SUFFIX}"
             "${CMAKE_CURRENT_LIST_DIR}/tool${PLATFORM_SUFFIX}"
     COMMENT "Copy resources and tools"
