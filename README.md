@@ -1,6 +1,20 @@
 # README.md
 
-## Build
+## Cloning & Building
+
+```bash
+  # Where $LOCATION is where you want to clone to
+  git clone --branch master --recurse-submodules --shallow-submodules https://github.com/xexaaron/Project.git $LOCATION
+  cd $LOCATION
+  # Directory must be named build to work with certain development tools
+  mkdir build
+  cd build
+  cmake ..
+  # Default build mode is Debug
+  cmake --build .
+```
+
+## Tools
 
 ### Version
 
