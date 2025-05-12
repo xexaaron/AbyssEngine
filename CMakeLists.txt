@@ -96,6 +96,11 @@ else()
     set(PLATFORM_LIBS "")
 endif()
 
+# Setup gch::small_vector
+
+set(GCH_SMALL_VEC_DIR "Vendor/gch")
+set(GCH_SMALL_VEC_INCLUDE_DIR "${GCH_SMALL_VEC_DIR}/source/include")
+
 # List Sources
 
 set(CPP_SOURCES
@@ -130,6 +135,7 @@ set(CPP_SOURCES
     Source/Private/Rendering/UI/InputTextbox.cpp
     Source/Private/Rendering/UI/Console.cpp
     Source/Private/Rendering/UI/Dropdown.cpp
+    Source/Private/Rendering/UI/WidgetSwitcher.cpp
     Source/Private/vk/VkRenderer.cpp
     Source/Private/vk/VkBuffer.cpp
     Source/Private/vk/VkContext.cpp
@@ -172,6 +178,7 @@ set(HEADER_FILES
     Source/Public/Utility/TagParser.h
     Source/Public/Utility/Random.h
     Source/Public/Utility/CursorString.h
+    Source/Public/Utility/Delegate.h
     Source/Public/Rendering/Font.h
     Source/Public/Rendering/Context.h
     Source/Public/Rendering/Renderer.h
@@ -191,6 +198,7 @@ set(HEADER_FILES
     Source/Public/Rendering/UI/InputTextbox.h
     Source/Public/Rendering/UI/Console.h
     Source/Public/Rendering/UI/Dropdown.h
+    Source/Public/Rendering/UI/WidgetSwitcher.h
     Source/Public/vk/VkRenderer.h
     Source/Public/vk/VkBuffer.h
     Source/Public/vk/VkContext.h
@@ -244,7 +252,7 @@ target_compile_options(${ENGINE} PRIVATE ${COMPILE_OPTS})
 target_compile_options(${EDITOR} PRIVATE ${COMPILE_OPTS})
 target_compile_definitions(${ENGINE} PRIVATE ${GLM_DEFINITIONS} ABY_BUFFERED_LOGGING)
 target_compile_definitions(${EDITOR} PRIVATE ${GLM_DEFINITIONS} ABY_BUFFERED_LOGGING)
-target_include_directories(${ENGINE} PUBLIC ${VULKAN_INCLUDE_DIR} ${COMMON_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS})
+target_include_directories(${ENGINE} PUBLIC ${VULKAN_INCLUDE_DIR} ${COMMON_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS} ${GCH_SMALL_VEC_INCLUDE_DIR})
 target_include_directories(${EDITOR} PUBLIC Source/Public ${COMMON_INCLUDE_DIRS})
 set_target_properties(${ENGINE} PROPERTIES FOLDER "Abyss")
 set_target_properties(${EDITOR} PROPERTIES FOLDER "Abyss")

@@ -8,9 +8,9 @@ namespace aby::ui {
 
     Canvas::Canvas(const ImageStyle& style) :
         Panel(Transform{
-            .position = { 0, 0 },
-            .size = { 800, 600 }
-        }, style, EResize::NONE)
+                .position = { 0, 0 },
+                .size = { 800, 600 }
+            }, ImageStyle{ .border = style.border, .color = {0.f,0.f,0.f,0.f}, .texture = style.texture }, EResize::NONE)
     {
         m_Name = "Canvas";
     }

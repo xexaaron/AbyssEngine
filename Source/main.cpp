@@ -4,6 +4,7 @@
 #include "Rendering/UI/UI.h"
 #include "Rendering/Font.h"
 #include "Platform/Platform.h"
+#include "Utility/Delegate.h"
 
 namespace editor {
 
@@ -22,9 +23,6 @@ namespace editor {
             console->set_anchor(aby::ui::Anchor{ aby::ui::EAnchor::BOTTOM_LEFT, {} });
             m_Canvas->add_child(console);
             m_App.add_object(m_Canvas);
-            auto canvas_style = aby::ui::ImageStyle::dark_mode();
-            canvas_style.color.a = 0.f;
-            m_Canvas->set_style(canvas_style);
         }
 
         aby::App& app() {
@@ -97,6 +95,9 @@ namespace editor {
     };
 }
 
+void add(int, int) {
+
+}
 
 aby::App& aby::main(const std::vector<std::string>& args) {
     static editor::Editor editor;
