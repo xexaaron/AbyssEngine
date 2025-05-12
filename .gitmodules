@@ -10,3 +10,6 @@
 [submodule "Vendor/CmdLine"]
 	path = Vendor/CmdLine
 	url = https://github.com/xexaaron/CmdLine.git
+[submodule "Vendor/gch"]
+	path = Vendor/gch
+	url = https://github.com/gharveymn/small_vector
