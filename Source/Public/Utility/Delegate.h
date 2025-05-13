@@ -1,8 +1,11 @@
+#pragma once
+
 #include <gch/small_vector.hpp>
 #include "Core/Common.h"
 #include "Core/Log.h"
 #include <functional>
 #include <type_traits>
+
 namespace aby::util {
 
     enum class EDelegate {

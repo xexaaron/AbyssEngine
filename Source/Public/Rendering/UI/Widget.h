@@ -42,10 +42,10 @@ namespace aby::ui {
         const Transform& transform() const;
         i32              zindex() const;
         Weak<Object>     parent() const;
+        const std::string& name() const;
 
         virtual void for_each(std::function<void(Ref<Widget>)> fn);
         void for_each(std::function<void(Ref<Widget>, std::size_t)> fn);
-
     protected:
         bool        bVisible;
         bool        bScalesWithWindow;

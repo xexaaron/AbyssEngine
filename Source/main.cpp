@@ -5,6 +5,7 @@
 #include "Rendering/Font.h"
 #include "Platform/Platform.h"
 #include "Utility/Delegate.h"
+#include "Rendering/UI/WidgetSwitcher.h"
 
 namespace editor {
 
@@ -17,8 +18,13 @@ namespace editor {
             if (!aby::Font::create(&m_App.ctx(), m_App.bin() / "Fonts/IBM_Plex_Mono/IBMPlexMono-Bold.ttf", 12)) {
                 throw std::runtime_error("Could not create Font!");
             }
+
             auto menubar = Editor::create_menubar(m_App, m_Canvas);
+            auto switcher = aby::ui::WidgetSwitcher::create(aby::ui::Transform{}, aby::ui::ImageStyle::dark_mode());
+            
+
             m_Canvas->add_child(menubar);
+            m_Canvas->add_child(switcher);
             auto console = Editor::create_console();
             console->set_anchor(aby::ui::Anchor{ aby::ui::EAnchor::BOTTOM_LEFT, {} });
             m_Canvas->add_child(console);

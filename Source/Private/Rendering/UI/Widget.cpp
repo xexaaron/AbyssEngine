@@ -160,4 +160,9 @@ namespace aby::ui {
         });
     }
 
+    const std::string& Widget::name() const {
+        return m_Name;
+    }
+
+
 }
