@@ -238,7 +238,11 @@ set(COMMON_INCLUDE_DIRS "Source/Public" ${GLFW_INCLUDE_DIR} ${STB_INCLUDE_DIR} $
 set(RESOURCE_DIR "${CMAKE_SOURCE_DIR}/Source/Resources")
 
 add_subproject("localize")
-add_subproject("tests")
+
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    add_subproject("tests")
+endif()
+
 add_subproject("watchdog")
 add_subproject("tool")
 add_dependencies(tool AbyssFTLib)
