@@ -236,11 +236,11 @@ make_source_groups(
     Utility
     vk
 )
+
+
 source_group("Private" FILES ${STB_IMPL} "Source/main.cpp")
 set(COMMON_INCLUDE_DIRS "Source/Public" ${GLFW_INCLUDE_DIR} ${STB_INCLUDE_DIR} ${GLM_INCLUDE_DIR})
-set(RESOURCES ${SHADER_SOURCES} ${TEXTURE_SOURCES} ${FONT_SOURCES})
-source_group("Resources" FILES ${RESOURCES})
-# Subprojects and compile defintions
+set(RESOURCE_DIR "${CMAKE_SOURCE_DIR}/Source/Resources")
 
 add_subproject("localize")
 add_subproject("tests")
@@ -279,13 +279,13 @@ add_custom_command(
     TARGET ${ENGINE} POST_BUILD
     DEPENDS tool 
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_SOURCE_DIR}/Source/Textures"
+            "${RESOURCE_DIR}/Textures"
             "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/Textures"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_SOURCE_DIR}/Source/Fonts"
+            "${RESOURCE_DIR}/Fonts"
             "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/Fonts"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_SOURCE_DIR}/Source/Shaders"
+            "${RESOURCE_DIR}/Shaders"
             "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/Shaders"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/tool${PLATFORM_SUFFIX}"
