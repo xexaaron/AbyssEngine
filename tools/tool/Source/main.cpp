@@ -44,6 +44,17 @@ void clean(const std::filesystem::path& path) {
     }
 }
 
+void build(const std::string& args) {
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::filesystem::path build_dir = cwd / "build";
+
+    std::string make_proj  = "cmake -B \"" + build_dir.string() + "\" -S \"" + cwd.string() + "\" " + args;
+    std::string build_proj = "cmake --build \"" + build_dir.string() + "\"";
+
+    std::system(make_proj.c_str());
+    std::system(build_proj.c_str());
+}
+
 std::string get_tool_names(const std::filesystem::path& exec_root) {
     std::string tool_names = "[";
     bool first_tool = true;
@@ -62,7 +73,8 @@ std::string get_tool_names(const std::filesystem::path& exec_root) {
     if (!first_tool) {
         tool_names.append(", ");
     }
-    tool_names.append("clean");
+    tool_names.append("clean, ");
+    tool_names.append("build");
     tool_names.append("]");
     return tool_names;
 }
@@ -104,6 +116,11 @@ int main(int argc, char** argv) {
 
     if (tool == "clean") {
         clean(exec_root / "Cache");
+        return 0;
+    }
+
+    if (tool == "build") {
+        build(args);
         return 0;
     }
 
