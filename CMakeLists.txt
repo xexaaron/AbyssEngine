@@ -62,6 +62,7 @@ set(GLM_INCLUDE_DIR ${GLM_DIR})
 set(GLM_DEFINITIONS GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE  GLM_FORCE_LEFT_HANDED)
 
 # Setup Freetype
+
 set(FREETYPE_DIR "Vendor/freetype")
 set(FREETYPE_INCLUDE_DIR "${FREETYPE_DIR}/include")
 set(FREETYPE_DEVEL_DIR "${FREETYPE_DIR}/devel")
@@ -70,9 +71,9 @@ set(FREETYPE_LIBRARY_DIR "${FREETYPE_DIR}/objs")
 add_subdirectory(${FREETYPE_DIR})
 set_vendor_properties(freetype "Dependencies")
 target_compile_definitions(freetype PRIVATE SKIP_INSTALL_ALL)
+set(FT_ENABLE_ERROR_STRINGS ON CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
 set(FREETYPE_INCLUDE_DIRS ${FREETYPE_DIR} ${FREETYPE_DEVEL_DIR})
-
 
 # Setup Vulkan
 
@@ -270,12 +271,12 @@ target_link_libraries(${ENGINE} PRIVATE
 )
 
 target_link_libraries(${EDITOR} PRIVATE ${ENGINE})
-add_dependencies(${ENGINE} freetype glfw)
+add_dependencies(${ENGINE} freetype glfw tool)
 add_dependencies(${EDITOR} ${ENGINE})
 
 # Copy Resources
 add_custom_command(
-    TARGET ${EDITOR} POST_BUILD
+    TARGET ${ENGINE} POST_BUILD
     DEPENDS tool 
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CMAKE_SOURCE_DIR}/Source/Textures"

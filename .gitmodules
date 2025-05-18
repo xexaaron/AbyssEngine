@@ -13,3 +13,6 @@
 [submodule "Vendor/gch"]
 	path = Vendor/gch
 	url = https://github.com/gharveymn/small_vector
+[submodule "Vendor/zlib"]
+	path = Vendor/zlib
+	url = https://github.com/madler/zlib.git

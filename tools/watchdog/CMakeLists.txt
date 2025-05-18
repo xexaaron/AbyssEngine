@@ -12,4 +12,4 @@ add_executable(${PROJECT_NAME}
     ${CMDLINE_DIR}/Private/CmdLine.cpp
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE "${CMDLINE_DIR}/Public")
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMDLINE_DIR}/Public" )
