@@ -36,7 +36,7 @@ namespace aby {
         
         Resource         texture() const;
         std::string_view name() const;
-        u32    size() const;
+        u32              size() const;
         const Glyphs&    glyphs() const;
         bool             is_mono() const;
         float            text_height() const;

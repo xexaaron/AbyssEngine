@@ -15,7 +15,7 @@ namespace aby::ui {
 		Super::add_child(container);
 	}
 	
-	static Ref<WidgetSwitcher> create(const Transform& transform, const ImageStyle& tab_style) {
+	Ref<WidgetSwitcher> WidgetSwitcher::create(const Transform& transform, const ImageStyle& tab_style) {
 		return create_ref<WidgetSwitcher>(transform, tab_style);
 	}
 
