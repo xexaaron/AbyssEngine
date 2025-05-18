@@ -5,19 +5,26 @@ namespace aby::ui {
 	WidgetSwitcher::WidgetSwitcher(const Transform& transform, const ImageStyle& tab_style) :
 		Widget(transform, "WidgetSwitcher"),
 		m_ActiveWidget(1),
-		m_TabSize(30, 20)
+		m_TabSize(30, 20),
+		m_TabStyle(tab_style)
 	{
-		Transform tab_transform = transform;
-		tab_transform.size.y = m_TabSize.y;
-		tab_transform.anchor.position = EAnchor::TOP_LEFT;
-		tab_transform.anchor.offset = { 0, 0 };
-		auto container = LayoutContainer::create(tab_transform, tab_style, EDirection::HORIZONTAL);
-		Super::add_child(container);
+
 	}
 	
 	Ref<WidgetSwitcher> WidgetSwitcher::create(const Transform& transform, const ImageStyle& tab_style) {
 		return create_ref<WidgetSwitcher>(transform, tab_style);
 	}
+
+	void WidgetSwitcher::on_create(App* app, bool) {
+		Transform tab_transform = m_Transform;
+		tab_transform.size.y = m_TabSize.y;
+		tab_transform.anchor.position = EAnchor::TOP_LEFT;
+		tab_transform.anchor.offset = { 0, 0 };
+		auto container = LayoutContainer::create(tab_transform, m_TabStyle, EDirection::HORIZONTAL);
+		Super::add_child(container);
+		Super::add_child(Ref<Widget>(new Widget({}, {}, nullptr)));
+	}
+
 
 	std::size_t WidgetSwitcher::add_child(Ref<Widget> child) {
 		std::size_t idx = Super::add_child(child);
@@ -40,7 +47,7 @@ namespace aby::ui {
 		Super::on_tick(app, deltatime);
 	}
 	void WidgetSwitcher::for_each(std::function<void(Ref<Widget>)> fn) {
-		ABY_ASSERT(m_ActiveWidget > m_Children.size(), "Out of bounds");
+		ABY_ASSERT(m_ActiveWidget < m_Children.size(), "Out of bounds");
 		fn(m_Children[0]);
 		fn(m_Children[m_ActiveWidget]);
 	}

@@ -4,12 +4,9 @@
 [submodule "Vendor/glfw"]
 	path = Vendor/glfw
 	url = https://github.com/glfw/glfw.git
-[submodule "Vendor/freetype"]
-	path = Vendor/freetype
-	url = https://github.com/freetype/freetype
-[submodule "Vendor/CmdLine"]
-	path = Vendor/CmdLine
-	url = https://github.com/xexaaron/CmdLine.git
 [submodule "Vendor/gch"]
 	path = Vendor/gch
 	url = https://github.com/gharveymn/small_vector
+[submodule "Vendor/AbyssFreetype"]
+	path = Vendor/AbyssFreetype
+	url = https://github.com/xexaaron/AbyssFreetype

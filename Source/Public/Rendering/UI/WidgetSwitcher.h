@@ -11,7 +11,9 @@ namespace aby::ui {
 		static Ref<WidgetSwitcher> create(const Transform& transform, const ImageStyle& tab_style);
 
 		WidgetSwitcher(const Transform& transform, const ImageStyle& tab_style);
+		
 
+		void on_create(App* app, bool) override;
 		void on_tick(App* app, Time deltatime) override;
 
 		void for_each(std::function<void(Ref<Widget>)> fn) override;
@@ -25,6 +27,7 @@ namespace aby::ui {
 	private:
 		std::size_t m_ActiveWidget;
 		glm::vec2 m_TabSize;
+		ImageStyle m_TabStyle;
 	};
 
 }

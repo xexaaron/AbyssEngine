@@ -2,20 +2,22 @@
 #include "Core/App.h"
 #include <vector>
 
-#include <glfw/glfw3.h>
 #ifdef _WIN32
     #include <Windows.h>
     #include "vulkan/vulkan_win32.h"
     #define VK_PLATFORM_SURFACE_EXTENSION_NAME VK_KHR_WIN32_SURFACE_EXTENSION_NAME
+    #include <glfw/glfw3.h>
 #elif defined(__linux__)
     #include <X11/Xlib.h>
     #include "vulkan/vulkan_xlib.h"
     #define GLFW_EXPOSE_NATIVE_X11
     #include <glfw/glfw3native.h>
     #define VK_PLATFORM_SURFACE_EXTENSION_NAME VK_KHR_XLIB_SURFACE_EXTENSION_NAME
+    #include <glfw/glfw3.h>
 #else
     #error "Unsupported Platform"
 #endif
+
 
 namespace aby::vk {
 

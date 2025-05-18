@@ -21,7 +21,6 @@ namespace editor {
 
             auto menubar = Editor::create_menubar(m_App, m_Canvas);
             auto switcher = aby::ui::WidgetSwitcher::create(aby::ui::Transform{}, aby::ui::ImageStyle::dark_mode());
-            
 
             m_Canvas->add_child(menubar);
             m_Canvas->add_child(switcher);

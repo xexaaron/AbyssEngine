@@ -305,7 +305,7 @@ namespace aby::vk {
             glm::mat4 transform = compute_text_transform(glyph, current_position, text.scale, text_size.y);
             for (std::size_t i = 0; i < 4; i++) {
                 glm::vec3 position(transform * VERTEX_POSITIONS[i]);
-                glm::vec3 texinfo(glyph.texcoords[i], texture);
+                glm::vec3 texinfo(glyph.texcoords[i].x, glyph.texcoords[i].y, texture);
                 acc = Vertex(position, color, texinfo);
                 ++acc;
             }
@@ -323,7 +323,7 @@ namespace aby::vk {
                             glm::mat4 decor_transform = compute_text_transform(decor_glyph, { current_position.x, current_position.y }, text.scale, text_size.y);
                             for (std::size_t i = 0; i < 4; i++) {
                                 glm::vec3 position(decor_transform * VERTEX_POSITIONS[i]);
-                                glm::vec3 texinfo(decor_glyph.texcoords[i], texture);
+                                glm::vec3 texinfo(decor_glyph.texcoords[i].x, decor_glyph.texcoords[i].y, texture);
                                 acc = Vertex(position, color, texinfo);
                                 ++acc;
                             }

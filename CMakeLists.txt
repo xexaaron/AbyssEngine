@@ -26,14 +26,17 @@ else()
 endif()
 
 if (MSVC)
-    # W4                    warn level 4
-    # wd4100                unreferenced formal parameter
-    # Zc:preprocessor       standard conformant preprocssor (allow __VA_OPT__)
-    set(COMPILE_OPTS /W4 /wd4100 /Zc:preprocessor)
+    # W4                    warn level 4.
+    # wd4100                Disable unreferenced formal parameter.
+    # wd4201                Disable nonstandard ext: nameless struct/union.
+    # wd4505                Disable unreferenced function with internal linkage has been removed.
+    # Zc:preprocessor       standard conformant preprocssor (allow __VA_OPT__).
+    set(COMPILE_OPTS /W4 /wd4100 /wd4201 /wd4505 /Zc:preprocessor)
 else()
-    set(COMPILE_OPTS -Wall -Wextra -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-unused-function)
+    set(COMPILE_OPTS -Wall -Wextra -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-unused-function
+                     -Wno-gnu-anonymous-struct -Wno-nested-anon-types
+    )
 endif()
-
 # Setup GLFW
 
 set(GLFW_DIR "Vendor/glfw")
@@ -61,19 +64,11 @@ set(GLM_DIR "$ENV{VULKAN_SDK}")
 set(GLM_INCLUDE_DIR ${GLM_DIR})
 set(GLM_DEFINITIONS GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE  GLM_FORCE_LEFT_HANDED)
 
-# Setup Freetype
+# Setup AbyssFreetype
 
-set(FREETYPE_DIR "Vendor/freetype")
-set(FREETYPE_INCLUDE_DIR "${FREETYPE_DIR}/include")
-set(FREETYPE_DEVEL_DIR "${FREETYPE_DIR}/devel")
-set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries" FORCE)
-set(FREETYPE_LIBRARY_DIR "${FREETYPE_DIR}/objs")
-add_subdirectory(${FREETYPE_DIR})
-set_vendor_properties(freetype "Dependencies")
-target_compile_definitions(freetype PRIVATE SKIP_INSTALL_ALL)
-set(FT_ENABLE_ERROR_STRINGS ON CACHE BOOL "" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
-set(FREETYPE_INCLUDE_DIRS ${FREETYPE_DIR} ${FREETYPE_DEVEL_DIR})
+set(ABYSS_FREETYPE_DIR "Vendor/AbyssFreetype")
+set(ABYSS_FREETYPE_INCLUDE_DIR "${ABYSS_FREETYPE_DIR}/Source/Public")
+add_subdirectory(${ABYSS_FREETYPE_DIR})
 
 # Setup Vulkan
 
@@ -246,15 +241,23 @@ add_subproject("localize")
 add_subproject("tests")
 add_subproject("watchdog")
 add_subproject("tool")
+add_dependencies(tool AbyssFTLib)
 
 add_library(${ENGINE} ${CPP_SOURCES} ${HEADER_FILES} ${RESOURCES})
 add_executable(${EDITOR} Source/main.cpp ${RESOURCES})
 target_compile_options(${ENGINE} PRIVATE ${COMPILE_OPTS})
 target_compile_options(${EDITOR} PRIVATE ${COMPILE_OPTS})
-target_compile_definitions(${ENGINE} PRIVATE ${GLM_DEFINITIONS} ABY_BUFFERED_LOGGING)
+target_compile_definitions(${ENGINE} PRIVATE ${GLM_DEFINITIONS} ABY_BUFFERED_LOGGING _CRT_SECURE_NO_WARNINGS)
 target_compile_definitions(${EDITOR} PRIVATE ${GLM_DEFINITIONS} ABY_BUFFERED_LOGGING)
-target_include_directories(${ENGINE} PUBLIC ${VULKAN_INCLUDE_DIR} ${COMMON_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS} ${GCH_SMALL_VEC_INCLUDE_DIR})
-target_include_directories(${EDITOR} PUBLIC Source/Public ${COMMON_INCLUDE_DIRS})
+target_include_directories(${ENGINE} PUBLIC 
+    ${VULKAN_INCLUDE_DIR} 
+    ${COMMON_INCLUDE_DIRS} 
+    ${FREETYPE_INCLUDE_DIRS} 
+    ${GCH_SMALL_VEC_INCLUDE_DIR} 
+    ${ABYSS_FREETYPE_INCLUDE_DIR}
+    ${ABY_FT_PP_INCLUDE_DIR}
+)
+target_include_directories(${EDITOR} PUBLIC Source/Public ${COMMON_INCLUDE_DIRS} ${ABY_FT_PP_INCLUDE_DIR})
 set_target_properties(${ENGINE} PROPERTIES FOLDER "Abyss")
 set_target_properties(${EDITOR} PROPERTIES FOLDER "Abyss")
 
@@ -266,18 +269,17 @@ target_link_libraries(${ENGINE} PRIVATE
     ${SPIRV_CROSS_LIB_PATH}
     ${SPIRV_CROSS_GLSL_LIB_PATH}
     ${PLATFORM_LIBS}
-    freetype
+    AbyssFTLib
     glfw
 )
 
 target_link_libraries(${EDITOR} PRIVATE ${ENGINE})
-add_dependencies(${ENGINE} freetype glfw tool)
+add_dependencies(${ENGINE} AbyssFTLib glfw tool)
 add_dependencies(${EDITOR} ${ENGINE})
 
 # Copy Resources
 add_custom_command(
     TARGET ${ENGINE} POST_BUILD
-    DEPENDS tool 
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${RESOURCE_DIR}/Textures"
             "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/Textures"
@@ -296,14 +298,11 @@ add_custom_command(
 # Copy DLLs 
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(FREETYPE_DLL_IN  "${CMAKE_BINARY_DIR}/Vendor/freetype/${CMAKE_BUILD_TYPE}/freetype${DEBUG_SUFFIX}.dll")
-    set(FREETYPE_DLL_OUT "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/freetype${DEBUG_SUFFIX}.dll")
     set(SHADERC_DLL_IN   "${VULKAN_BIN_DIR}/shaderc_shared${DEBUG_SUFFIX}.dll")
     set(SHADERC_DLL_OUT  "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/shaderc_shared${DEBUG_SUFFIX}.dll")
 
     add_custom_command(TARGET ${EDITOR} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E echo "Checking and copying DLLs..."
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${FREETYPE_DLL_IN} ${FREETYPE_DLL_OUT}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SHADERC_DLL_IN} ${SHADERC_DLL_OUT}
         COMMENT "Copy necessary DLLs"
     )

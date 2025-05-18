@@ -26,11 +26,11 @@ add_definitions(
     -DEXECUTABLE_SUFFIX="${EXECUTABLE_SUFFIX}"
 )
 
-set(CMDLINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../../Vendor/CmdLine/Source")
+set(CMDLINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../../Vendor/AbyssFreetype/Vendor/CmdLine")
 
 add_executable(${PROJECT_NAME} 
     Source/main.cpp 
-    ${CMDLINE_DIR}/Private/CmdLine.cpp
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE "${CMDLINE_DIR}/Public")
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMDLINE_DIR}/Source/Public")
+target_link_libraries(${PROJECT_NAME} CmdLine)

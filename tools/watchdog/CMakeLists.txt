@@ -5,11 +5,11 @@ project(watchdog)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_BUILD_TYPE Debug)
 
-set(CMDLINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../../Vendor/CmdLine/Source")
+set(CMDLINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../../Vendor/AbyssFreetype/Vendor/CmdLine")
 
 add_executable(${PROJECT_NAME} 
     Source/main.cpp 
-    ${CMDLINE_DIR}/Private/CmdLine.cpp
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE "${CMDLINE_DIR}/Public" )
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMDLINE_DIR}/Source/Public")
+target_link_libraries(${PROJECT_NAME} CmdLine)
