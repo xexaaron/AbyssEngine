@@ -47,8 +47,8 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build GLFW examples")
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build GLFW tests")
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build GLFW docs")
 if(CMAKE_HOST_SYSTEM_VERSION MATCHES "microsoft-standard-WSL2")
-set(GLFW_BUILD_WAYLAND 0)
-set(GLFW_BUILD_X11 1)
+    set(GLFW_BUILD_WAYLAND 0)
+    set(GLFW_BUILD_X11 1)
 endif()
 add_subdirectory(${GLFW_DIR})
 set_vendor_properties(glfw "Dependencies/glfw")
@@ -57,18 +57,65 @@ set_vendor_properties(glfw "Dependencies/glfw")
 
 set(STB_INCLUDE_DIR "Vendor/stb")
 set(STB_IMPL "${STB_INCLUDE_DIR}/stb.cpp")
+set(STB_SOURCES 
+    "${STB_INCLUDE_DIR}/stb_image/stb_image_resize2.h"
+    "${STB_INCLUDE_DIR}/stb_image/stb_image_write.h"
+    "${STB_INCLUDE_DIR}/stb_image/stb_image.h"
+    "${STB_INCLUDE_DIR}/stb.cpp"
+)
+add_library(stb INTERFACE ${STB_SOURCES})
+set_target_properties(stb PROPERTIES FOLDER "Dependencies/stb")
+# Setup gch::small_vector
+
+set(GCH_SMALL_VEC_DIR "Vendor/gch")
+set(GCH_SMALL_VEC_INCLUDE_DIR "${GCH_SMALL_VEC_DIR}/source/include")
+set(GCH_SMALL_VEC_SOURCES "${GCH_SMALL_VEC_INCLUDE_DIR}/gch/small_vector.hpp")
+add_library(small_vector INTERFACE ${GCH_SMALL_VEC_SOURCES})
+set_target_properties(small_vector PROPERTIES FOLDER "Dependencies/gch")
 
 # Setup GLM
 
-set(GLM_DIR "$ENV{VULKAN_SDK}")
+set(GLM_DIR "Vendor/glm")
 set(GLM_INCLUDE_DIR ${GLM_DIR})
 set(GLM_DEFINITIONS GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE  GLM_FORCE_LEFT_HANDED)
+add_subdirectory(${GLM_DIR})
+set_target_properties(glm PROPERTIES FOLDER "Dependencies/glm")
 
 # Setup AbyssFreetype
 
 set(ABYSS_FREETYPE_DIR "Vendor/AbyssFreetype")
 set(ABYSS_FREETYPE_INCLUDE_DIR "${ABYSS_FREETYPE_DIR}/Source/Public")
 add_subdirectory(${ABYSS_FREETYPE_DIR})
+set_target_properties(AbyssFT PROPERTIES FOLDER "Dependencies/AbyssFT")
+set_target_properties(AbyssFTLib PROPERTIES FOLDER "Dependencies/AbyssFT")
+set_target_properties(AbyssFTTest PROPERTIES FOLDER "Dependencies/AbyssFT")
+set_target_properties(CmdLine PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(CmdLineTest PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(PrettyPrint PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(PrettyPrintTest PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(brotlicommon PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(brotlienc PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(brotlidec PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(brotli PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(bz2 PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(bz2_ObjLib PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(bzip2 PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(bzip2recover PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(check PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(freetype PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(zlib PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(zlibstatic PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(png_genfiles PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(png_shared PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(png_static PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(pngfix PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(png-fix-itxt PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(pngimage PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(pngstest PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(pngtest PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(pngunknown PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+set_target_properties(pngvalid PROPERTIES FOLDER "Dependencies/AbyssFT/Dependencies")
+
 
 # Setup Vulkan
 
@@ -92,10 +139,7 @@ else()
     set(PLATFORM_LIBS "")
 endif()
 
-# Setup gch::small_vector
 
-set(GCH_SMALL_VEC_DIR "Vendor/gch")
-set(GCH_SMALL_VEC_INCLUDE_DIR "${GCH_SMALL_VEC_DIR}/source/include")
 
 # List Sources
 
