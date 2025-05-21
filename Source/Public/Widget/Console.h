@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Rendering/UI/LayoutContainer.h"
-#include "Rendering/UI/InputTextbox.h"
-#include "Rendering/UI/Dropdown.h"
+#include "Widget/LayoutContainer.h"
+#include "Widget/InputTextbox.h"
+#include "Widget/Dropdown.h"
 #include "Platform/Process.h"
 
 namespace aby::ui {

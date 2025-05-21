@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Rendering/UI/Button.h"
-#include "Rendering/UI/LayoutContainer.h"
+#include "Widget/Button.h"
+#include "Widget/LayoutContainer.h"
 
 namespace aby::ui {
 	

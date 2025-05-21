@@ -164,18 +164,18 @@ set(CPP_SOURCES
     Source/Private/Rendering/Camera.cpp
     Source/Private/Rendering/Shader.cpp
     Source/Private/Rendering/Texture.cpp
-    Source/Private/Rendering/UI/Widget.cpp
-    Source/Private/Rendering/UI/UICommon.cpp
-    Source/Private/Rendering/UI/Textbox.cpp
-    Source/Private/Rendering/UI/Panel.cpp
-    Source/Private/Rendering/UI/LayoutContainer.cpp
-    Source/Private/Rendering/UI/Image.cpp
-    Source/Private/Rendering/UI/Canvas.cpp
-    Source/Private/Rendering/UI/Button.cpp
-    Source/Private/Rendering/UI/InputTextbox.cpp
-    Source/Private/Rendering/UI/Console.cpp
-    Source/Private/Rendering/UI/Dropdown.cpp
-    Source/Private/Rendering/UI/WidgetSwitcher.cpp
+    Source/Private/Widget/Widget.cpp
+    Source/Private/Widget/UICommon.cpp
+    Source/Private/Widget/Textbox.cpp
+    Source/Private/Widget/Panel.cpp
+    Source/Private/Widget/LayoutContainer.cpp
+    Source/Private/Widget/Image.cpp
+    Source/Private/Widget/Canvas.cpp
+    Source/Private/Widget/Button.cpp
+    Source/Private/Widget/InputTextbox.cpp
+    Source/Private/Widget/Console.cpp
+    Source/Private/Widget/Dropdown.cpp
+    Source/Private/Widget/WidgetSwitcher.cpp
     Source/Private/vk/VkRenderer.cpp
     Source/Private/vk/VkBuffer.cpp
     Source/Private/vk/VkContext.cpp
@@ -226,19 +226,19 @@ set(HEADER_FILES
     Source/Public/Rendering/Shader.h
     Source/Public/Rendering/Texture.h
     Source/Public/Rendering/Vertex.h
-    Source/Public/Rendering/UI/UI.h
-    Source/Public/Rendering/UI/Widget.h
-    Source/Public/Rendering/UI/UICommon.h
-    Source/Public/Rendering/UI/Textbox.h
-    Source/Public/Rendering/UI/Panel.h
-    Source/Public/Rendering/UI/LayoutContainer.h
-    Source/Public/Rendering/UI/Image.h
-    Source/Public/Rendering/UI/Canvas.h
-    Source/Public/Rendering/UI/Button.h
-    Source/Public/Rendering/UI/InputTextbox.h
-    Source/Public/Rendering/UI/Console.h
-    Source/Public/Rendering/UI/Dropdown.h
-    Source/Public/Rendering/UI/WidgetSwitcher.h
+    Source/Public/Widget/UI.h
+    Source/Public/Widget/Widget.h
+    Source/Public/Widget/UICommon.h
+    Source/Public/Widget/Textbox.h
+    Source/Public/Widget/Panel.h
+    Source/Public/Widget/LayoutContainer.h
+    Source/Public/Widget/Image.h
+    Source/Public/Widget/Canvas.h
+    Source/Public/Widget/Button.h
+    Source/Public/Widget/InputTextbox.h
+    Source/Public/Widget/Console.h
+    Source/Public/Widget/Dropdown.h
+    Source/Public/Widget/WidgetSwitcher.h
     Source/Public/vk/VkRenderer.h
     Source/Public/vk/VkBuffer.h
     Source/Public/vk/VkContext.h
@@ -348,7 +348,6 @@ add_custom_command(
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(SHADERC_DLL_IN   "${VULKAN_BIN_DIR}/shaderc_shared${DEBUG_SUFFIX}.dll")
     set(SHADERC_DLL_OUT  "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/shaderc_shared${DEBUG_SUFFIX}.dll")
-
     add_custom_command(TARGET ${EDITOR} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E echo "Checking and copying DLLs..."
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SHADERC_DLL_IN} ${SHADERC_DLL_OUT}

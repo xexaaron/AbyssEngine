@@ -1,5 +1,5 @@
 #pragma once
-#include "Rendering/UI/Panel.h"
+#include "Widget/Panel.h"
 
 namespace aby::ui {
     

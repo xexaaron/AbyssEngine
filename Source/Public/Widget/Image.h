@@ -1,5 +1,5 @@
 #pragma once
-#include "Rendering/UI/Widget.h"
+#include "Widget/Widget.h"
 #include <array>
 
 namespace aby::ui {

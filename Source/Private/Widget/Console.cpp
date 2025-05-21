@@ -1,4 +1,4 @@
-#include "Rendering/UI/Console.h"
+#include "Widget/Console.h"
 
 #ifdef min
 #undef min

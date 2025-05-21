@@ -1,11 +1,11 @@
-#include <filesystem>
 #include "Core/App.h"
 #include "Core/Resource.h"
-#include "Rendering/UI/UI.h"
+#include "Widget/UI.h"
 #include "Rendering/Font.h"
 #include "Platform/Platform.h"
 #include "Utility/Delegate.h"
-#include "Rendering/UI/WidgetSwitcher.h"
+#include "Widget/WidgetSwitcher.h"
+#include <filesystem>
 
 namespace editor {
 

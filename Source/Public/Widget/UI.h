@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Rendering/UI/InputTextbox.h"
+#include "Widget/InputTextbox.h"
     // -- Button
     //   -- Textbox
     //      -- Image
     //          -- Widget
     //              -- Object
-#include "Rendering/UI/Console.h"
+#include "Widget/Console.h"
     // -- LayoutContainer
     //      -- Panel
     //          -- ParentWidget
@@ -14,7 +14,7 @@
     //                  -- Image
     //                      -- Widget
     //                          -- Object
-#include "Rendering/UI/Canvas.h"
+#include "Widget/Canvas.h"
     // -- Panel
     //      -- ParentWidget
     //          -- Object

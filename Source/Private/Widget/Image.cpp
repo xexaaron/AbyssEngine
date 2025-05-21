@@ -1,4 +1,4 @@
-#include "Rendering/UI/Image.h"
+#include "Widget/Image.h"
 #include "Core/Log.h"
 
 namespace aby::ui {

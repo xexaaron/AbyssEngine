@@ -1,6 +1,6 @@
 #include "Core/App.h"
 #include "Core/Log.h"
-#include "Rendering/UI/Widget.h"
+#include "Widget/Widget.h"
 #include "vk/VkRenderer.h"
 #include "Platform/Platform.h"
 

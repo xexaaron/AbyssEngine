@@ -1,5 +1,5 @@
 #pragma once
-#include "Rendering/UI/Image.h"
+#include "Widget/Image.h"
 
 namespace aby::ui {
 
