@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <CmdLine/CmdLine.h>
+#include <PrettyPrint/PrettyPrint.h>
 #include <map>
 #include <iostream>
 #include <algorithm>
@@ -55,27 +56,21 @@ void build(const std::string& args) {
     std::system(build_proj.c_str());
 }
 
-std::string get_tool_names(const std::filesystem::path& exec_root) {
-    std::string tool_names = "[";
-    bool first_tool = true;
+std::vector<std::string> get_tool_names(const std::filesystem::path& exec_root) {
+    std::vector<std::string> tool_names;
+
     for (auto& entry : std::filesystem::directory_iterator(exec_root)) {
         if (!entry.is_directory()) {
             auto path = entry.path();
-            if ((!path.has_extension()) || (path.extension() == ".exe" && path.filename() != EDITOR_EXECUTABLE_NAME)) {
-                if (!first_tool) {
-                    tool_names.append(", ");
-                }
-                tool_names.append(path.filename().replace_extension("").string());
-                first_tool = false;
+            if ((!path.has_extension()) || (path.extension() == ".exe" && path.filename() != EDITOR_EXECUTABLE_NAME) &&
+                 !path.filename().replace_extension().string().ends_with("Test") &&
+                  path.filename().replace_extension().string() != "tool") 
+            {
+                tool_names.push_back(path.filename().replace_extension("").string());
             }
         }
     }
-    if (!first_tool) {
-        tool_names.append(", ");
-    }
-    tool_names.append("clean, ");
-    tool_names.append("build");
-    tool_names.append("]");
+    tool_names.push_back("clean");
     return tool_names;
 }
 
@@ -95,45 +90,40 @@ int main(int argc, char** argv) {
     if (root_pp_fn != EXECUTABLE_FOLDER) {
         exec_root /= std::filesystem::path(EXECUTABLE_FOLDER_NAME) / EXECUTABLE_FOLDER;
     }
-    std::string tool_names = get_tool_names(exec_root);
-    std::string description = "Select a tool to run " + tool_names;
-
-    std::string tool;
+    std::vector<std::string> tool_names = get_tool_names(exec_root);
     std::string args;
-    if (!cmd.opt("run", description, &tool, true)
-        .opt("args", "Pass arguments to selected tool", &args, false)
+
+    std::map<std::string, bool> tools_to_run;
+    for (const auto& tool_name : tool_names) {
+        tools_to_run[tool_name] = false;
+        std::string desc("Run " + tool_name);
+        cmd.flag(tool_name, desc, &tools_to_run[tool_name]);
+    }
+
+    if (!cmd.opt("args", "Pass arguments to selected tool", &args, false)
         .parse(argc, argv, opts))
     {
         std::cout << '\n';
         return 1;
     }
 
-    if (tool.empty()) {
-        std::cerr << "[Tool] [Error] Argument for tool was empty" << std::endl;
-        std::cout << '\n';
-        return 1;
-    }
-
-    if (tool == "clean") {
+    if (tools_to_run["clean"]) {
         clean(exec_root / "Cache");
-        return 0;
     }
 
-    if (tool == "build") {
-        build(args);
-        return 0;
-    }
+    for (auto& tool : tools_to_run) {
+        if (too.first == "clean") continue;
 
-    std::filesystem::path tool_path = std::filesystem::absolute(exec_root / tool.append(EXECUTABLE_SUFFIX));
-    if (!std::filesystem::exists(tool_path)) {
-        std::cerr << "[Tool] [Error] Tool does not exist: " << tool_path.string() << std::endl;
-        std::cout << '\n';
-        return 1;
+        if (tool.second) {
+            std::filesystem::path tool_path = std::filesystem::absolute(exec_root / std::string(tool.first).append(EXECUTABLE_SUFFIX));
+            if (!std::filesystem::exists(tool_path)) {
+                aby::util::pretty_print(std::format("Tool does not exist: {}", tool_path.string()), "Tool", aby::util::Colors{.box = aby::util::EColor::RED});
+                return 1;
+            }
+            std::string sys_cmd = tool_path.string() + " " + args;
+            std::system(sys_cmd.c_str());
+        } 
     }
-
-    std::string sys_cmd = tool_path.string() + " " + args;
-    std::system(sys_cmd.c_str());
-    std::cout << '\n';
 
     return 0;
 }

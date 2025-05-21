@@ -32,5 +32,5 @@ add_executable(${PROJECT_NAME}
     Source/main.cpp 
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE "${CMDLINE_DIR}/Source/Public")
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMDLINE_DIR}/Source/Public" "${CMDLINE_DIR}/Vendor/AbyssPrettyPrint/Source/Public")
 target_link_libraries(${PROJECT_NAME} CmdLine)
