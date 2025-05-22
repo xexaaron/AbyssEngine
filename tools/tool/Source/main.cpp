@@ -21,57 +21,60 @@
 #define EDITOR_EXECUTABLE_NAME "CMAKE_ERROR at tools/tool/CMakeLists.txt"
 #endif
 
-void clean(const std::filesystem::path& path) {
-    if (!std::filesystem::exists(path)) {
-        std::cerr << "[Tool] [Error] Directory does not exist: " << path.string() << std::endl;
-        return;
-    }
-    std::string confirm;
-    std::cout << "[Tool] [Info] Are you sure you want to delete: " << path.string() << std::endl << "[Tool] [Info] Enter (y)es or (n)o" << std::endl;
-    std::cin >> confirm;
+namespace aby {
 
-    std::transform(confirm.begin(), confirm.end(), confirm.begin(), [](unsigned char c) { 
-        return static_cast<char>(std::tolower(static_cast<int>(c))); 
-    });
+    void clean(const std::filesystem::path& path) {
+        if (!std::filesystem::exists(path)) {
+            std::cerr << "[Tool] [Error] Directory does not exist: " << path.string() << std::endl;
+            return;
+        }
+        std::string confirm;
+        std::cout << "[Tool] [Info] Are you sure you want to delete: " << path.string() << std::endl << "[Tool] [Info] Enter (y)es or (n)o" << std::endl;
+        std::cin >> confirm;
 
-    if (confirm == "yes" || confirm == "y") {
-        std::filesystem::remove_all(path);
-    }
-    else if (confirm == "no" || confirm == "n") {
-        return;
-    }
-    else {
-        std::cout << "[Tool] [Error] Invalid input. Exiting..." << std::endl;
-    }
-}
+        std::transform(confirm.begin(), confirm.end(), confirm.begin(), [](unsigned char c) { 
+            return static_cast<char>(std::tolower(static_cast<int>(c))); 
+        });
 
-void build(const std::string& args) {
-    std::filesystem::path cwd = std::filesystem::current_path();
-    std::filesystem::path build_dir = cwd / "build";
-
-    std::string make_proj  = "cmake -B \"" + build_dir.string() + "\" -S \"" + cwd.string() + "\" " + args;
-    std::string build_proj = "cmake --build \"" + build_dir.string() + "\"";
-
-    std::system(make_proj.c_str());
-    std::system(build_proj.c_str());
-}
-
-std::vector<std::string> get_tool_names(const std::filesystem::path& exec_root) {
-    std::vector<std::string> tool_names;
-
-    for (auto& entry : std::filesystem::directory_iterator(exec_root)) {
-        if (!entry.is_directory()) {
-            auto path = entry.path();
-            if ((!path.has_extension()) || (path.extension() == ".exe" && path.filename() != EDITOR_EXECUTABLE_NAME) &&
-                 !path.filename().replace_extension().string().ends_with("Test") &&
-                  path.filename().replace_extension().string() != "tool") 
-            {
-                tool_names.push_back(path.filename().replace_extension("").string());
-            }
+        if (confirm == "yes" || confirm == "y") {
+            std::filesystem::remove_all(path);
+        }
+        else if (confirm == "no" || confirm == "n") {
+            return;
+        }
+        else {
+            std::cout << "[Tool] [Error] Invalid input. Exiting..." << std::endl;
         }
     }
-    tool_names.push_back("clean");
-    return tool_names;
+
+    std::filesystem::path exec_dir(const char* argv0) {
+        std::filesystem::path root(argv0);
+        auto exec_root = root.parent_path();
+        auto root_pp_fn = root.parent_path().filename();
+        if (root_pp_fn != EXECUTABLE_FOLDER) {
+            exec_root /= std::filesystem::path(EXECUTABLE_FOLDER_NAME) / EXECUTABLE_FOLDER;
+        }
+        return exec_root;
+    }
+
+    std::vector<std::string> get_tool_names(const std::filesystem::path& exec_root) {
+        std::vector<std::string> tool_names;
+
+        for (auto& entry : std::filesystem::directory_iterator(exec_root)) {
+            if (!entry.is_directory()) {
+                auto path = entry.path();
+                if ((!path.has_extension()) || (path.extension() == ".exe" && path.filename() != EDITOR_EXECUTABLE_NAME) &&
+                    !path.filename().replace_extension().string().ends_with("Test") &&
+                    path.filename().replace_extension().string() != "tool") 
+                {
+                    tool_names.push_back(path.filename().replace_extension().string());
+                }
+            }
+        }
+        tool_names.push_back("clean");
+        return tool_names;
+    }
+
 }
 
 int main(int argc, char** argv) {
@@ -82,47 +85,45 @@ int main(int argc, char** argv) {
         .cerr = std::cerr, 
         .help = true,
         .term_colors = true,
+        .log_cmd = true,
     };
 
-    std::filesystem::path root(argv[0]);
-    auto exec_root = root.parent_path();
-    auto root_pp_fn = root.parent_path().filename();
-    if (root_pp_fn != EXECUTABLE_FOLDER) {
-        exec_root /= std::filesystem::path(EXECUTABLE_FOLDER_NAME) / EXECUTABLE_FOLDER;
-    }
-    std::vector<std::string> tool_names = get_tool_names(exec_root);
+    auto exec_root = aby::exec_dir(argv[0]);
+    std::vector<std::string> tool_names = aby::get_tool_names(exec_root);
     std::string args;
 
     std::map<std::string, bool> tools_to_run;
     for (const auto& tool_name : tool_names) {
         tools_to_run[tool_name] = false;
-        std::string desc("Run " + tool_name);
-        cmd.flag(tool_name, desc, &tools_to_run[tool_name]);
+        std::string desc("Run " + tool_name + ".");
+        if (tool_name == "clean") desc = "Clear cached files (fonts, shaders, etc.).";
+        cmd.flag(tool_name, desc, &tools_to_run[tool_name], true, tool_names);
     }
 
-    if (!cmd.opt("args", "Pass arguments to selected tool", &args, false)
+    if (!cmd.opt("args", "Pass arguments to selected tool (quote enclosed).", &args, false)
         .parse(argc, argv, opts))
     {
         std::cout << '\n';
         return 1;
     }
 
+
     if (tools_to_run["clean"]) {
-        clean(exec_root / "Cache");
+        aby::clean(exec_root / "Cache");
+        return 0;
     }
 
     for (auto& tool : tools_to_run) {
-        if (too.first == "clean") continue;
-
-        if (tool.second) {
-            std::filesystem::path tool_path = std::filesystem::absolute(exec_root / std::string(tool.first).append(EXECUTABLE_SUFFIX));
-            if (!std::filesystem::exists(tool_path)) {
-                aby::util::pretty_print(std::format("Tool does not exist: {}", tool_path.string()), "Tool", aby::util::Colors{.box = aby::util::EColor::RED});
-                return 1;
-            }
-            std::string sys_cmd = tool_path.string() + " " + args;
-            std::system(sys_cmd.c_str());
-        } 
+        if (!tool.second) continue;
+        if (tool.first == "clean") continue;
+        
+        std::filesystem::path tool_path = std::filesystem::absolute(exec_root / std::string(tool.first).append(EXECUTABLE_SUFFIX));
+        if (!std::filesystem::exists(tool_path)) {
+            aby::util::pretty_print(std::format("Tool does not exist: {}", tool_path.string()), "Tool", aby::util::Colors{.box = aby::util::EColor::RED});
+            return 1;
+        }
+        std::string sys_cmd = tool_path.string() + " " + args;
+        std::system(sys_cmd.c_str());
     }
 
     return 0;

@@ -4,7 +4,7 @@ project(Abyss)
 include(${CMAKE_SOURCE_DIR}/tools/cmake/Functions.cmake)
 
 # Setup Build Options
-
+set(CMAKE_DISABLE_CPACK TRUE)
 set(CMAKE_DISABLE_PREDEFINED_TARGETS TRUE)
 set(CMAKE_CXX_STANDARD 23)
 set(ENGINE ${PROJECT_NAME}Engine)
@@ -281,15 +281,17 @@ source_group("Private" FILES ${STB_IMPL} "Source/main.cpp")
 set(COMMON_INCLUDE_DIRS "Source/Public" ${GLFW_INCLUDE_DIR} ${STB_INCLUDE_DIR} ${GLM_INCLUDE_DIR})
 set(RESOURCE_DIR "${CMAKE_SOURCE_DIR}/Source/Resources")
 
-add_subproject("localize")
-
+# Setup subprojects
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
     add_subproject("tests")
 endif()
-
+add_subproject("localize")
 add_subproject("watchdog")
+add_subproject("aby_package")
 add_subproject("tool")
 add_dependencies(tool AbyssFTLib)
+
+# Setup library/engine
 
 add_library(${ENGINE} ${CPP_SOURCES} ${HEADER_FILES} ${RESOURCES})
 add_executable(${EDITOR} Source/main.cpp ${RESOURCES})
