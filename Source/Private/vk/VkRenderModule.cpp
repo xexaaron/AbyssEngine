@@ -86,7 +86,6 @@ namespace aby::vk {
         vkCmdDraw(cmd, static_cast<u32>(this->vertex_count()), 1u, 0u, 0u);
     }
 
-
     void RenderPrimitive::reset() {
         m_VertexAccumulator.reset();
         m_IndexCount = 0;
@@ -101,6 +100,7 @@ namespace aby::vk {
     }
 
 }
+
 
 namespace aby::vk {
 
@@ -118,6 +118,30 @@ namespace aby::vk {
         {  0.5f,  0.5f, 0.0f, 1.0f },
         { -0.5f,  0.5f, 0.0f, 1.0f }
     };
+
+    static const std::unordered_set<char32_t> TEXT_ESCAPE_CHARACTERS = {
+        0x27, // '''
+        0x22, // '"'
+        0x3f, // '?'
+        0x5c, // '\'
+        0x07, // '\a'
+        0x08, // '\b'
+        0x0c, // '\f'
+        0x0a, // '\n'
+        0x0d, // '\r'
+        0x09, // '\t'
+        0x0b, // '\v'
+    };
+
+    glm::mat4 compute_text_transform(const ft::Glyph& g, const glm::vec2& current_position, float text_scale, float text_size_y) {
+        glm::vec3 size = { g.size.x * text_scale, g.size.y * text_scale, 0.f };
+        glm::vec3 pos = {
+            (current_position.x + g.bearing.x * text_scale) + (size.x / 2),
+            (current_position.y + (text_size_y - g.bearing.y) * text_scale) + (size.y / 2),
+            0.f
+        };
+        return glm::translate(UNIT_MATRIX, pos) * glm::scale(UNIT_MATRIX, size);
+    }
 
     RenderModule::RenderModule(Ref<vk::Context> ctx, vk::Swapchain& swapchain, const std::vector<fs::path>& shaders) :
         m_Ctx(ctx.get()),
@@ -178,6 +202,7 @@ namespace aby::vk {
             prim.reset();
         }
     }
+    
     void RenderModule::flush(VkCommandBuffer cmd, DeviceManager& manager, ERenderPrimitive primitive) {
         if (primitive == ERenderPrimitive::ALL) {
             for (auto& prim : m_Primitives) {
@@ -209,6 +234,7 @@ namespace aby::vk {
         acc = triangle.v3;
         ++acc;
     }
+    
     void RenderModule::draw_quad(const Quad& quad) {
         auto& acc = this->quads();
 
@@ -223,32 +249,48 @@ namespace aby::vk {
         }
     }
 
-    namespace {
-        static const std::unordered_set<char32_t> TEXT_ESCAPE_CHARACTERS = {
-            0x27, // '''
-            0x22, // '"'
-            0x3f, // '?'
-            0x5c, // '\'
-            0x07, // '\a'
-            0x08, // '\b'
-            0x0c, // '\f'
-            0x0a, // '\n'
-            0x0d, // '\r'
-            0x09, // '\t'
-            0x0b, // '\v'
+    void RenderModule::draw_cube(const Quad& quad) {
+        auto& acc = this->quads();
+
+        glm::vec3 half_size = quad.size * 0.5f;
+
+
+        struct FaceTransform {
+            glm::vec3 translation;
+            glm::vec3 rotation_axis;
+            float rotation_angle; // in radians
         };
 
-        glm::mat4 compute_text_transform(const ft::Glyph& g, const glm::vec2& current_position, float text_scale, float text_size_y) {
-            // Compute size and position
-            glm::vec3 size = { g.size.x * text_scale, g.size.y * text_scale, 0.f };
-            glm::vec3 pos = {
-                (current_position.x + g.bearing.x * text_scale) + (size.x / 2),
-                (current_position.y + (text_size_y - g.bearing.y) * text_scale) + (size.y / 2),
-                0.f
-            };
-            return glm::translate(UNIT_MATRIX, pos) * glm::scale(UNIT_MATRIX, size);
-        }
+        const FaceTransform faces[6] = {
+            // Front face (+Z)
+            { {0, 0, half_size.z}, {0, 0, 0}, 0 },
+            // Back face (-Z)
+            { {0, 0, -half_size.z}, {0, 1, 0}, glm::pi<float>() },
+            // Left face (-X)
+            { {-half_size.x, 0, 0}, {0, 1, 0}, -glm::half_pi<float>() },
+            // Right face (+X)
+            { {half_size.x, 0, 0}, {0, 1, 0}, glm::half_pi<float>() },
+            // Top face (+Y)
+            { {0, half_size.y, 0}, {1, 0, 0}, -glm::half_pi<float>() },
+            // Bottom face (-Y)
+            { {0, -half_size.y, 0}, {1, 0, 0}, glm::half_pi<float>() },
+        };
 
+        for (const auto& face : faces) {
+            glm::mat4 face_transform = glm::translate(UNIT_MATRIX, quad.pos);
+            face_transform *= glm::translate(UNIT_MATRIX, face.translation);
+            if (face.rotation_angle != 0.0f)
+                face_transform *= glm::rotate(UNIT_MATRIX, face.rotation_angle, face.rotation_axis);
+            face_transform *= glm::scale(UNIT_MATRIX, { quad.size.x, quad.size.y, 1.0f });
+
+            for (std::size_t i = 0; i < std::size(VERTEX_POSITIONS); i++) {
+                glm::vec3 pos(face_transform * VERTEX_POSITIONS[i]);
+                glm::vec3 texinfo(COORDS[i], quad.texinfo.z);
+                Vertex v(pos, quad.col, texinfo);
+                acc = v;
+                ++acc;
+            }
+        }
     }
 
     void RenderModule::draw_text(const Text& text) {
@@ -339,7 +381,6 @@ namespace aby::vk {
             cursor++;
         }
     }
-
 
     RenderPrimitive& RenderModule::quads() {
         std::size_t idx = static_cast<std::size_t>(ERenderPrimitive::QUAD);

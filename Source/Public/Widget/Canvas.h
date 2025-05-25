@@ -21,7 +21,7 @@ namespace aby::ui {
 
         bool on_window_resize(WindowResizeEvent& event) override;
     private:
-        FreeCamera m_Camera;
+        OrientedCamera m_Camera;
     };
     
 }

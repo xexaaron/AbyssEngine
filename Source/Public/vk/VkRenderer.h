@@ -19,17 +19,14 @@ namespace aby::vk {
         void on_event(Event& event) override;
 
         void draw_text(const Text& text) override;
-        void draw_triangle_3d(const Triangle& triangle) override;
-        void draw_triangle_2d(const Triangle& triangle) override;
-        void draw_quad_3d(const Quad& quad) override;
-        void draw_quad_2d(const Quad& quad) override;
+        void draw_triangle(const Triangle& triangle) override;
+        void draw_quad(const Quad& quad) override;
+        void draw_cube(const Quad& quad) override;
     protected: 
         void render(u32 img);
         void start_batch(RenderModule& module);
         void flush(RenderModule& module, ERenderPrimitive primitive);
         void flush_if(RenderModule& module, bool flush, ERenderPrimitive primitive);
-        void draw_triangle(RenderModule& module, const Triangle& triangle);
-        void draw_quad(RenderModule& module, const Quad& quad);
     private:
         bool on_resize(WindowResizeEvent& event);
         bool on_resize(u32 w, u32 h);

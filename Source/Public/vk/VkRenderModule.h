@@ -65,20 +65,20 @@ namespace aby::vk {
 
     class RenderModule {
     public:
-    public:
         RenderModule(Ref<vk::Context> ctx, vk::Swapchain& swapchain, const std::vector<fs::path>& shaders);
 
         void destroy();
         void reset();
         void flush(VkCommandBuffer cmd, DeviceManager& manager, ERenderPrimitive primitive = ERenderPrimitive::ALL);
         void set_uniforms(const void* data, std::size_t bytes, u32 binding = 0);
+        
         void draw_triangle(const Triangle& triangle);
         void draw_quad(const Quad& quad);
+        void draw_cube(const Quad& quad);
         void draw_text(const Text& text);
 
         Ref<ShaderModule> module() const;
         vk::Pipeline&     pipeline();
-
         RenderPrimitive&  quads();
         RenderPrimitive&  tris();
     private:

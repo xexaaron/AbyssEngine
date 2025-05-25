@@ -5,7 +5,7 @@ namespace aby::ui {
 
     ImageStyle ImageStyle::dark_mode() {
         return ImageStyle{
-            .border  = { { 0.1f, 0.1f, 0.1f, 0.5f}, 2.0f },
+            .border  = { { 0.1f, 0.1f, 0.1f, 1.f}, 2.0f },
             .color   = { 0.15f, 0.15f, 0.15f, 1.f },
             .texture = {}
         };

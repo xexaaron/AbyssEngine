@@ -19,7 +19,7 @@ namespace aby {
         m_ViewportSize(glm::vec2(0.f)),
         m_Position(pos),
         m_ViewMatrix(glm::mat4(1.0f)),
-        m_Projection(glm::perspective(glm::radians(cfg.fov), cfg.aspect_ratio, cfg.aspect_ratio, cfg.far_clip))
+        m_Projection(glm::perspective(glm::radians(cfg.fov), cfg.aspect_ratio, cfg.near_clip, cfg.far_clip))
     {
     }
 
@@ -155,7 +155,6 @@ namespace aby {
         m_Position = m_FocalPoint - forward() * m_Distance;
         m_ViewMatrix = glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(orientation());
         m_ViewMatrix = glm::inverse(m_ViewMatrix);
-        m_ViewMatrix[1][1] *= -1;
     }
 
     
@@ -222,7 +221,6 @@ namespace aby {
     void FreeCamera::update_view() {
         m_ViewMatrix = glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(orientation());
         m_ViewMatrix = glm::inverse(m_ViewMatrix);
-        m_ViewMatrix[1][1] *= -1;
     }
 
 }

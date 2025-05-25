@@ -19,8 +19,6 @@ namespace aby::ui {
 	};
 
 	class Console : public LayoutContainer {
-	private:
-		using VisbileReverseRange = std::pair<Widget::Children::reverse_iterator, Widget::Children::reverse_iterator>;
 	public:
 		static Ref<Console> create(const ImageStyle& style);
 

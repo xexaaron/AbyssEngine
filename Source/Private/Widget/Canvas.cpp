@@ -10,7 +10,7 @@ namespace aby::ui {
         Panel(Transform{
                 .position = { 0, 0 },
                 .size = { 800, 600 }
-            }, ImageStyle{ .border = style.border, .color = {0.f,0.f,0.f,0.f}, .texture = style.texture }, EResize::NONE)
+            }, ImageStyle{ .border={ .color = {0.f, 0.f, 0.f, 0.f },.width = 0.f}, .color = {0.f,0.f,0.f,0.f}, .texture = style.texture }, EResize::NONE)
     {
         m_Name = "Canvas";
     }
@@ -29,9 +29,8 @@ namespace aby::ui {
         m_Camera.on_tick(app, deltatime);
         ren.on_begin(m_Camera.view_projection());
         Panel::on_tick(app, deltatime);
-        glm::vec3 pos = m_Camera.position() + (m_Camera.forward() * 500.f);
-        Quad quad({ 100, 100, 100 }, pos);
-        ren.draw_quad_3d(quad);
+        Quad quad({ 100, 100, 100 }, {0, 0, 0});
+        ren.draw_cube(quad);
         ren.on_end();
     }
 

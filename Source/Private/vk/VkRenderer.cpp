@@ -11,7 +11,6 @@
 #include <glm/gtx/euler_angles.hpp>
 
 namespace aby::vk {
-    
 
     Renderer::Renderer(Ref<vk::Context> ctx) :
         m_Ctx(ctx),
@@ -37,31 +36,21 @@ namespace aby::vk {
         flush_if(m_2D, m_2D.quads().should_flush(text.text.length()), ERenderPrimitive::QUAD);
         m_2D.draw_text(text);
     }
-
-    void Renderer::draw_triangle_3d(const Triangle& triangle) {
-        draw_triangle(m_3D, triangle);
-    }
    
-    void Renderer::draw_triangle_2d(const Triangle& triangle) {
-        draw_triangle(m_2D, triangle);
+    void Renderer::draw_triangle(const Triangle& triangle) {
+        flush_if(m_2D, m_2D.tris().should_flush(), ERenderPrimitive::TRIANGLE);
+        m_2D.draw_triangle(triangle);
     }
 
-    void Renderer::draw_quad_3d(const Quad& quad) {
-        draw_quad(m_3D, quad);
+    void Renderer::draw_cube(const Quad& cube) {
+        flush_if(m_3D, m_3D.quads().should_flush(), ERenderPrimitive::QUAD);
+        m_3D.draw_cube(cube);
     }
 
-    void Renderer::draw_quad_2d(const Quad& quad) {
-        draw_quad(m_2D, quad);
-    }
-
-    void Renderer::draw_triangle(RenderModule& module, const Triangle& triangle) {
-        flush_if(module, module.tris().should_flush(), ERenderPrimitive::TRIANGLE);
-        module.draw_triangle(triangle);
-    }
-    
-    void Renderer::draw_quad(RenderModule& module, const Quad& quad) {
-        flush_if(module, module.quads().should_flush(), ERenderPrimitive::QUAD);
-        module.draw_quad(quad);
+    void Renderer::draw_quad(const Quad& quad) {
+        if (quad.col.a == 0) return;
+        flush_if(m_2D, m_2D.quads().should_flush(), ERenderPrimitive::QUAD);
+        m_2D.draw_cube(quad);
     }
 
     void Renderer::start_batch(RenderModule& module) {

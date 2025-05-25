@@ -26,7 +26,7 @@ namespace aby::ui {
                 m_Border.color,
                 0.f
             );
-            app->renderer().draw_quad_2d(border);
+            app->renderer().draw_quad(border);
         }
         else {
             Quad top(
@@ -53,10 +53,10 @@ namespace aby::ui {
                 m_Border.color,
                 0.f
             );
-            app->renderer().draw_quad_2d(top);
-            app->renderer().draw_quad_2d(bottom);
-            app->renderer().draw_quad_2d(left);
-            app->renderer().draw_quad_2d(right);
+            app->renderer().draw_quad(top);
+            app->renderer().draw_quad(bottom);
+            app->renderer().draw_quad(left);
+            app->renderer().draw_quad(right);
 
         }
 
@@ -67,7 +67,7 @@ namespace aby::ui {
             static_cast<float>(m_Texture.handle()),
             {1, 1}
         );
-        app->renderer().draw_quad_2d(img);
+        app->renderer().draw_quad(img);
 
         Super::on_tick(app, deltatime);
     }

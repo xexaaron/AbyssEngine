@@ -77,7 +77,7 @@ set_target_properties(small_vector PROPERTIES FOLDER "Dependencies/gch")
 
 set(GLM_DIR "Vendor/glm")
 set(GLM_INCLUDE_DIR ${GLM_DIR})
-set(GLM_DEFINITIONS GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE  GLM_FORCE_LEFT_HANDED)
+set(GLM_DEFINITIONS GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_FORCE_LEFT_HANDED)
 add_subdirectory(${GLM_DIR})
 set_target_properties(glm PROPERTIES FOLDER "Dependencies/glm")
 
@@ -339,11 +339,19 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${RESOURCE_DIR}/Shaders"
             "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/Shaders"
+    COMMENT "Copy resources"
+)
+
+# Copy tool
+
+add_custom_command(
+    TARGET ${ENGINE} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/tool${PLATFORM_SUFFIX}"
             "${CMAKE_CURRENT_LIST_DIR}/tool${PLATFORM_SUFFIX}"
-    COMMENT "Copy resources and tools"
+    COMMENT "Copy tool executable to root directory"
 )
+
 
 # Copy DLLs 
 
@@ -357,7 +365,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     )
 endif()
 
-# Ensure post build commands run even when not expliclty stating ${EDITOR} as the build target.
 add_custom_target(run_post_build ALL DEPENDS ${EDITOR})
 set_target_properties(run_post_build PROPERTIES FOLDER "Abyss/Tools")
 
