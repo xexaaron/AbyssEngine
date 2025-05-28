@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
     for (int i = 2; i < argc; i++) { // Start from 1 to skip the program name
         std::string arg = argv[i];
         std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
-            return std::tolower(c);
+            return static_cast<char>(std::tolower(static_cast<int>(c)));
         });
         args[i - 1] = arg;
     }

@@ -21,6 +21,15 @@ namespace aby {
         }
         return exec_root;
     }
+
+    bool skip_file_or_dir(const std::filesystem::directory_entry& entry) {
+        auto path_str = entry.path().string();
+        return path_str.contains("test")       || 
+            path_str.contains("Test")          || 
+            entry.path().extension() == ".lib" ||
+            entry.path().extension() == ".pdb" ||
+            entry.path().filename().replace_extension("") == "aby_package";
+    }
 }
 
 int main(int argc, char** argv) {
@@ -46,21 +55,23 @@ int main(int argc, char** argv) {
 
     if (!std::filesystem::exists(output_dir)) {
         std::filesystem::create_directory(output_dir);
+    } else {
+        std::filesystem::remove_all(output_dir);
+        std::filesystem::create_directory(output_dir);
     }
 
     auto source_dir = aby::exec_dir(argv[0], build_mode);
     auto dir_iter = std::filesystem::recursive_directory_iterator(source_dir);
 
-    for (const auto& entry : dir_iter) {
-        // Skip test-related files/directories
-        auto path_str = entry.path().string();
-        if (path_str.contains("test") || path_str.contains("Test")) {
-            continue;
-        }
+#ifdef _WIN32
+    std::filesystem::create_directories(std::filesystem::path(output_dir) / "Lib");
+#endif
 
-        // Compute the relative path from the source dir
+    for (const auto& entry : dir_iter) {
+        if (aby::skip_file_or_dir(entry)) continue;
+
         auto relative_path = std::filesystem::relative(entry.path(), source_dir);
-        auto target_path = output_dir / relative_path;
+        auto target_path = std::filesystem::path(output_dir) / relative_path;
 
         try {
             if (entry.is_directory()) {

@@ -54,12 +54,18 @@ namespace aby {
         if (root_pp_fn != EXECUTABLE_FOLDER) {
             exec_root /= std::filesystem::path(EXECUTABLE_FOLDER_NAME) / EXECUTABLE_FOLDER;
         }
+        if (!std::filesystem::exists(exec_root)) {
+            exec_root = root.parent_path(); // Use same directory if not in packaged mode
+        }
         return exec_root;
     }
 
-    std::vector<std::string> get_tool_names(const std::filesystem::path& exec_root) {
+    std::vector<std::string> get_tool_names(std::filesystem::path& exec_root) {
         std::vector<std::string> tool_names;
-
+        if (!std::filesystem::exists(exec_root)) {
+            aby::util::pretty_print(std::format("Tool directory does not exist {}", exec_root.string()), "Tool", aby::util::Colors{.box = aby::util::EColor::RED});
+            return {};
+        }
         for (auto& entry : std::filesystem::directory_iterator(exec_root)) {
             if (!entry.is_directory()) {
                 auto path = entry.path();
