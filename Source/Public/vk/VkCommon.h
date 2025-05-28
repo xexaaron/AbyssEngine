@@ -8,14 +8,26 @@
 #define VK_CHECK(x) do {                                                          \
     VkResult result = (x);                                                        \
     if (result != VK_SUCCESS) {                                                   \
-        ::aby::Logger::Assert("!({})", #x);                                       \
-        ::aby::Logger::Assert("{}", ::aby::vk::helper::to_string(result)); \
+        aby::Logger::Assert("File:{}:{}\n{}",                                     \
+            std::string_view(__FILE__).substr(                                    \
+                std::string_view(__FILE__).find_last_of("/\\") + 1),              \
+            __LINE__,                                                             \
+            ABY_FUNC_SIG                                                          \
+        );                                                                        \
+        ::aby::Logger::Assert("{}", ::aby::vk::helper::to_string(result));        \
+        ::aby::Logger::flush();                                                   \
         ABY_DBG_BREAK();                                                          \
     }                                                                             \
 } while(0)
 
 #define VK_CHECK_HANDLE(x) do {                                                                     \
         if (x == VK_NULL_HANDLE) {                                                                  \
+            aby::Logger::Assert("File:{}:{}\n{}",                                                   \
+                std::string_view(__FILE__).substr(                                                  \
+                    std::string_view(__FILE__).find_last_of("/\\") + 1),                            \
+                __LINE__,                                                                           \
+                ABY_FUNC_SIG                                                                        \
+            );                                                                                      \
             ::aby::Logger::Assert("!(({}){} != VK_NULL_HANDLE)", typeid(decltype(x)).name(), #x);   \
             ::aby::Logger::Assert("Handle is null");                                                \
         }                                                                                           \

@@ -4,7 +4,7 @@
 #include "vk/VkRenderer.h"
 #include "Platform/Platform.h"
 
-// Static data
+
 namespace aby {
     
     fs::path App::m_ExePath = "";
@@ -175,14 +175,15 @@ namespace aby {
 
 }
 
-
+#if _MSC_VER && !defined(NDEBUG) 
 
 #define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#include <cstdlib>
+    #include <crtdbg.h>
+    #include <cstdlib>
 
-#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)  
-#define new DEBUG_NEW  // Override `new` to track allocations
+    #define DEBUG_NEW new (_NORMAL_BLOCK, __FILE__, __LINE__)
+    #define new DEBUG_NEW // Override `new` to track allocations
+#endif
 
 namespace aby {
     std::vector<std::string> setup(int argc, char** argv) {
@@ -195,6 +196,7 @@ namespace aby {
     }
    
 }
+
 int main(int argc, char* argv[]) {
 #if _MSC_VER && !defined(NDEBUG) 
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);

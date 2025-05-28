@@ -43,6 +43,9 @@ namespace aby::ui {
         for_each([&](Ref<Widget> widget) {
             layout_widgets(m_Transform.size, m_Transform.position, widget);
         });
+        util::MaxEmptyRectFinder<util::EGridType::VECTOR_2D> max_empty_rect;
+        m_ViewportRect = max_empty_rect.find(m_Transform.size, m_Children);
+        ABY_DBG("Viewport Rect: {}", m_ViewportRect);
     }
 
     void Canvas::layout_widgets(const glm::vec2& parent_size, const glm::vec2& parent_pos, Ref<Widget> widget) {
@@ -117,6 +120,10 @@ namespace aby::ui {
         m_Camera.set_viewport(event.size());
         layout_widgets();
         return false;
+    }
+
+    const glm::vec4& Canvas::viewport_rect() const {
+        return m_ViewportRect;
     }
 
 }

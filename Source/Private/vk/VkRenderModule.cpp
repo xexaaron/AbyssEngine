@@ -31,9 +31,9 @@ namespace aby::vk {
     const vk::PrimitiveDescriptor& RenderPrimitive::descriptor() const {
         return m_Descriptor;
     }
-
+xCount;
     std::size_t RenderPrimitive::index_count() const {
-        return m_IndexCount;
+        return m_Inde
     }
 
     std::size_t RenderPrimitive::vertex_count() const {
@@ -358,7 +358,7 @@ namespace aby::vk {
                     case util::ETextDecor::UNDERLINE: {
                             auto decor_it = glyphs.find('_');
                             if (decor_it == glyphs.end()) {
-                                IF_DBG(ABY_WARN("Font Glyph for character '{:#x}' not found", (int32_t)c));
+                                IF_DBG(ABY_WARN("Font Glyph for character '{:#x}' not found", (int32_t)c), ;);
                                 continue;
                             }
                             const auto& decor_glyph = decor_it->second;

@@ -10,6 +10,7 @@
 #include <chrono>
 #include <queue>
 #include <glm/glm.hpp>
+#include <source_location>
 #include "Core/Common.h"
 #include "Utility/Random.h"
 
@@ -87,7 +88,7 @@ namespace aby {
         }
         template <typename... Args>
         static void Assert(std::format_string<Args...> fmt, Args&&... args) {
-        #ifndef NDEBUG
+    #ifndef NDEBUG
             print("AST", ELogColor::Red, fmt, std::forward<Args>(args)...);
         #endif
         }

@@ -85,30 +85,32 @@ extern "C" __declspec(dllimport) void __stdcall DebugBreak();
 #endif
 
 #ifndef NDEBUG
-#define IF_DBG(x) x 
+#define IF_DBG(x, el) x 
 #else 
-#define IF_DBG(x)
+#define IF_DBG(x, el) el
 #endif
 
 #define abstract
 #define ABY_LOG(...) aby::Logger::log(__VA_ARGS__)
 #define ABY_ERR(...) aby::Logger::error(__VA_ARGS__)
 #define ABY_WARN(...) aby::Logger::warn(__VA_ARGS__)
-#define ABY_DBG(...) IF_DBG(aby::Logger::debug(__VA_ARGS__))
-#define ABY_ASSERT(condition, ...)                                                   \
-    IF_DBG(do {                                                                      \
-        if (!(condition)) {                                                          \
-            aby::Logger::Assert("File:{}:{}\n{}",                                    \
-                std::string_view(__FILE__).substr(                                   \
-                    std::string_view(__FILE__).find_last_of("/\\") + 1),             \
-                __LINE__,                                                            \
-                ABY_FUNC_SIG                                                         \
-            );                                                                       \
-            aby::Logger::Assert("({})\n{}", #condition, std::format(__VA_ARGS__));  \
-            aby::Logger::flush();                                                    \
-            ABY_DBG_BREAK();                                                         \
-        }                                                                            \
-    } while (0))
+#define ABY_DBG(...) IF_DBG(aby::Logger::debug(__VA_ARGS__), )
+#define ABY_ASSERT(condition, ...)                                                     \
+    IF_DBG(                                                                            \
+        do {                                                                           \
+            if (!(condition)) {                                                        \
+                aby::Logger::Assert("File:{}:{}\n{}",                                  \
+                    std::string_view(__FILE__).substr(                                 \
+                        std::string_view(__FILE__).find_last_of("/\\") + 1),           \
+                    __LINE__,                                                          \
+                    ABY_FUNC_SIG                                                       \
+                );                                                                     \
+                aby::Logger::Assert("({})\n" __VA_OPT__(": {}"), #condition __VA_OPT__(, std::format(__VA_ARGS__))); \
+                aby::Logger::flush();                                                  \
+                ABY_DBG_BREAK();                                                       \
+            }                                                                          \
+        } while (0),                                                                   \
+    condition;)
 
 #define EXPAND_VEC2(v) v.x, v.y
 #define EXPAND_VEC3(v) v.x, v.y, v.z
