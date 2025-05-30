@@ -10,3 +10,7 @@
 [submodule "Vendor/AbyssFreetype"]
 	path = Vendor/AbyssFreetype
 	url = https://github.com/xexaaron/AbyssFreetype
+[submodule "Vendor/ImGui/imgui"]
+	path = Vendor/ImGui/imgui
+	url = https://github.com/ocornut/imgui
+	branch = docking

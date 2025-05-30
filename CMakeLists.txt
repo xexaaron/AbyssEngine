@@ -144,131 +144,161 @@ else()
     set(PLATFORM_LIBS "")
 endif()
 
+# Setup ImGui
 
+    
+set(IMGUI_DIR "Vendor/ImGui/imgui")
+set(IMGUI_INCLUDE_DIR "Vendor/ImGui")
+set(IMGUI_HEADERS
+    ${IMGUI_DIR}/imconfig.h
+    ${IMGUI_DIR}/imgui_internal.h
+    ${IMGUI_DIR}/imgui.h
+    ${IMGUI_DIR}/imstb_rectpack.h
+    ${IMGUI_DIR}/imstb_textedit.h
+    ${IMGUI_DIR}/imstb_truetype.h
+)
 
+set(IMGUI_SOURCES
+    ${IMGUI_DIR}/imgui_draw.cpp
+    ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_DIR}/imgui_widgets.cpp
+    ${IMGUI_DIR}/imgui.cpp
+)
+
+set(IMGUI_BACKENDS
+    ${IMGUI_DIR}/backends/imgui_impl_glfw.h
+    ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_vulkan.h
+    ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
+)
+
+add_library(ImGui STATIC ${IMGUI_HEADERS} ${IMGUI_SOURCES} ${IMGUI_BACKENDS})
+target_include_directories(ImGui PUBLIC ${IMGUI_DIR} ${IMGUI_INCLUDE_DIR} ${VULKAN_INCLUDE_DIR} ${GLFW_INCLUDE_DIR})
+target_compile_definitions(ImGui PUBLIC IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING)
+set_target_properties(ImGui PROPERTIES FOLDER "Dependencies/ImGui")
 # List Sources
 
 set(CPP_SOURCES
-    Source/Private/Core/Log.cpp
     Source/Private/Core/App.cpp
-    Source/Private/Core/Window.cpp
     Source/Private/Core/Event.cpp
-    Source/Private/Core/Serialize.cpp
+    Source/Private/Core/Log.cpp
     Source/Private/Core/Object.cpp
     Source/Private/Core/Resource.cpp
-    Source/Private/Core/Time.cpp
+    Source/Private/Core/Serialize.cpp
     Source/Private/Core/Thread.cpp
-    Source/Private/Utility/Inserter.cpp
-    Source/Private/Utility/TagParser.cpp
-    Source/Private/Utility/Random.cpp
-    Source/Private/Utility/CursorString.cpp
-    Source/Private/Utility/MaxEmptyRectFinder.cpp
-    Source/Private/Rendering/Vertex.cpp
-    Source/Private/Rendering/Font.cpp
-    Source/Private/Rendering/Context.cpp
-    Source/Private/Rendering/Renderer.cpp
+    Source/Private/Core/Time.cpp
+    Source/Private/Core/Window.cpp
+    Source/Private/Platform/Platform.cpp
+    Source/Private/Platform/Platform.cpp
+    Source/Private/Platform/Process.cpp
+    Source/Private/Platform/posix/PlatformPosix.cpp
+    Source/Private/Platform/posix/ProcessPosix.cpp
+    Source/Private/Platform/win32/PlatformWin32.cpp
+    Source/Private/Platform/win32/ProcessWin32.cpp
     Source/Private/Rendering/Camera.cpp
+    Source/Private/Rendering/Context.cpp
+    Source/Private/Rendering/Font.cpp
+    Source/Private/Rendering/Renderer.cpp
     Source/Private/Rendering/Shader.cpp
     Source/Private/Rendering/Texture.cpp
-    Source/Private/Widget/Widget.cpp
-    Source/Private/Widget/UICommon.cpp
-    Source/Private/Widget/Textbox.cpp
-    Source/Private/Widget/Panel.cpp
-    Source/Private/Widget/LayoutContainer.cpp
-    Source/Private/Widget/Image.cpp
-    Source/Private/Widget/Canvas.cpp
+    Source/Private/Rendering/Vertex.cpp
+    Source/Private/Utility/CursorString.cpp
+    Source/Private/Utility/Inserter.cpp
+    Source/Private/Utility/MaxEmptyRectFinder.cpp
+    Source/Private/Utility/Random.cpp
+    Source/Private/Utility/TagParser.cpp
     Source/Private/Widget/Button.cpp
-    Source/Private/Widget/InputTextbox.cpp
+    Source/Private/Widget/Canvas.cpp
     Source/Private/Widget/Console.cpp
     Source/Private/Widget/Dropdown.cpp
+    Source/Private/Widget/Image.cpp
+    Source/Private/Widget/InputTextbox.cpp
+    Source/Private/Widget/LayoutContainer.cpp
+    Source/Private/Widget/Panel.cpp
+    Source/Private/Widget/Textbox.cpp
+    Source/Private/Widget/UICommon.cpp
+    Source/Private/Widget/Widget.cpp
     Source/Private/Widget/WidgetSwitcher.cpp
-    Source/Private/vk/VkRenderer.cpp
+    Source/Private/vk/VkAllocator.cpp
     Source/Private/vk/VkBuffer.cpp
-    Source/Private/vk/VkContext.cpp
-    Source/Private/vk/VkCommon.cpp
-    Source/Private/vk/VkCmdPool.cpp
     Source/Private/vk/VkCmdBuff.cpp
+    Source/Private/vk/VkCmdPool.cpp
+    Source/Private/vk/VkCommon.cpp
+    Source/Private/vk/VkContext.cpp
+    Source/Private/vk/VkDebugger.cpp
+    Source/Private/vk/VkDescriptorPool.cpp
     Source/Private/vk/VkDeviceManager.cpp
     Source/Private/vk/VkInstance.cpp
-    Source/Private/vk/VkDebugger.cpp
-    Source/Private/vk/VkSurface.cpp
-    Source/Private/vk/VkSwapchain.cpp
-    Source/Private/vk/VkAllocator.cpp
-    Source/Private/vk/VkShader.cpp
-    Source/Private/vk/VkDescriptorPool.cpp
     Source/Private/vk/VkPipeline.cpp
     Source/Private/vk/VkRenderModule.cpp
+    Source/Private/vk/VkRenderer.cpp
+    Source/Private/vk/VkShader.cpp
+    Source/Private/vk/VkSurface.cpp
+    Source/Private/vk/VkSwapchain.cpp
     Source/Private/vk/VkTexture.cpp
-    Source/Private/Platform/Platform.cpp
-    Source/Private/Platform/win32/PlatformWin32.cpp
-    Source/Private/Platform/posix/PlatformPosix.cpp
-    Source/Private/Platform/Platform.cpp
-    Source/Private/Platform/win32/ProcessWin32.cpp
-    Source/Private/Platform/posix/ProcessPosix.cpp
-    Source/Private/Platform/Process.cpp
     ${STB_IMPL}
 )
 
 set(HEADER_FILES
-    Source/Public/Core/Log.h
+    Source/Public/Core/App.h
     Source/Public/Core/Common.h
     Source/Public/Core/Event.h
-    Source/Public/Core/App.h
-    Source/Public/Core/Window.h
+    Source/Public/Core/Log.h
     Source/Public/Core/Object.h
-    Source/Public/Core/Serialize.h
     Source/Public/Core/Resource.h
-    Source/Public/Core/Time.h
+    Source/Public/Core/Serialize.h
     Source/Public/Core/Thread.h
-    Source/Public/Utility/Inserter.h
-    Source/Public/Utility/TagParser.h
-    Source/Public/Utility/Random.h
-    Source/Public/Utility/CursorString.h
-    Source/Public/Utility/Delegate.h
-    Source/Public/Utility/MaxEmptyRectFinder.h
-    Source/Public/Rendering/Font.h
-    Source/Public/Rendering/Context.h
-    Source/Public/Rendering/Renderer.h
+    Source/Public/Core/Time.h
+    Source/Public/Core/Window.h
+    Source/Public/Platform/Platform.h
+    Source/Public/Platform/Process.h
+    Source/Public/Platform/posix/PlatformPosix.h
+    Source/Public/Platform/posix/ProcessPosix.h
+    Source/Public/Platform/win32/PlatformWin32.h
+    Source/Public/Platform/win32/ProcessWin32.h
     Source/Public/Rendering/Camera.h
+    Source/Public/Rendering/Context.h
+    Source/Public/Rendering/Font.h
+    Source/Public/Rendering/Renderer.h
     Source/Public/Rendering/Shader.h
     Source/Public/Rendering/Texture.h
     Source/Public/Rendering/Vertex.h
-    Source/Public/Widget/UI.h
-    Source/Public/Widget/Widget.h
-    Source/Public/Widget/UICommon.h
-    Source/Public/Widget/Textbox.h
-    Source/Public/Widget/Panel.h
-    Source/Public/Widget/LayoutContainer.h
-    Source/Public/Widget/Image.h
-    Source/Public/Widget/Canvas.h
+    Source/Public/Utility/CursorString.h
+    Source/Public/Utility/Delegate.h
+    Source/Public/Utility/Inserter.h
+    Source/Public/Utility/MaxEmptyRectFinder.h
+    Source/Public/Utility/Random.h
+    Source/Public/Utility/TagParser.h
     Source/Public/Widget/Button.h
-    Source/Public/Widget/InputTextbox.h
+    Source/Public/Widget/Canvas.h
     Source/Public/Widget/Console.h
     Source/Public/Widget/Dropdown.h
+    Source/Public/Widget/Image.h
+    Source/Public/Widget/InputTextbox.h
+    Source/Public/Widget/LayoutContainer.h
+    Source/Public/Widget/Panel.h
+    Source/Public/Widget/Textbox.h
+    Source/Public/Widget/UI.h
+    Source/Public/Widget/UICommon.h
+    Source/Public/Widget/Widget.h
     Source/Public/Widget/WidgetSwitcher.h
-    Source/Public/vk/VkRenderer.h
+    Source/Public/vk/VkAllocator.h
     Source/Public/vk/VkBuffer.h
-    Source/Public/vk/VkContext.h
-    Source/Public/vk/VkCommon.h
-    Source/Public/vk/VkCmdPool.h
     Source/Public/vk/VkCmdBuff.h
+    Source/Public/vk/VkCmdPool.h
+    Source/Public/vk/VkCommon.h
+    Source/Public/vk/VkContext.h
+    Source/Public/vk/VkDebugger.h
+    Source/Public/vk/VkDescriptorPool.h
     Source/Public/vk/VkDeviceManager.h
     Source/Public/vk/VkInstance.h
-    Source/Public/vk/VkDebugger.h
-    Source/Public/vk/VkSurface.h
-    Source/Public/vk/VkSwapchain.h
-    Source/Public/vk/VkAllocator.h
-    Source/Public/vk/VkShader.h
-    Source/Public/vk/VkDescriptorPool.h
     Source/Public/vk/VkPipeline.h
     Source/Public/vk/VkRenderModule.h
+    Source/Public/vk/VkRenderer.h
+    Source/Public/vk/VkShader.h
+    Source/Public/vk/VkSurface.h
+    Source/Public/vk/VkSwapchain.h
     Source/Public/vk/VkTexture.h
-    Source/Public/Platform/win32/PlatformWin32.h
-    Source/Public/Platform/posix/PlatformPosix.h
-    Source/Public/Platform/Platform.h
-    Source/Public/Platform/win32/ProcessWin32.h
-    Source/Public/Platform/posix/ProcessPosix.h
-    Source/Public/Platform/Process.h
 )
 
 # Setup virtual folders (Functions.cmake)
@@ -313,6 +343,8 @@ target_include_directories(${ENGINE} PUBLIC
     ${GCH_SMALL_VEC_INCLUDE_DIR} 
     ${ABYSS_FREETYPE_INCLUDE_DIR}
     ${ABY_FT_PP_INCLUDE_DIR}
+    ${IMGUI_INCLUDE_DIR}
+    ${IMGUI_DIR}
 )
 target_include_directories(${EDITOR} PUBLIC Source/Public ${COMMON_INCLUDE_DIRS} ${ABY_FT_PP_INCLUDE_DIR})
 set_target_properties(${ENGINE} PROPERTIES FOLDER "Abyss")
@@ -328,6 +360,7 @@ target_link_libraries(${ENGINE} PRIVATE
     ${PLATFORM_LIBS}
     AbyssFTLib
     glfw
+    ImGui
 )
 
 target_link_libraries(${EDITOR} PRIVATE ${ENGINE})

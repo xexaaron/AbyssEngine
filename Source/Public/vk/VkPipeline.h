@@ -19,12 +19,14 @@ namespace aby::vk {
 		void bind(VkCommandBuffer buffer);
 
 		Ref<ShaderModule> shaders();
+		VkPipelineRenderingCreateInfo create_info();
 
 		operator VkPipeline();
 	private:
 		VkDevice m_Device;
 		Ref<ShaderModule> m_Shaders;
 		VkPipeline m_Pipeline;
+		VkPipelineRenderingCreateInfo m_CreateInfo;
 	};
 
 }

@@ -348,7 +348,7 @@ namespace aby::ui {
 	u32 Console::calc_max_items() const {
 		// Subtract the space taken by the input box and menu area
 		float avail_height = m_Transform.size.y - (m_Constraints.item_height * 2);
-		return std::max(0, static_cast<int>(avail_height / m_Constraints.item_height)) - 1;
+		return std::max(0, static_cast<int>(avail_height / m_Constraints.item_height));
 	}
 
 	void Console::for_each(std::function<void(Ref<Widget>)> fn) {

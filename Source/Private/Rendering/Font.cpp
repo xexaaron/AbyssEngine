@@ -3,6 +3,7 @@
 #include "Core/App.h"
 #include <stb_image/stb_image_write.h>
 #include <FT/abyft.h>
+#include <imgui/imgui.h>
 
 namespace aby {
 
@@ -27,7 +28,7 @@ namespace aby {
             .verbose = true,
         }))
     {
-        m_Texture = Texture::create(ctx, m_Data.png);
+        m_Texture            = Texture::create(ctx, m_Data.png);
     }
 
     Font::~Font() {

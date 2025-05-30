@@ -22,6 +22,9 @@ namespace aby::vk {
         void draw_triangle(const Triangle& triangle) override;
         void draw_quad(const Quad& quad) override;
         void draw_cube(const Quad& quad) override;
+
+        vk::RenderModule& rm2d();
+        vk::RenderModule& rm3d();
     protected: 
         void render(u32 img);
         void start_batch(RenderModule& module);

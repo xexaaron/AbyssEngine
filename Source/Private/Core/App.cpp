@@ -55,6 +55,7 @@ namespace aby {
         }
 
         m_Window->initialize();
+        m_Ctx->imgui_init();
 
         auto last_time = std::chrono::high_resolution_clock::now();
         float delta_time = 0.0f;
@@ -62,13 +63,22 @@ namespace aby {
             auto current_time = std::chrono::high_resolution_clock::now();
             delta_time = std::chrono::duration<float>(current_time - last_time).count();
             last_time = current_time;
-            if (!m_Window->is_minimized()) {
-                for (auto& obj : m_Objects) {
-                    obj->on_tick(this, Time(delta_time));
-                }
-                m_Window->swap_buffers();
-                m_Window->poll_events();
+            
+            if (m_Window->is_minimized()) continue;
+            
+            m_Window->poll_events();
+
+            m_Ctx->imgui_new_frame();
+
+            for (auto& obj : m_Objects) {
+                obj->on_tick(this, Time(delta_time));
             }
+            m_Window->swap_buffers();
+
+
+            m_Ctx->imgui_end_frame();
+
+
             Logger::flush();
         }
 
@@ -174,6 +184,8 @@ namespace aby {
     }
 
 }
+
+
 
 #if _MSC_VER && !defined(NDEBUG) 
 

@@ -17,6 +17,9 @@ namespace aby {
         virtual ~Context() = default;
 
         virtual void destroy() = 0; 
+        virtual void imgui_init() = 0;
+        virtual void imgui_new_frame() = 0;
+        virtual void imgui_end_frame() = 0;
 
         Window*     window();
         App*        app();

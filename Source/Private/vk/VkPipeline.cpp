@@ -126,7 +126,7 @@ namespace aby::vk {
 
 		auto format = swapchain.format();
 
-		VkPipelineRenderingCreateInfo pipeline_rendering_info{
+		m_CreateInfo = VkPipelineRenderingCreateInfo{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
 			.colorAttachmentCount = 1,
 			.pColorAttachmentFormats = &format,
@@ -137,7 +137,7 @@ namespace aby::vk {
 		// Pipeline creation
 		VkGraphicsPipelineCreateInfo pipeline_ci{
 			.sType				 = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-			.pNext				 = &pipeline_rendering_info,
+			.pNext				 = &m_CreateInfo,
 			.stageCount			 = static_cast<u32>(stages.size()),
 			.pStages			 = stages.data(),
 			.pVertexInputState	 = &vertex_input,
@@ -181,6 +181,9 @@ namespace aby::vk {
 		);
 	}
 
+	VkPipelineRenderingCreateInfo Pipeline::create_info() {
+		return m_CreateInfo;
+	} 
 
 	Ref<ShaderModule> Pipeline::shaders() {
 		return m_Shaders;

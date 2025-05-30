@@ -6,6 +6,7 @@
 #include "Core/Window.h"
 #include "Rendering/Context.h"
 
+
 namespace aby::vk {
 
     class Context : public aby::Context {
@@ -14,6 +15,9 @@ namespace aby::vk {
 
         static Ref<Context> create(App* app, Window* window);
         void destroy() override;
+        void imgui_init() override;
+        void imgui_new_frame() override;
+        void imgui_end_frame() override;
 
         Instance&      inst();
         Debugger&      debugger();

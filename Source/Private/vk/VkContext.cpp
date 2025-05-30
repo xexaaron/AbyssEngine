@@ -1,7 +1,8 @@
 #include "vk/VkContext.h"
 #include "Core/App.h"
+#include "Core/Log.h"
+#include "vk/VkRenderer.h"
 #include <vector>
-
 #ifdef _WIN32
     #include <Windows.h>
     #include "vulkan/vulkan_win32.h"
@@ -18,6 +19,16 @@
     #error "Unsupported Platform"
 #endif
 
+#include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_vulkan.h>
+#include <vk/VkAllocator.h>
+
+namespace aby::vk {
+    void check_vk_result(VkResult err) {
+        VK_CHECK(err);
+    }
+}
 
 namespace aby::vk {
 
@@ -56,9 +67,59 @@ namespace aby::vk {
         m_Debugger.destroy();
         m_Surface.destroy();
         m_Instance.destroy();
+        ImGui::DestroyContext();
     }
 
-   
+    void Context::imgui_init() {
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+        ImGui::StyleColorsDark();
+        ImGuiStyle& style = ImGui::GetStyle();
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            style.WindowRounding = 0.0f;
+            style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+        }
+        ImGui_ImplGlfw_InitForVulkan(m_Window->glfw(), true);
+        ImGui_ImplVulkan_InitInfo init_info = {};
+        init_info.ApiVersion         = VK_API_VERSION_1_3;
+        init_info.Allocator          = vk::Allocator::get();
+        init_info.Instance           = m_Instance;
+        init_info.Device             = m_Devices.logical();
+        init_info.PhysicalDevice     = m_Devices.physical();
+        init_info.QueueFamily        = m_Devices.graphics().FamilyIdx;
+        init_info.Queue              = m_Devices.graphics().Queue;
+        init_info.DescriptorPool     = nullptr;
+        init_info.DescriptorPoolSize = 1000;
+        init_info.PipelineCache      = {};
+        init_info.RenderPass         = nullptr;
+        init_info.Subpass            = 0;
+        init_info.MinImageCount      = 2; // ?
+        init_info.ImageCount         = vk::MAX_FRAMES_IN_FLIGHT; // ?
+        init_info.MSAASamples        = VK_SAMPLE_COUNT_1_BIT;
+        init_info.CheckVkResultFn    = &check_vk_result;
+        init_info.UseDynamicRendering = true;
+        init_info.PipelineRenderingCreateInfo = static_cast<vk::Renderer&>(m_App->renderer()).rm2d().pipeline().create_info();
+        ImGui_ImplVulkan_Init(&init_info);
+    }
+
+    void Context::imgui_new_frame() {
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+    }
+
+    void Context::imgui_end_frame() {
+        ImGui::EndFrame();
+        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+        }
+    }
 
     Instance& Context::inst() {
         return m_Instance;

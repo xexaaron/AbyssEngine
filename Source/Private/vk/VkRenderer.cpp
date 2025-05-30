@@ -361,5 +361,12 @@ namespace aby::vk {
         m_Swapchain.create(surface, devices, window, m_Frames);
     }
 
+    vk::RenderModule& Renderer::rm2d() {
+        return m_2D;
+    }
+    vk::RenderModule& Renderer::rm3d() {
+        return m_3D;
+    }
+
 }
 
