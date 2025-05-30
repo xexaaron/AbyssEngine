@@ -162,6 +162,7 @@ set(CPP_SOURCES
     Source/Private/Utility/TagParser.cpp
     Source/Private/Utility/Random.cpp
     Source/Private/Utility/CursorString.cpp
+    Source/Private/Utility/MaxEmptyRectFinder.cpp
     Source/Private/Rendering/Vertex.cpp
     Source/Private/Rendering/Font.cpp
     Source/Private/Rendering/Context.cpp
@@ -224,6 +225,7 @@ set(HEADER_FILES
     Source/Public/Utility/Random.h
     Source/Public/Utility/CursorString.h
     Source/Public/Utility/Delegate.h
+    Source/Public/Utility/MaxEmptyRectFinder.h
     Source/Public/Rendering/Font.h
     Source/Public/Rendering/Context.h
     Source/Public/Rendering/Renderer.h
@@ -276,7 +278,7 @@ make_source_groups(
     Platform/posix
     Platform/win32
     Rendering
-    Rendering/UI
+    Widget
     Utility
     vk
 )

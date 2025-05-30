@@ -6,6 +6,10 @@
 #include <cmath> // for std::floor, std::ceil
 #include <glm/glm.hpp>
 
+#if defined(_MSC_VER) && !defined(NDEBUG)
+    #pragma optimize("", on)
+#endif
+
 namespace aby::util {
 
     enum class EGridType {
@@ -64,15 +68,15 @@ namespace aby::util {
     private:
         void allocate_grid(const glm::vec2& size) {
             if constexpr (GridType == EGridType::FLAT_VECTOR) {
-                m_Grid.assign(size.x * size.y, 0);
+                m_Grid.assign(static_cast<int>(size.x * size.y), 0);
             } else if constexpr (GridType == EGridType::VECTOR_2D) {
                 m_Grid.assign(static_cast<int>(size.y), std::vector<int>(static_cast<int>(size.x), 0));
             } else if constexpr (GridType == EGridType::RAW_FLAT_ARRAY) {
-                m_Grid = new int[size.x * size.y]();
+                m_Grid = new int[static_cast<std::size_t>(size.x * size.y)]();
             } else if constexpr (GridType == EGridType::RAW_2D_ARRAY) {
-                m_Grid = new int*[size.y];
+                m_Grid = new int*[static_cast<std::size_t>(size.y)];
                 for (int i = 0; i < size.y; ++i)
-                    m_Grid[i] = new int[size.x]();
+                    m_Grid[i] = new int[static_cast<std::size_t>(size.x)]();
             }
         }
 
@@ -94,10 +98,15 @@ namespace aby::util {
             } else if constexpr (GridType == EGridType::VECTOR_2D) {
                 for (auto& row : m_Grid) std::fill(row.begin(), row.end(), 0);
             } else if constexpr (GridType == EGridType::RAW_FLAT_ARRAY) {
-                std::fill(m_Grid, m_Grid + size.x * size.y, 0);
+                for (int i = 0; i < size.x * size.y; i++) {
+                    m_Grid[i] = 0;
+                }
             } else if constexpr (GridType == EGridType::RAW_2D_ARRAY) {
-                for (int y = 0; y < size.y; ++y)
-                    std::fill(m_Grid[y], m_Grid[y] + size.x, 0);
+                for (int y = 0; y < size.y; ++y) {
+                    for (int x = 0; x < size.x; ++x) {
+                        m_Grid[y][x] = 0;
+                    }
+                }
             }
 
             for (const auto& widget : widgets) {
@@ -110,11 +119,11 @@ namespace aby::util {
                 for (int y = y0; y < y1; ++y)
                     for (int x = x0; x < x1; ++x) {
                         if constexpr (GridType == EGridType::FLAT_VECTOR)
-                            m_Grid[y * size.x + x] = 1;
+                            m_Grid[y * static_cast<int>(size.x) + x] = 1;
                         else if constexpr (GridType == EGridType::VECTOR_2D)
                             m_Grid[y][x] = 1;
                         else if constexpr (GridType == EGridType::RAW_FLAT_ARRAY)
-                            m_Grid[y * size.x + x] = 1;
+                            m_Grid[(y * static_cast<int>(size.x) + x)] = 1;
                         else if constexpr (GridType == EGridType::RAW_2D_ARRAY)
                             m_Grid[y][x] = 1;
                     }
@@ -131,7 +140,7 @@ namespace aby::util {
             } else if constexpr (GridType == EGridType::RAW_2D_ARRAY) {
                 return m_Grid[y][x];
             } else {
-                static_assert("WHAT THE FUCK!?!?!?!");
+                static_assert(false);
             }
         }
     private:
@@ -142,5 +151,13 @@ namespace aby::util {
         GridType_t m_Grid;
     };
 
+    extern template class MaxEmptyRectFinder<EGridType::FLAT_VECTOR>;
+    extern template class MaxEmptyRectFinder<EGridType::VECTOR_2D>;
+    extern template class MaxEmptyRectFinder<EGridType::RAW_FLAT_ARRAY>;
+    extern template class MaxEmptyRectFinder<EGridType::RAW_2D_ARRAY>;
 
 }
+
+#if defined(_MSC_VER) && !defined(NDEBUG)
+#   pragma optimize( "", off)
+#endif

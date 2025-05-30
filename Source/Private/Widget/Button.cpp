@@ -78,6 +78,7 @@ namespace aby::ui {
         bool hit = event.hit(m_Transform.position, m_Transform.size);
         if (!hit) {
             if (m_State == EButtonState::HOVERED) {
+                ABY_ASSERT(m_Window, "Button::on_create was never called for {}", m_Name);
                 m_Window->set_cursor(ECursor::ARROW);
                 on_unhovered();
             }
@@ -93,6 +94,7 @@ namespace aby::ui {
                 if (m_State == EButtonState::DEFAULT) {
                     m_State = EButtonState::HOVERED;
                 }
+                ABY_ASSERT(m_Window, "Button::on_create was never called for {}", m_Name);
                 m_Window->set_cursor(ECursor::HAND);
             }
             on_hovered();

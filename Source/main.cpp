@@ -18,15 +18,23 @@ namespace editor {
             if (!aby::Font::create(&m_App.ctx(), m_App.bin() / "Fonts/IBM_Plex_Mono/IBMPlexMono-Bold.ttf", 12)) {
                 throw std::runtime_error("Could not create Font!");
             }
-
-            auto menubar = Editor::create_menubar(m_App, m_Canvas);
-            auto switcher = aby::ui::WidgetSwitcher::create(aby::ui::Transform{}, aby::ui::ImageStyle::dark_mode());
-
-            m_Canvas->add_child(menubar);
-            m_Canvas->add_child(switcher);
             auto console = Editor::create_console();
-            console->set_anchor(aby::ui::Anchor{ aby::ui::EAnchor::BOTTOM_LEFT, {} });
+            // auto switcher = aby::ui::WidgetSwitcher::create(&m_App, {}, aby::ui::ImageStyle::dark_mode());
+            // switcher->set_transform({
+            //     .anchor = {
+            //         .position = aby::ui::EAnchor::BOTTOM_LEFT,
+            //         .offset = {},
+            //     },
+            //     .position = {},
+            //     .size = {
+            //         m_App.window()->size().x,
+            //         (m_App.window()->size().y / 2.5f) - console->item_height() - switcher->tab_size().y
+            //     },
+            // });
+            // switcher->add_child(console);
+            // switcher->set_active(0);
             m_Canvas->add_child(console);
+            m_Canvas->add_child(Editor::create_menubar(m_App, m_Canvas));
             m_App.add_object(m_Canvas);
         }
 
@@ -52,7 +60,7 @@ namespace editor {
                 },
                 aby::WindowInfo{
                     .size = glm::u32vec2{ 800, 600 },
-                    .flags = aby::EWindowFlags::MAXIMIZED |
+                    .flags = //aby::EWindowFlags::MAXIMIZED |
                              aby::EWindowFlags::VSYNC
                 }
             );

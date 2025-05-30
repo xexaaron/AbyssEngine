@@ -58,6 +58,6 @@ namespace aby::util {
 }
 
 namespace std {
-    std::string to_string(aby::util::ETagComparison compare);
-    std::string to_string(aby::util::ETextDecor type);
+    string to_string(aby::util::ETagComparison compare);
+    string to_string(aby::util::ETextDecor type);
 }

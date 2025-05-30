@@ -90,6 +90,11 @@ namespace aby::ui {
         m_Name = name;
     }
 
+    void Widget::set_scale_with_window(bool scales) {
+        bScalesWithWindow = scales;
+    }
+
+
     bool Widget::is_visible() const {
         return bVisible;
     }

@@ -2,6 +2,9 @@
 
 namespace aby::util {
 
+	/**
+	 * @brief Cursor string for easy tracking of cursor position and highlights within a buffer.
+	*/
 	class CursorString {
 	public:
 		CursorString(std::string& str, size_t init_cursor_pos = 0);
@@ -20,8 +23,12 @@ namespace aby::util {
 
 		bool is_cursor_at_end() const;
 		bool is_highlighted() const;
-		std::string format() const;
 		std::size_t position() const;
+		/**
+		 * @brief Format the string using tags that can be parsed using utilities in TagParser.h
+		 * @return std::string (Example: "<ul>H<hl></ul>ello</hl> world!")
+		*/
+		std::string format() const;
 	private:
 		std::string* m_Buffer;
 		std::size_t  m_Cursor;

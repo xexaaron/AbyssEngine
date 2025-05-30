@@ -10,7 +10,8 @@ namespace aby::ui {
         Panel(Transform{
                 .position = { 0, 0 },
                 .size = { 800, 600 }
-            }, ImageStyle{ .border={ .color = {0.f, 0.f, 0.f, 0.f },.width = 0.f}, .color = {0.f,0.f,0.f,0.f}, .texture = style.texture }, EResize::NONE)
+        }, ImageStyle{ .border={ .color = {0.f, 0.f, 0.f, 0.f },.width = 0.f}, .color = {0.f,0.f,0.f,0.f}, .texture = style.texture }, EResize::NONE),
+        m_ViewportRect{0, 0, 800, 600}
     {
         m_Name = "Canvas";
     }

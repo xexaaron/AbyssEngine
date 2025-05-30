@@ -41,6 +41,8 @@ namespace aby::ui {
 		void exec_sys_cmd(const std::string& cmd);
 
 		void for_each(std::function<void(Ref<Widget>)> fn) override;
+
+		float item_height() const;
 	protected:
 		bool on_key_pressed(KeyPressedEvent& event);
 		bool on_window_resize(WindowResizeEvent& event) override;

@@ -35,6 +35,7 @@ namespace aby::ui {
         void set_zindex(i32 zindex);
         void set_visible(bool visible);
         void set_name(const std::string& name);
+        void set_scale_with_window(bool scales);
 
         Children&        children();
         const Children&  children() const;

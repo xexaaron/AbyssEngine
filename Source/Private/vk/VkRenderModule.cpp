@@ -31,9 +31,8 @@ namespace aby::vk {
     const vk::PrimitiveDescriptor& RenderPrimitive::descriptor() const {
         return m_Descriptor;
     }
-xCount;
     std::size_t RenderPrimitive::index_count() const {
-        return m_Inde
+        return m_IndexCount;
     }
 
     std::size_t RenderPrimitive::vertex_count() const {

@@ -75,16 +75,16 @@ namespace aby::util {
 
 std::string std::to_string(aby::util::ETagComparison compare) {
     switch (compare) {
-    case aby::util::ETagComparison::OPEN:  return "OPEN";
-    case aby::util::ETagComparison::CLOSE: return "CLOSE";
-    default: return "NONE";
+        case aby::util::ETagComparison::OPEN:  return "OPEN";
+        case aby::util::ETagComparison::CLOSE: return "CLOSE";
+        default: return "NONE";
     }
 }
 
 std::string std::to_string(aby::util::ETextDecor type) {
     switch (type) {
-    case aby::util::ETextDecor::UNDERLINE: return "UNDERLINE";
-    case aby::util::ETextDecor::HIGHLIGHT: return "HIGHLIGHT";
-    default: return "NONE";
+        case aby::util::ETextDecor::UNDERLINE: return "UNDERLINE";
+        case aby::util::ETextDecor::HIGHLIGHT: return "HIGHLIGHT";
+        default: return "NONE";
     }
 }
