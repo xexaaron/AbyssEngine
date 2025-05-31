@@ -61,15 +61,15 @@ namespace aby::vk {
     }
 
     void Context::destroy() {
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
         m_Shaders.clear();
         m_Textures.clear();
         m_Devices.destroy();
         m_Debugger.destroy();
         m_Surface.destroy();
         m_Instance.destroy();
-        ImGui_ImplVulkan_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
-        ImGui::DestroyContext();
     }
 
     void Context::imgui_init() {

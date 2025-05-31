@@ -207,15 +207,88 @@ namespace aby {
         return args;
     }
    
+
 }
 
-int main(int argc, char* argv[]) {
-#if _MSC_VER && !defined(NDEBUG) 
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-    _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+
+
+#ifdef _WIN32
+    #include <Windows.h>
+
+    std::string wide_to_ansi(const std::wstring& wstr) {
+        if (wstr.empty()) return {};
+        int size_needed = WideCharToMultiByte(CP_ACP, 0, wstr.data(), (int)wstr.size(), nullptr, 0, nullptr, nullptr);
+        std::string strTo(size_needed, 0);
+        WideCharToMultiByte(CP_ACP, 0, wstr.data(), (int)wstr.size(), &strTo[0], size_needed, nullptr, nullptr);
+        return strTo;
+    }
+
+    void get_args(int& argc, char**& argv) {
+        // Get the full command line as wide string
+        LPWSTR* argvW = CommandLineToArgvW(GetCommandLineW(), &argc);
+        if (!argvW) {
+            argc = 0;
+            argv = nullptr;
+            return;
+        }
+
+        // Allocate argv array of char*
+        argv = new char* [argc];
+
+        for (int i = 0; i < argc; ++i) {
+            std::string arg = wide_to_ansi(argvW[i]);
+            // allocate and copy argument string
+            argv[i] = new char[arg.size() + 1];
+            memcpy(argv[i], arg.c_str(), arg.size() + 1);
+        }
+
+        LocalFree(argvW);
+    }
+
+    void free_args(int argc, char** argv) {
+        if (!argv) return;
+        for (int i = 0; i < argc; ++i) {
+            delete[] argv[i];
+        }
+        delete[] argv;
+    }
+
+    int WINAPI WinMain(_In_ HINSTANCE hinstance, _In_opt_ HINSTANCE hprevinstance, _In_ LPSTR lpcmdline, _In_ int nshowcmd) {
+        if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+            ABY_ASSERT(freopen("CONOUT$", "w", stdout) != nullptr);
+            ABY_ASSERT(freopen("CONOUT$", "w", stderr) != nullptr);
+        }
+        else {
+            AllocConsole();
+            ABY_ASSERT(freopen("CONOUT$", "w", stdout) != nullptr);
+            ABY_ASSERT(freopen("CONOUT$", "w", stderr) != nullptr);
+        }
+        std::cout.clear();
+        std::cerr.clear();
+        std::cout << "\n" << std::endl;
+    #if _MSC_VER && !defined(NDEBUG) 
+        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+        _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+    #endif
+
+        int argc = 0;
+        char** argv = nullptr;
+        get_args(argc, argv);
+
+        auto args = aby::setup(argc, argv);
+        aby::App& app = aby::main(args);
+        app.run();
+
+        free_args(argc, argv);
+
+        return 0;
+    }
+#else
+    int main(int argc, char* argv[]) {
+        auto args = aby::setup(argc, argv);
+        aby::App& app = aby::main(args);
+        app.run();
+        return 0;
+    }
 #endif
-    auto args = aby::setup(argc, argv);
-    aby::App& app = aby::main(args);
-    app.run();
-    return 0;
-}
+

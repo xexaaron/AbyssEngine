@@ -40,7 +40,7 @@ namespace aby {
     class Window {
     public:
         explicit Window(const WindowInfo& info);
-        ~Window();
+        virtual ~Window();
 
         static Unique<Window> create(const WindowInfo& info);
 
@@ -65,7 +65,7 @@ namespace aby {
         * @return Windows -> ::HWND
         * @return Linux   -> ::Window
         */
-        void*         native() const;
+        virtual void* native() const = 0;
         GLFWwindow*   glfw() const;
         double        scale() const;
         u32 width() const;
@@ -92,7 +92,7 @@ namespace aby {
         }
     private:
         void setup_callbacks();
-    private:
+    protected:
         std::vector<std::function<void(Event&)>> m_Callbacks;
         WindowData  m_Data;
         GLFWwindow* m_Window;

@@ -1,7 +1,12 @@
+#pragma once
+
 #include "Core/Common.h"
 #include <numeric>
 #include <limits>
 #include <random>
+
+#undef min
+#undef max
 
 namespace aby::util {
 

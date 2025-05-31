@@ -34,11 +34,24 @@ if (MSVC)
     # wd4201                Disable nonstandard ext: nameless struct/union.
     # wd4505                Disable unreferenced function with internal linkage has been removed.
     # Zc:preprocessor       standard conformant preprocssor (allow __VA_OPT__).
-    set(COMPILE_OPTS /W4 /wd4100 /wd4201 /wd4505 /Zc:preprocessor)
-else()
-    set(COMPILE_OPTS -Wall -Wextra -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-unused-function
-                     -Wno-gnu-anonymous-struct -Wno-nested-anon-types
+    set(COMPILE_OPTS 
+        /W4 
+        /wd4100 
+        /wd4201 
+        /wd4505 
+        /Zc:preprocessor
     )
+    set(LINK_OPTS /SUBSYSTEM:WINDOWS)
+else()
+    set(COMPILE_OPTS 
+        -Wall -Wextra 
+        -Wno-unused-parameter 
+        -Wno-ignored-qualifiers 
+        -Wno-unused-function
+        -Wno-gnu-anonymous-struct 
+        -Wno-nested-anon-types
+    )
+    set(LINK_OPTS)
 endif()
 # Setup GLFW
 
@@ -135,7 +148,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     get_filename_component(SPIRV_CROSS_LIB_PATH "${VULKAN_LIBRARY_DIR}/spirv-cross-core${DEBUG_SUFFIX}.lib" ABSOLUTE)
     get_filename_component(SPIRV_CROSS_GLSL_LIB_PATH "${VULKAN_LIBRARY_DIR}/spirv-cross-glsl${DEBUG_SUFFIX}.lib" ABSOLUTE)
     get_filename_component(SHADER_C_LIB_PATH "${VULKAN_LIBRARY_DIR}/shaderc_shared${DEBUG_SUFFIX}.lib" ABSOLUTE)
-    set(PLATFORM_LIBS "dwmapi.lib")
+    set(PLATFORM_LIBS "dwmapi.lib" "ole32.lib" "shell32.lib")
 else()
     get_filename_component(VULKAN_LIB_PATH "${VULKAN_LIBRARY_DIR}/libvulkan.so" ABSOLUTE)
     get_filename_component(SPIRV_CROSS_LIB_PATH "${VULKAN_LIBRARY_DIR}/libspirv-cross-core.a" ABSOLUTE)
@@ -174,7 +187,6 @@ set(IMGUI_BACKENDS
 
 add_library(ImGui STATIC ${IMGUI_HEADERS} ${IMGUI_SOURCES} ${IMGUI_BACKENDS})
 target_include_directories(ImGui PUBLIC ${IMGUI_DIR} ${IMGUI_INCLUDE_DIR} ${VULKAN_INCLUDE_DIR} ${GLFW_INCLUDE_DIR})
-target_compile_definitions(ImGui PUBLIC IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING)
 set_target_properties(ImGui PROPERTIES FOLDER "Dependencies/ImGui")
 # List Sources
 
@@ -193,8 +205,10 @@ set(CPP_SOURCES
     Source/Private/Platform/Process.cpp
     Source/Private/Platform/posix/PlatformPosix.cpp
     Source/Private/Platform/posix/ProcessPosix.cpp
+    Source/Private/Platform/posix/WindowPosix.cpp
     Source/Private/Platform/win32/PlatformWin32.cpp
     Source/Private/Platform/win32/ProcessWin32.cpp
+    Source/Private/Platform/win32/WindowWin32.cpp
     Source/Private/Rendering/Camera.cpp
     Source/Private/Rendering/Context.cpp
     Source/Private/Rendering/Font.cpp
@@ -254,8 +268,10 @@ set(HEADER_FILES
     Source/Public/Platform/Process.h
     Source/Public/Platform/posix/PlatformPosix.h
     Source/Public/Platform/posix/ProcessPosix.h
+    Source/Public/Platform/posix/WindowPosix.h
     Source/Public/Platform/win32/PlatformWin32.h
     Source/Public/Platform/win32/ProcessWin32.h
+    Source/Public/Platform/win32/WindowWin32.h
     Source/Public/Rendering/Camera.h
     Source/Public/Rendering/Context.h
     Source/Public/Rendering/Font.h
@@ -332,6 +348,7 @@ add_dependencies(tool AbyssFTLib)
 
 add_library(${ENGINE} ${CPP_SOURCES} ${HEADER_FILES} ${RESOURCES})
 add_executable(${EDITOR} Source/main.cpp ${RESOURCES})
+target_link_options(${EDITOR} PRIVATE ${LINK_OPTS})
 target_compile_options(${ENGINE} PRIVATE ${COMPILE_OPTS})
 target_compile_options(${EDITOR} PRIVATE ${COMPILE_OPTS})
 target_compile_definitions(${ENGINE} PRIVATE ${GLM_DEFINITIONS} ABY_BUFFERED_LOGGING _CRT_SECURE_NO_WARNINGS)

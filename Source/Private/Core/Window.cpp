@@ -3,15 +3,9 @@
 #include <glfw/glfw3.h>
 
 #ifdef _WIN32
-    #define GLFW_EXPOSE_NATIVE_WIN32
-    #include <glfw/glfw3native.h>
-    #include <dwmapi.h>
-    #ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
-        #define DWMWA_USE_IMMERSIVE_DARK_MODE 20  // Value from modern Windows SDKs
-    #endif
+   #include "Platform/win32/WindowWin32.h"
 #elif defined(__linux__)
-    #define GLFW_EXPOSE_NATIVE_X11
-    #include <glfw/glfw3native.h>
+    #include "Platform/win32/WindowWin32.h"
 #elif defined(__APPLE__)
     #error "Unsupported Platform"
 #endif
@@ -53,15 +47,14 @@ namespace aby {
 
         glfwMakeContextCurrent(m_Window);
         glfwSetWindowUserPointer(m_Window, &m_Data);
-
-    #ifdef _WIN32
-        BOOL use_dark_mode = TRUE;
-        DwmSetWindowAttribute(static_cast<HWND>(native()), DWMWA_USE_IMMERSIVE_DARK_MODE, &use_dark_mode, sizeof(use_dark_mode));
-    #endif
     }
 
     Unique<Window> Window::create(const WindowInfo& info) {
-        return create_unique<Window>(info);
+    #ifdef _WIN32
+        return create_unique<win32::Window>(info);
+    #elif defined(__linux__)
+        return create_unique<posix::Window>(info);
+    #endif
     }
 
     Window::~Window() {
@@ -112,13 +105,7 @@ namespace aby {
     GLFWwindow* Window::glfw() const {
         return m_Window;
     }
-    void* Window::native() const {
-    #ifdef _WIN32
-            return static_cast<void*>(glfwGetWin32Window(m_Window));
-    #elif defined(__linux__)
-            return reinterpret_cast<void*>(glfwGetX11Window(m_Window));
-    #endif
-    }
+   
     u32 Window::width() const {
         return m_Data.width;
     }
@@ -195,7 +182,6 @@ namespace aby {
         return (m_Data.flags & EWindowFlags::MAXIMIZED) != EWindowFlags::NONE;
     }
 
-
     bool Window::is_key_pressed(Button::EKey button) const {
         auto state = glfwGetKey(m_Window, button);
         return state == GLFW_PRESS || state == GLFW_REPEAT;
@@ -205,6 +191,7 @@ namespace aby {
         auto state = glfwGetMouseButton(m_Window, button);
         return state == GLFW_PRESS;
     }
+    
     glm::fvec2 Window::desktop_resolution() const {
         const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
         return { static_cast<float>(mode->width), static_cast<float>(mode->height) };
@@ -405,7 +392,6 @@ namespace aby {
             m_Data.cursor = cursor;
         }
     }
-
 
 }
 
