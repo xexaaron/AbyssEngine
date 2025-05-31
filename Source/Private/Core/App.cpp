@@ -4,7 +4,6 @@
 #include "vk/VkRenderer.h"
 #include "Platform/Platform.h"
 
-
 namespace aby {
     
     fs::path App::m_ExePath = "";
@@ -59,11 +58,11 @@ namespace aby {
 
         auto last_time = std::chrono::high_resolution_clock::now();
         float delta_time = 0.0f;
-        while (!m_Window->is_open()) {
+        while (m_Window->is_open()) {
             auto current_time = std::chrono::high_resolution_clock::now();
             delta_time = std::chrono::duration<float>(current_time - last_time).count();
             last_time = current_time;
-            
+
             if (m_Window->is_minimized()) continue;
             
             m_Window->poll_events();
@@ -73,11 +72,10 @@ namespace aby {
             for (auto& obj : m_Objects) {
                 obj->on_tick(this, Time(delta_time));
             }
+
             m_Window->swap_buffers();
 
-
             m_Ctx->imgui_end_frame();
-
 
             Logger::flush();
         }
@@ -254,7 +252,8 @@ namespace aby {
     }
 
     int WINAPI WinMain(_In_ HINSTANCE hinstance, _In_opt_ HINSTANCE hprevinstance, _In_ LPSTR lpcmdline, _In_ int nshowcmd) {
-        if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        bool console_attached = AttachConsole(ATTACH_PARENT_PROCESS);
+        if (console_attached) {
             ABY_ASSERT(freopen("CONOUT$", "w", stdout) != nullptr);
             ABY_ASSERT(freopen("CONOUT$", "w", stderr) != nullptr);
         }
@@ -280,7 +279,13 @@ namespace aby {
         app.run();
 
         free_args(argc, argv);
-
+        std::cout.flush();
+        std::cerr.flush();
+        fclose(stdout);
+        fclose(stderr);
+        if (!console_attached) {
+            FreeConsole();
+        }
         return 0;
     }
 #else

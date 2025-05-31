@@ -8,7 +8,7 @@
 #define VK_CHECK(x) do {                                                          \
     VkResult result = (x);                                                        \
     if (result != VK_SUCCESS) {                                                   \
-        aby::Logger::Assert("File:{}:{}\n{}",                                     \
+        aby::Logger::Assert("[File:{}:{}] {}",                                     \
             std::string_view(__FILE__).substr(                                    \
                 std::string_view(__FILE__).find_last_of("/\\") + 1),              \
             __LINE__,                                                             \

@@ -143,8 +143,8 @@ namespace aby::win32 {
 
             std::stringstream ss;
             ss << "/c taskkill /IM \"" << exe_name << "\" /F && start \"\" \"" << exe_path << "\"";
-            std::string cmd = ss.str();
-            hr = create_shell_link("C:\\Windows\\System32\\cmd.exe", cmd.c_str(), "Restart", &psl);
+            std::string args = ss.str();
+            hr = create_shell_link("C:\\Windows\\System32\\cmd.exe", args.c_str(), "Restart", &psl);
             if (SUCCEEDED(hr))
             {
                 hr = poc->AddObject(psl);
@@ -210,7 +210,6 @@ namespace aby::win32 {
     }
 
     std::string Window::get_watchdog_ansi(const std::string& exe_path) const {
-        // naive string operations for example
         size_t pos = exe_path.find_last_of("\\/");
         std::string folder = (pos == std::string::npos) ? "" : exe_path.substr(0, pos + 1);
         return folder + "watchdog.exe";

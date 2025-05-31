@@ -7,14 +7,16 @@ namespace aby::vk {
 	Pipeline::Pipeline() :
 		m_Device(VK_NULL_HANDLE),
 		m_Shaders(nullptr),
-		m_Pipeline(VK_NULL_HANDLE)
+		m_Pipeline(VK_NULL_HANDLE),
+		m_ColorAttachment(VK_FORMAT_UNDEFINED)
 	{
 	}
 
 	Pipeline::Pipeline(Window* window, DeviceManager& manager, Ref<ShaderModule> shaders, Swapchain& swapchain) : 
 		m_Device(VK_NULL_HANDLE),
 		m_Shaders(nullptr),
-		m_Pipeline(VK_NULL_HANDLE)
+		m_Pipeline(VK_NULL_HANDLE),
+		m_ColorAttachment(swapchain.format())
 	{
 		create(window, manager, shaders, swapchain);
 	}
@@ -24,6 +26,10 @@ namespace aby::vk {
 		m_Shaders  = shaders;
 		m_Pipeline = VK_NULL_HANDLE;
 
+		if (m_ColorAttachment == VK_FORMAT_UNDEFINED) {
+			m_ColorAttachment = swapchain.format();
+		}
+ 
 		auto& descriptor = m_Shaders->vertex_descriptor();
 		auto input_binding_stride = descriptor.input_binding_stride();
 
@@ -124,12 +130,10 @@ namespace aby::vk {
 			.pDynamicStates = dynamic_states.data()
 		};
 
-		auto format = swapchain.format();
-
 		m_CreateInfo = VkPipelineRenderingCreateInfo{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
 			.colorAttachmentCount = 1,
-			.pColorAttachmentFormats = &format,
+			.pColorAttachmentFormats = &m_ColorAttachment, // &format
 		};
 
 		std::vector<VkPipelineShaderStageCreateInfo> stages = m_Shaders->stages();
@@ -156,7 +160,6 @@ namespace aby::vk {
 		// Create pipeline
 		VK_CHECK(vkCreateGraphicsPipelines(m_Device, VK_NULL_HANDLE, 1, &pipeline_ci, IAllocator::get(), &m_Pipeline));
 	}
-
 
 	void Pipeline::destroy() {
 		if (m_Pipeline != VK_NULL_HANDLE) {

@@ -116,6 +116,7 @@ namespace aby::vk {
     }
 
     void Context::imgui_end_frame() {
+        ImGui::Render();
         ImGui::EndFrame();
         if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
             ImGui::UpdatePlatformWindows();

@@ -32,8 +32,9 @@ namespace aby {
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // OpenGL
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
         glfwSetErrorCallback([](int code, const char* description) {
             ABY_ERR("[GLFW] ({}): {}", code, description);
@@ -45,7 +46,7 @@ namespace aby {
             ABY_ASSERT(Window::m_Window, "Failed to create GLFW window");
         }
 
-        glfwMakeContextCurrent(m_Window);
+        // glfwMakeContextCurrent(m_Window); // OpenGL
         glfwSetWindowUserPointer(m_Window, &m_Data);
     }
 
@@ -65,7 +66,7 @@ namespace aby {
     }
 
     bool Window::is_open() const {
-        return glfwWindowShouldClose(m_Window);
+        return !glfwWindowShouldClose(m_Window);
     }
 
     void Window::initialize() {
@@ -95,7 +96,7 @@ namespace aby {
     }
 
     void Window::swap_buffers() const {
-        glfwSwapBuffers(m_Window);
+        //glfwSwapBuffers(m_Window); // OpenGL
     }
 
     void Window::close() {
@@ -167,7 +168,7 @@ namespace aby {
         else {
             m_Data.flags &= ~EWindowFlags::VSYNC;
         }
-        glfwSwapInterval(static_cast<int>(vsync));
+        //glfwSwapInterval(static_cast<int>(vsync)); // OpenGL
     }
 
     bool Window::is_vsync() const {

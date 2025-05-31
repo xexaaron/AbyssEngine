@@ -27,6 +27,7 @@ namespace aby::vk {
 		Ref<ShaderModule> m_Shaders;
 		VkPipeline m_Pipeline;
 		VkPipelineRenderingCreateInfo m_CreateInfo;
+		VkFormat m_ColorAttachment;
 	};
 
 }
