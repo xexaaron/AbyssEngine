@@ -67,6 +67,8 @@ namespace aby::vk {
         m_Debugger.destroy();
         m_Surface.destroy();
         m_Instance.destroy();
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
     }
 

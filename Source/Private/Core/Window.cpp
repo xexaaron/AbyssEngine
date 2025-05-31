@@ -16,8 +16,6 @@
     #error "Unsupported Platform"
 #endif
 
-
-
 namespace aby {
 
     Window::Window(const WindowInfo& info) :
