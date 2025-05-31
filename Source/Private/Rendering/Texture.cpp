@@ -1,8 +1,8 @@
 #include "Rendering/Texture.h"
 #include "Core/Log.h"
 #include "Core/App.h"
-#include "vk/VkTexture.h"
-#include "vk/VkContext.h"
+#include "Platform/vk/VkTexture.h"
+#include "Platform/vk/VkContext.h"
 #include <stb_image/stb_image.h>
 #include <array>
 

@@ -210,6 +210,23 @@ set(CPP_SOURCES
     Source/Private/Platform/win32/PlatformWin32.cpp
     Source/Private/Platform/win32/ProcessWin32.cpp
     Source/Private/Platform/win32/WindowWin32.cpp
+    Source/Private/Platform/vk/VkAllocator.cpp
+    Source/Private/Platform/vk/VkBuffer.cpp
+    Source/Private/Platform/vk/VkCmdBuff.cpp
+    Source/Private/Platform/vk/VkCmdPool.cpp
+    Source/Private/Platform/vk/VkCommon.cpp
+    Source/Private/Platform/vk/VkContext.cpp
+    Source/Private/Platform/vk/VkDebugger.cpp
+    Source/Private/Platform/vk/VkDescriptorPool.cpp
+    Source/Private/Platform/vk/VkDeviceManager.cpp
+    Source/Private/Platform/vk/VkInstance.cpp
+    Source/Private/Platform/vk/VkPipeline.cpp
+    Source/Private/Platform/vk/VkRenderModule.cpp
+    Source/Private/Platform/vk/VkRenderer.cpp
+    Source/Private/Platform/vk/VkShader.cpp
+    Source/Private/Platform/vk/VkSurface.cpp
+    Source/Private/Platform/vk/VkSwapchain.cpp
+    Source/Private/Platform/vk/VkTexture.cpp
     Source/Private/Rendering/Camera.cpp
     Source/Private/Rendering/Context.cpp
     Source/Private/Rendering/Font.cpp
@@ -234,23 +251,6 @@ set(CPP_SOURCES
     Source/Private/Widget/UICommon.cpp
     Source/Private/Widget/Widget.cpp
     Source/Private/Widget/WidgetSwitcher.cpp
-    Source/Private/vk/VkAllocator.cpp
-    Source/Private/vk/VkBuffer.cpp
-    Source/Private/vk/VkCmdBuff.cpp
-    Source/Private/vk/VkCmdPool.cpp
-    Source/Private/vk/VkCommon.cpp
-    Source/Private/vk/VkContext.cpp
-    Source/Private/vk/VkDebugger.cpp
-    Source/Private/vk/VkDescriptorPool.cpp
-    Source/Private/vk/VkDeviceManager.cpp
-    Source/Private/vk/VkInstance.cpp
-    Source/Private/vk/VkPipeline.cpp
-    Source/Private/vk/VkRenderModule.cpp
-    Source/Private/vk/VkRenderer.cpp
-    Source/Private/vk/VkShader.cpp
-    Source/Private/vk/VkSurface.cpp
-    Source/Private/vk/VkSwapchain.cpp
-    Source/Private/vk/VkTexture.cpp
     ${STB_IMPL}
 )
 
@@ -273,6 +273,23 @@ set(HEADER_FILES
     Source/Public/Platform/win32/PlatformWin32.h
     Source/Public/Platform/win32/ProcessWin32.h
     Source/Public/Platform/win32/WindowWin32.h
+    Source/Public/Platform/vk/VkAllocator.h
+    Source/Public/Platform/vk/VkBuffer.h
+    Source/Public/Platform/vk/VkCmdBuff.h
+    Source/Public/Platform/vk/VkCmdPool.h
+    Source/Public/Platform/vk/VkCommon.h
+    Source/Public/Platform/vk/VkContext.h
+    Source/Public/Platform/vk/VkDebugger.h
+    Source/Public/Platform/vk/VkDescriptorPool.h
+    Source/Public/Platform/vk/VkDeviceManager.h
+    Source/Public/Platform/vk/VkInstance.h
+    Source/Public/Platform/vk/VkPipeline.h
+    Source/Public/Platform/vk/VkRenderModule.h
+    Source/Public/Platform/vk/VkRenderer.h
+    Source/Public/Platform/vk/VkShader.h
+    Source/Public/Platform/vk/VkSurface.h
+    Source/Public/Platform/vk/VkSwapchain.h
+    Source/Public/Platform/vk/VkTexture.h
     Source/Public/Rendering/Camera.h
     Source/Public/Rendering/Context.h
     Source/Public/Rendering/Font.h
@@ -299,23 +316,6 @@ set(HEADER_FILES
     Source/Public/Widget/UICommon.h
     Source/Public/Widget/Widget.h
     Source/Public/Widget/WidgetSwitcher.h
-    Source/Public/vk/VkAllocator.h
-    Source/Public/vk/VkBuffer.h
-    Source/Public/vk/VkCmdBuff.h
-    Source/Public/vk/VkCmdPool.h
-    Source/Public/vk/VkCommon.h
-    Source/Public/vk/VkContext.h
-    Source/Public/vk/VkDebugger.h
-    Source/Public/vk/VkDescriptorPool.h
-    Source/Public/vk/VkDeviceManager.h
-    Source/Public/vk/VkInstance.h
-    Source/Public/vk/VkPipeline.h
-    Source/Public/vk/VkRenderModule.h
-    Source/Public/vk/VkRenderer.h
-    Source/Public/vk/VkShader.h
-    Source/Public/vk/VkSurface.h
-    Source/Public/vk/VkSwapchain.h
-    Source/Public/vk/VkTexture.h
 )
 
 # Setup virtual folders (Functions.cmake)

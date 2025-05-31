@@ -1,6 +1,6 @@
 #include "Rendering/Shader.h"
-#include "vk/VkShader.h"
-#include "vk/VkContext.h"
+#include "Platform/vk/VkShader.h"
+#include "Platform/vk/VkContext.h"
 #include "Core/Log.h"
 
 
