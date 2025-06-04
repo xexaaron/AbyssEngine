@@ -13,6 +13,8 @@
 #include <spirv_cross/spirv_glsl.hpp>
 #include <spirv_cross/spirv_reflect.hpp>
 
+#include <imgui/backends/imgui_impl_vulkan.h>
+
 namespace aby::vk::helper {
 
     shaderc_shader_kind get_shader_type(EShader type) {
@@ -640,6 +642,10 @@ namespace aby::vk {
     const ShaderDescriptor& ShaderModule::vertex_descriptor() const {
         auto vert_shader = std::static_pointer_cast<vk::Shader>(m_Ctx->shaders().at(m_Vertex));
         return vert_shader->descriptor();
+    }
+    
+    VkDescriptorPool ShaderModule::pool() {
+        return m_Pool;
     }
 
 

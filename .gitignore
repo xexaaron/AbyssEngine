@@ -7,6 +7,9 @@ freetype-demos/
 MTuner/
 out/
 
+## Temp
+ImGuiEdits.h
+
 tool.exe
 /tool
 

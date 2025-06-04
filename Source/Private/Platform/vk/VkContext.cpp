@@ -75,6 +75,7 @@ namespace aby::vk {
     }
 
     void Context::imgui_init() {
+        IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -97,8 +98,8 @@ namespace aby::vk {
         init_info.PhysicalDevice     = m_Devices.physical();
         init_info.QueueFamily        = m_Devices.graphics().FamilyIdx;
         init_info.Queue              = m_Devices.graphics().Queue;
-        init_info.DescriptorPool     = nullptr;
-        init_info.DescriptorPoolSize = 1000;
+        init_info.DescriptorPool     = static_cast<vk::Renderer&>(m_App->renderer()).rm2d().module()->pool();
+        init_info.DescriptorPoolSize = 0;
         init_info.PipelineCache      = {};
         init_info.RenderPass         = nullptr;
         init_info.Subpass            = 0;
@@ -109,6 +110,9 @@ namespace aby::vk {
         init_info.UseDynamicRendering = true;
         init_info.PipelineRenderingCreateInfo = static_cast<vk::Renderer&>(m_App->renderer()).rm2d().pipeline().create_info();
         ImGui_ImplVulkan_Init(&init_info);
+
+        auto font = app()->bin() / "Fonts" / "JetBrainsMonoNerdFontMono-Regular.ttf";
+        io.Fonts->AddFontFromFileTTF(font.string().c_str(), 16.0f, nullptr, io.Fonts->GetGlyphRangesDefault());
     }
 
     void Context::imgui_new_frame() {

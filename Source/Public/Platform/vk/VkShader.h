@@ -110,6 +110,7 @@ namespace aby::vk {
         VkPipelineLayout layout() const;
         const std::vector<VkDescriptorSet>& descriptors() const;
         std::vector<VkDescriptorSet>& descriptors();
+        VkDescriptorPool pool();
 
         std::vector<VkPipelineShaderStageCreateInfo> stages() const;
     protected:

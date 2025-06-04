@@ -66,7 +66,7 @@ namespace aby {
             if (m_Window->is_minimized()) continue;
             
             m_Window->poll_events();
-
+            m_Renderer->on_begin();
             m_Ctx->imgui_new_frame();
 
             for (auto& obj : m_Objects) {
@@ -74,8 +74,8 @@ namespace aby {
             }
 
             m_Window->swap_buffers();
-
             m_Ctx->imgui_end_frame();
+            m_Renderer->on_end();
 
             Logger::flush();
         }

@@ -66,6 +66,7 @@ namespace aby {
         * @return Linux   -> ::Window
         */
         virtual void* native() const = 0;
+        virtual u32   menubar_height() const = 0;
         GLFWwindow*   glfw() const;
         double        scale() const;
         u32 width() const;

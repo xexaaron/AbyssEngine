@@ -3,12 +3,16 @@
 #include "Platform/vk/VkTexture.h"
 #include "Core/App.h"
 #include "Core/Log.h"
+
 #include <numeric>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
+
+#include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_vulkan.h>
 
 namespace aby::vk {
 
@@ -219,6 +223,8 @@ namespace aby::vk {
         vkCmdSetCullMode(cmd, VK_CULL_MODE_NONE);
         vkCmdSetPrimitiveTopology(cmd, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
         flush(m_2D, ERenderPrimitive::ALL);
+
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
 
         vkCmdEndRendering(cmd);
 

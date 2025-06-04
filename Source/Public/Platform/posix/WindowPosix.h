@@ -1,7 +1,7 @@
 #pragma once
 #include "Core/Window.h"
 
-namespace aby::posix {
+namespace aby::sys::posix {
     
     class Window final : public aby::Window {
     public:

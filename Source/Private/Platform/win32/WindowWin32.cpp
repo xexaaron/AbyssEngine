@@ -11,79 +11,192 @@
     #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
 #endif
 
+#include <imgui/imgui.h>
 
 #define ABY_COMMAND_RESTART 2
 
-namespace aby::win32 {
+namespace aby::sys::win32 {
 
     Window::Window(const WindowInfo& info) :
         aby::Window(info),
         m_OgProc(nullptr)
     {
-        BOOL use_dark_mode = TRUE;
-        HWND hwnd = static_cast<HWND>(native());
-        DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &use_dark_mode, sizeof(use_dark_mode));
-        setup_window_menu(hwnd);
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-        m_OgProc = (WNDPROC)SetWindowLongPtrA(hwnd, GWLP_WNDPROC, (LONG_PTR)&Window::wnd_proc);
-        ABY_ASSERT(SUCCEEDED(CoInitialize(NULL)));
+        set_dark_mode();
+        setup_window_menu();
+        set_window_proc();
         create_jump_list();
+        disable_titlebar();
     }
 
     Window::~Window() {
         delete_jump_list();
-        CoUninitialize();
-    }
-
-    void Window::setup_window_menu(HWND hwnd) {
-        HMENU sys_menu = GetSystemMenu(hwnd, FALSE);
-        AppendMenuA(sys_menu, MF_SEPARATOR, 0, NULL);
-        AppendMenuA(sys_menu, MF_STRING, ABY_COMMAND_RESTART, "Restart");
-        DrawMenuBar(hwnd);
     }
 
     void* Window::native() const {
         return glfwGetWin32Window(m_Window);
     }
 
+    u32 Window::menubar_height() const {
+        return ImGui::GetFrameHeight();
+    }
+
+    void Window::set_dark_mode() {
+        BOOL use_dark_mode = TRUE;
+        HWND hwnd = static_cast<HWND>(native());
+        DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &use_dark_mode, sizeof(use_dark_mode));
+    }
+
+    void Window::setup_window_menu() {
+        auto hwnd = static_cast<HWND>(native());
+        HMENU sys_menu = GetSystemMenu(hwnd, FALSE);
+        AppendMenuA(sys_menu, MF_SEPARATOR, 0, NULL);
+        AppendMenuA(sys_menu, MF_STRING, ABY_COMMAND_RESTART, "Restart");
+        DrawMenuBar(hwnd);
+    }
+
+    void Window::set_window_proc() {
+        auto hwnd = static_cast<HWND>(native());
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+        m_OgProc = (WNDPROC)SetWindowLongPtrA(hwnd, GWLP_WNDPROC, (LONG_PTR)&Window::wnd_proc);
+    }
+
+    void Window::disable_titlebar() {
+        HWND hWnd = glfwGetWin32Window(m_Window);
+        LONG_PTR lStyle = GetWindowLongPtr(hWnd, GWL_STYLE);
+        lStyle |= WS_THICKFRAME;
+        lStyle &= ~WS_CAPTION;
+        SetWindowLongPtr(hWnd, GWL_STYLE, lStyle);
+        RECT windowRect;
+        GetWindowRect(hWnd, &windowRect);
+        int width = windowRect.right - windowRect.left;
+        int height = windowRect.bottom - windowRect.top;
+        SetWindowPos(hWnd, NULL, 0, 0, width, height, SWP_FRAMECHANGED | SWP_NOMOVE);
+    }
+
+    void Window::restart() {
+        auto exe_path = get_exe();
+        auto watchdog = get_watchdog(exe_path);
+        std::stringstream ss;
+        ss << "" << watchdog.string() << " "
+            << "--id " << exe_path.filename().replace_extension("").string() << " "
+            << "--cmd " << exe_path.string() << "";
+        Thread restart([cmd = ss.str()]() {
+            std::system(cmd.c_str());
+            });
+        restart.set_name("Restart Thread");
+        ABY_LOG("System: {}", ss.str());
+        restart.detach();
+        close();
+    }
+
     LRESULT CALLBACK Window::wnd_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         Window* self = reinterpret_cast<Window*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
-        if (msg == WM_SYSCOMMAND && LOWORD(wparam) == ABY_COMMAND_RESTART) {
-            auto exe_path = self->get_exe();
-            auto watchdog = self->get_watchdog(exe_path);
-            std::stringstream ss;
-            ss << ""   << watchdog.string() << " "
-            << "--id "  << exe_path.filename().replace_extension("").string() << " "
-            << "--cmd " << exe_path.string() << "";
-
-            Thread restart([cmd = ss.str()]() {
-                std::system(cmd.c_str());
-            });
-            restart.set_name("Restart Thread");
-            ABY_LOG("System: {}", ss.str());
-            restart.detach();
-
-            if (self) self->close();
+        switch (msg) {
+        case WM_NCCALCSIZE: {
+            // Remove the window's standard sizing border
+            if (wparam == TRUE && lparam != NULL) {
+                NCCALCSIZE_PARAMS* pParams = reinterpret_cast<NCCALCSIZE_PARAMS*>(lparam);
+                pParams->rgrc[0].top += 1;
+                pParams->rgrc[0].right -= 2;
+                pParams->rgrc[0].bottom -= 2;
+                pParams->rgrc[0].left += 2;
+            }
             return 0;
+        }
+        case WM_NCPAINT: {
+            // Prevent the non-client area from being painted
+            return 0;
+        }
+        case WM_NCHITTEST: {
+            const int resize_border = 6;
+            const int menubar_height = self->menubar_height();
+
+            POINTS mouse_pos = MAKEPOINTS(lparam);
+            POINT client_mouse = { mouse_pos.x, mouse_pos.y };
+            ScreenToClient(hwnd, &client_mouse);
+
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+
+            const bool left = client_mouse.x <= resize_border;
+            const bool right = client_mouse.x >= rc.right - resize_border;
+            const bool top = client_mouse.y <= resize_border;
+            const bool bottom = client_mouse.y >= rc.bottom - resize_border;
+
+            if (top && left)   return HTTOPLEFT;
+            if (top && right)  return HTTOPRIGHT;
+            if (bottom && left)  return HTBOTTOMLEFT;
+            if (bottom && right) return HTBOTTOMRIGHT;
+            if (top)    return HTTOP;
+            if (bottom) return HTBOTTOM;
+            if (left)   return HTLEFT;
+            if (right)  return HTRIGHT;
+
+            // If not in resizing zone, but within the menubar: allow dragging
+            if (client_mouse.y >= 0 && client_mouse.y < menubar_height)
+                return HTCAPTION;
+
+            return HTCLIENT;
+        }
+        case WM_SYSCOMMAND: {
+            if (LOWORD(wparam) == ABY_COMMAND_RESTART) {
+                self->restart();
+                return 0;
+            }
+        }
         }
 
         if (self && self->m_OgProc) {
             return CallWindowProc(self->m_OgProc, hwnd, msg, wparam, lparam);
-        }
+        } 
         return DefWindowProc(hwnd, msg, wparam, lparam);
     }
 
-    static std::string hresult_to_string(HRESULT hr) {
-        _com_error err(hr);
-        return std::string(err.ErrorMessage());
+}
+
+namespace aby::sys::win32 {
+
+    HRESULT Window::add_tasks_to_list(ICustomDestinationList* pcdl) {
+        IObjectCollection* poc;
+        HRESULT hr = CoCreateInstance(CLSID_EnumerableObjectCollection, NULL, CLSCTX_INPROC, IID_PPV_ARGS(&poc));
+        if (SUCCEEDED(hr))
+        {
+            IShellLinkA* psl;
+            auto exe_path = get_exe_ansi();
+            auto watchdog = get_watchdog_ansi(exe_path);
+            auto exe_name = get_filename_only(exe_path) + ".exe";
+
+            std::stringstream ss;
+            ss << "/c taskkill /IM \"" << exe_name << "\" /F && start \"\" \"" << exe_path << "\"";
+            std::string args = ss.str();
+            hr = create_shell_link("C:\\Windows\\System32\\cmd.exe", args.c_str(), "Restart", &psl);
+            if (SUCCEEDED(hr))
+            {
+                hr = poc->AddObject(psl);
+                psl->Release();
+            }
+
+            if (SUCCEEDED(hr))
+            {
+                IObjectArray* poa;
+                hr = poc->QueryInterface(IID_PPV_ARGS(&poa));
+                if (SUCCEEDED(hr))
+                {
+                    hr = pcdl->AddUserTasks(poa);
+                    poa->Release();
+                }
+            }
+            poc->Release();
+        }
+        return hr;
     }
 
     HRESULT Window::create_shell_link(LPCSTR pszExePath, LPCSTR pszArguments, LPCSTR pszTitle, IShellLinkA** ppsl) {
         IShellLinkA* psl;
         HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void**)&psl);
         if (strstr(pszTitle, "Restart") != nullptr) {
-            auto icon = get_exe().parent_path() / "Textures" / "ArrowIcon2.ico";
+            auto icon = get_exe().parent_path() / "Textures" / "ArrowIcon.ico";
             psl->SetIconLocation(icon.string().c_str(), 0);
         }
         if (SUCCEEDED(hr))
@@ -131,42 +244,8 @@ namespace aby::win32 {
         return hr;
     }
 
-    HRESULT Window::add_tasks_to_list(ICustomDestinationList* pcdl) {
-        IObjectCollection* poc;
-        HRESULT hr = CoCreateInstance(CLSID_EnumerableObjectCollection, NULL, CLSCTX_INPROC, IID_PPV_ARGS(&poc));
-        if (SUCCEEDED(hr))
-        {
-            IShellLinkA* psl;
-            auto exe_path = get_exe_ansi();          
-            auto watchdog = get_watchdog_ansi(exe_path);  
-            auto exe_name = get_filename_only(exe_path) + ".exe"; 
-
-            std::stringstream ss;
-            ss << "/c taskkill /IM \"" << exe_name << "\" /F && start \"\" \"" << exe_path << "\"";
-            std::string args = ss.str();
-            hr = create_shell_link("C:\\Windows\\System32\\cmd.exe", args.c_str(), "Restart", &psl);
-            if (SUCCEEDED(hr))
-            {
-                hr = poc->AddObject(psl);
-                psl->Release();
-            }
-
-            if (SUCCEEDED(hr))
-            {
-                IObjectArray* poa;
-                hr = poc->QueryInterface(IID_PPV_ARGS(&poa));
-                if (SUCCEEDED(hr))
-                {
-                    hr = pcdl->AddUserTasks(poa);
-                    poa->Release();
-                }
-            }
-            poc->Release();
-        }
-        return hr;
-    }
-
     void Window::create_jump_list() {
+        ABY_ASSERT(SUCCEEDED(CoInitialize(NULL)));
         ICustomDestinationList* pcdl;
         HRESULT hr = CoCreateInstance(CLSID_DestinationList, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pcdl));
         if (SUCCEEDED(hr))
@@ -199,6 +278,7 @@ namespace aby::win32 {
             hr = pcdl->DeleteList(NULL);
             pcdl->Release();
         }
+        CoUninitialize();
     }
 
     std::string Window::get_exe_ansi() const {
@@ -246,7 +326,6 @@ namespace aby::win32 {
 #endif
         return watchdog;
     }
-
 
 }
 

@@ -7,19 +7,24 @@
 #include <shlguid.h>
 #include <comdef.h> 
 
-namespace aby::win32 {
+namespace aby::sys::win32 {
 
     class Window final : public aby::Window {
     public:
         Window(const WindowInfo& info);
         ~Window();
 
-        void setup_window_menu(HWND hwnd);
-
         void* native() const override;
-    public:
-        static LRESULT CALLBACK wnd_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+        u32 menubar_height() const override;
     private:
+        void restart();
+        void set_dark_mode();
+        void setup_window_menu();
+        void disable_titlebar();
+        void set_window_proc();
+    private:
+        static LRESULT CALLBACK wnd_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+    private: // Additional window options
         std::filesystem::path get_exe() const;
         std::filesystem::path get_watchdog(const std::filesystem::path& exe_path) const;
         std::string get_exe_ansi() const;

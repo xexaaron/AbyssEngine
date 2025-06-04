@@ -186,6 +186,8 @@ set(IMGUI_BACKENDS
     ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
 )
 
+set(IMGUI_RESOURCES)
+
 add_library(ImGui STATIC ${IMGUI_HEADERS} ${IMGUI_SOURCES} ${IMGUI_BACKENDS})
 target_include_directories(ImGui PUBLIC ${IMGUI_DIR} ${IMGUI_INCLUDE_DIR} ${VULKAN_INCLUDE_DIR} ${GLFW_INCLUDE_DIR})
 set_target_properties(ImGui PROPERTIES FOLDER "Dependencies/ImGui")
@@ -201,6 +203,7 @@ set(CPP_SOURCES
     Source/Private/Core/Thread.cpp
     Source/Private/Core/Time.cpp
     Source/Private/Core/Window.cpp
+    Source/Private/Editor/Editor.cpp
     Source/Private/Platform/Platform.cpp
     Source/Private/Platform/Platform.cpp
     Source/Private/Platform/Process.cpp
@@ -265,6 +268,7 @@ set(HEADER_FILES
     Source/Public/Core/Thread.h
     Source/Public/Core/Time.h
     Source/Public/Core/Window.h
+    Source/Public/Editor/Editor.h
     Source/Public/Platform/Platform.h
     Source/Public/Platform/Process.h
     Source/Public/Platform/posix/PlatformPosix.h
@@ -321,18 +325,19 @@ set(HEADER_FILES
 # Setup virtual folders (Functions.cmake)
 make_source_groups(
     Core
+    Editor
     Platform
     Platform/posix
     Platform/win32
+    Platform/vk
     Rendering
     Widget
     Utility
-    vk
 )
 
 
-source_group("Private" FILES ${STB_IMPL} "Source/main.cpp")
-set(COMMON_INCLUDE_DIRS "Source/Public" ${GLFW_INCLUDE_DIR} ${STB_INCLUDE_DIR} ${GLM_INCLUDE_DIR})
+source_group("Private" FILES "Source/main.cpp")
+set(COMMON_INCLUDE_DIRS "Source/Public" ${GLFW_INCLUDE_DIR} ${STB_INCLUDE_DIR} ${GLM_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${IMGUI_DIR})
 set(RESOURCE_DIR "${CMAKE_SOURCE_DIR}/Source/Resources")
 
 # Setup subprojects
@@ -361,8 +366,6 @@ target_include_directories(${ENGINE} PUBLIC
     ${GCH_SMALL_VEC_INCLUDE_DIR} 
     ${ABYSS_FREETYPE_INCLUDE_DIR}
     ${ABY_FT_PP_INCLUDE_DIR}
-    ${IMGUI_INCLUDE_DIR}
-    ${IMGUI_DIR}
 )
 target_include_directories(${EDITOR} PUBLIC Source/Public ${COMMON_INCLUDE_DIRS} ${ABY_FT_PP_INCLUDE_DIR})
 set_target_properties(${ENGINE} PROPERTIES FOLDER "Abyss")

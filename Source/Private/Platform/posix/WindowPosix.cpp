@@ -12,7 +12,7 @@
 
 
 
-namespace aby::posix {
+namespace aby::sys::posix {
 
      Window::Window(const WindowInfo& info) :
         aby::Window(info)

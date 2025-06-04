@@ -29,7 +29,6 @@ namespace aby {
         m_Window(nullptr)
     {
         ABY_ASSERT(glfwInit(), "Failed to initialize GLFW");
-
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
         // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // OpenGL
@@ -52,9 +51,9 @@ namespace aby {
 
     Unique<Window> Window::create(const WindowInfo& info) {
     #ifdef _WIN32
-        return create_unique<win32::Window>(info);
+        return create_unique<sys::win32::Window>(info);
     #elif defined(__linux__)
-        return create_unique<posix::Window>(info);
+        return create_unique<sys::posix::Window>(info);
     #endif
     }
 
