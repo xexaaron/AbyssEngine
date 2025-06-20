@@ -32,11 +32,25 @@ namespace aby::sys::win32 {
         delete_jump_list();
     }
 
+    void Window::begin_drag() {
+        auto hwnd  = static_cast<HWND>(native());
+        auto mouse = mouse_pos();
+
+        ReleaseCapture();
+        SendMessage(hwnd, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
+        POINT pt = { static_cast<LONG>(mouse.x), static_cast<LONG>(mouse.y) };
+        ScreenToClient(hwnd, &pt);
+        LPARAM lparam = MAKELPARAM(pt.x, pt.y);
+        WPARAM wparam = MK_LBUTTON;
+        SendMessage(hwnd, WM_LBUTTONDOWN, wparam, lparam);
+        SendMessage(hwnd, WM_LBUTTONUP, 0, lparam);
+    }
+
     void* Window::native() const {
         return glfwGetWin32Window(m_Window);
     }
 
-    u32 Window::menubar_height() const {
+    float Window::menubar_height() const {
         return ImGui::GetFrameHeight();
     }
 
@@ -93,58 +107,58 @@ namespace aby::sys::win32 {
         Window* self = reinterpret_cast<Window*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
         switch (msg) {
-        case WM_NCCALCSIZE: {
-            // Remove the window's standard sizing border
-            if (wparam == TRUE && lparam != NULL) {
-                NCCALCSIZE_PARAMS* pParams = reinterpret_cast<NCCALCSIZE_PARAMS*>(lparam);
-                pParams->rgrc[0].top += 1;
-                pParams->rgrc[0].right -= 2;
-                pParams->rgrc[0].bottom -= 2;
-                pParams->rgrc[0].left += 2;
-            }
-            return 0;
-        }
-        case WM_NCPAINT: {
-            // Prevent the non-client area from being painted
-            return 0;
-        }
-        case WM_NCHITTEST: {
-            const int resize_border = 6;
-            const int menubar_height = self->menubar_height();
-
-            POINTS mouse_pos = MAKEPOINTS(lparam);
-            POINT client_mouse = { mouse_pos.x, mouse_pos.y };
-            ScreenToClient(hwnd, &client_mouse);
-
-            RECT rc;
-            GetClientRect(hwnd, &rc);
-
-            const bool left = client_mouse.x <= resize_border;
-            const bool right = client_mouse.x >= rc.right - resize_border;
-            const bool top = client_mouse.y <= resize_border;
-            const bool bottom = client_mouse.y >= rc.bottom - resize_border;
-
-            if (top && left)   return HTTOPLEFT;
-            if (top && right)  return HTTOPRIGHT;
-            if (bottom && left)  return HTBOTTOMLEFT;
-            if (bottom && right) return HTBOTTOMRIGHT;
-            if (top)    return HTTOP;
-            if (bottom) return HTBOTTOM;
-            if (left)   return HTLEFT;
-            if (right)  return HTRIGHT;
-
-            // If not in resizing zone, but within the menubar: allow dragging
-            if (client_mouse.y >= 0 && client_mouse.y < menubar_height)
-                return HTCAPTION;
-
-            return HTCLIENT;
-        }
-        case WM_SYSCOMMAND: {
-            if (LOWORD(wparam) == ABY_COMMAND_RESTART) {
-                self->restart();
+            case WM_NCCALCSIZE: {
+                // Remove the window's standard sizing border
+                if (wparam == TRUE && lparam != NULL) {
+                    NCCALCSIZE_PARAMS* pParams = reinterpret_cast<NCCALCSIZE_PARAMS*>(lparam);
+                    pParams->rgrc[0].top += 1;
+                    pParams->rgrc[0].right -= 2;
+                    pParams->rgrc[0].bottom -= 2;
+                    pParams->rgrc[0].left += 2;
+                }
                 return 0;
             }
-        }
+            case WM_NCPAINT: {
+                // Prevent the non-client area from being painted
+                return 0;
+            }
+            case WM_NCHITTEST: {
+                const int resize_border = 6;
+                const int menubar_height = static_cast<int>(self->menubar_height());
+
+                POINTS mouse_pos = MAKEPOINTS(lparam);
+                POINT client_mouse = { mouse_pos.x, mouse_pos.y };
+                ScreenToClient(hwnd, &client_mouse);
+
+                RECT rc;
+                GetClientRect(hwnd, &rc);
+
+                const bool left = client_mouse.x <= resize_border;
+                const bool right = client_mouse.x >= rc.right - resize_border;
+                const bool top = client_mouse.y <= resize_border;
+                const bool bottom = client_mouse.y >= rc.bottom - resize_border;
+
+                if (top && left)   return HTTOPLEFT;
+                if (top && right)  return HTTOPRIGHT;
+                if (bottom && left)  return HTBOTTOMLEFT;
+                if (bottom && right) return HTBOTTOMRIGHT;
+                if (top)    return HTTOP;
+                if (bottom) return HTBOTTOM;
+                if (left)   return HTLEFT;
+                if (right)  return HTRIGHT;
+
+                return HTCLIENT;
+            }
+            case WM_NCLBUTTONUP: {
+
+            }
+            case WM_SYSCOMMAND: {
+                if (LOWORD(wparam) == ABY_COMMAND_RESTART) {
+                    self->restart();
+                    return 0;
+                }
+                break;
+            }
         }
 
         if (self && self->m_OgProc) {

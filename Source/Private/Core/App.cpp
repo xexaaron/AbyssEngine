@@ -252,6 +252,7 @@ namespace aby {
     }
 
     int WINAPI WinMain(_In_ HINSTANCE hinstance, _In_opt_ HINSTANCE hprevinstance, _In_ LPSTR lpcmdline, _In_ int nshowcmd) {
+#ifndef NDEBUG
         bool console_attached = AttachConsole(ATTACH_PARENT_PROCESS);
         if (console_attached) {
             ABY_ASSERT(freopen("CONOUT$", "w", stdout) != nullptr);
@@ -265,10 +266,13 @@ namespace aby {
         std::cout.clear();
         std::cerr.clear();
         std::cout << "\n" << std::endl;
-    #if _MSC_VER && !defined(NDEBUG) 
+
+#ifdef _MSC_VER
         _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
         _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
-    #endif
+#endif // _MSC_VER
+#endif // NDEBUG  
+
 
         int argc = 0;
         char** argv = nullptr;
@@ -279,6 +283,7 @@ namespace aby {
         app.run();
 
         free_args(argc, argv);
+#ifndef NDEBUG
         std::cout.flush();
         std::cerr.flush();
         fclose(stdout);
@@ -286,6 +291,7 @@ namespace aby {
         if (!console_attached) {
             FreeConsole();
         }
+#endif // NDEBUG
         return 0;
     }
 #else

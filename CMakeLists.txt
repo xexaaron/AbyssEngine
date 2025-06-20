@@ -163,7 +163,6 @@ endif()
 set(IMGUI_DIR "Vendor/ImGui/imgui")
 set(IMGUI_INCLUDE_DIR "Vendor/ImGui")
 set(IMGUI_HEADERS
-    ${IMGUI_DIR}/imconfig.h
     ${IMGUI_DIR}/imgui_internal.h
     ${IMGUI_DIR}/imgui.h
     ${IMGUI_DIR}/imstb_rectpack.h
@@ -189,7 +188,9 @@ set(IMGUI_BACKENDS
 set(IMGUI_RESOURCES)
 
 add_library(ImGui STATIC ${IMGUI_HEADERS} ${IMGUI_SOURCES} ${IMGUI_BACKENDS})
-target_include_directories(ImGui PUBLIC ${IMGUI_DIR} ${IMGUI_INCLUDE_DIR} ${VULKAN_INCLUDE_DIR} ${GLFW_INCLUDE_DIR})
+target_include_directories(ImGui PUBLIC ${IMGUI_DIR} ${IMGUI_INCLUDE_DIR} ${VULKAN_INCLUDE_DIR} ${GLFW_INCLUDE_DIR} ${GLM_INCLUDE_DIR} "Source/Public")
+target_compile_definitions(ImGui PUBLIC IMGUI_USER_CONFIG="Platform/imgui/imconfig.h")
+target_compile_options(ImGui PUBLIC ${COMPILE_OPTS})
 set_target_properties(ImGui PROPERTIES FOLDER "Dependencies/ImGui")
 # List Sources
 
@@ -207,6 +208,7 @@ set(CPP_SOURCES
     Source/Private/Platform/Platform.cpp
     Source/Private/Platform/Platform.cpp
     Source/Private/Platform/Process.cpp
+#    Source/Private/Platform/imgui/imgui_impl_vulkan.cpp
     Source/Private/Platform/posix/PlatformPosix.cpp
     Source/Private/Platform/posix/ProcessPosix.cpp
     Source/Private/Platform/posix/WindowPosix.cpp
@@ -269,6 +271,8 @@ set(HEADER_FILES
     Source/Public/Core/Time.h
     Source/Public/Core/Window.h
     Source/Public/Editor/Editor.h
+    Source/Public/Platform/imgui/imconfig.h
+ #   Source/Public/Platform/imgui/imgui_impl_vulkan.h
     Source/Public/Platform/Platform.h
     Source/Public/Platform/Process.h
     Source/Public/Platform/posix/PlatformPosix.h
@@ -330,6 +334,7 @@ make_source_groups(
     Platform/posix
     Platform/win32
     Platform/vk
+    Platform/imgui
     Rendering
     Widget
     Utility
@@ -354,10 +359,11 @@ add_dependencies(tool AbyssFTLib)
 
 add_library(${ENGINE} ${CPP_SOURCES} ${HEADER_FILES} ${RESOURCES})
 add_executable(${EDITOR} Source/main.cpp ${RESOURCES})
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${EDITOR})
 target_link_options(${EDITOR} PRIVATE ${LINK_OPTS})
 target_compile_options(${ENGINE} PRIVATE ${COMPILE_OPTS})
 target_compile_options(${EDITOR} PRIVATE ${COMPILE_OPTS})
-target_compile_definitions(${ENGINE} PRIVATE ${GLM_DEFINITIONS} ABY_BUFFERED_LOGGING _CRT_SECURE_NO_WARNINGS)
+target_compile_definitions(${ENGINE} PRIVATE ${GLM_DEFINITIONS} ABY_BUFFERED_LOGGING _CRT_SECURE_NO_WARNINGS IMGUI_USER_CONFIG="Platform/imgui/imconfig.h")
 target_compile_definitions(${EDITOR} PRIVATE ${GLM_DEFINITIONS} ABY_BUFFERED_LOGGING)
 target_include_directories(${ENGINE} PUBLIC 
     ${VULKAN_INCLUDE_DIR} 
@@ -383,7 +389,7 @@ target_link_libraries(${ENGINE} PRIVATE
     glfw
     ImGui
 )
-
+ 
 target_link_libraries(${EDITOR} PRIVATE ${ENGINE})
 add_dependencies(${ENGINE} AbyssFTLib glfw tool)
 add_dependencies(${EDITOR} ${ENGINE})

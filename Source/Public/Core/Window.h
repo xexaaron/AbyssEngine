@@ -52,6 +52,7 @@ namespace aby {
         void poll_events() const;
         void swap_buffers() const;
         void close(); 
+        virtual void begin_drag() = 0;
 
         void set_cursor(ECursor cursor);
         void set_title(const std::string& title);
@@ -66,7 +67,7 @@ namespace aby {
         * @return Linux   -> ::Window
         */
         virtual void* native() const = 0;
-        virtual u32   menubar_height() const = 0;
+        virtual float menubar_height() const = 0;
         GLFWwindow*   glfw() const;
         double        scale() const;
         u32 width() const;

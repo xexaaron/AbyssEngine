@@ -14,8 +14,10 @@ namespace aby::sys::win32 {
         Window(const WindowInfo& info);
         ~Window();
 
+        void begin_drag() override;
+
         void* native() const override;
-        u32 menubar_height() const override;
+        float menubar_height() const override;
     private:
         void restart();
         void set_dark_mode();

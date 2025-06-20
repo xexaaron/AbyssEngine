@@ -1,5 +1,5 @@
 #include "Editor/Editor.h"
-
+#include <Windows.h>
 namespace aby::editor {
 
     Editor::Editor() : 
@@ -46,16 +46,14 @@ namespace aby::editor {
 	}
 	
 	void EditorUI::on_create(App* app, bool) {
-		auto path = app->bin() / "Textures";
+		auto path	   = app->bin() / "Textures";
 		m_MinimizeIcon = Texture::create(&app->ctx(), path / "MinimizeIcon.png");
 		m_MaximizeIcon = Texture::create(&app->ctx(), path / "MaximizeIcon.png");
 		m_ExitIcon	   = Texture::create(&app->ctx(), path / "ExitIcon.png");
 	}
 
-
     void EditorUI::on_tick(App* app, Time deltatime) {
 		draw_dockspace();
-		float menubar_height = ImGui::GetFrameHeight(); // FontSize + 2 * FramePadding.y
 		ImGui::Begin("Viewport");
 		ImGui::End();
     }
@@ -115,22 +113,57 @@ namespace aby::editor {
 	}
 
 	void EditorUI::draw_menubar() {
-		ImGui::BeginMenuBar();
-		if (ImGui::BeginMenu("Options")) {
+		if (!ImGui::BeginMenuBar()) return;
 
+		// === Menus ===
+		if (ImGui::BeginMenu("Options")) {
+			if (ImGui::MenuItem("Settings")) {
+				// settings
+			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Restart")) {
+				m_App->restart();
+			}
+			if (ImGui::MenuItem("Exit", "alt+f4")) {
+				m_App->quit();
+			}
+			ImGui::EndMenu();
 		}
 
-		float button_dim = 20.0f;
-		float spacing = 5.0f;
-		float total_button_width = (button_dim + spacing) * 3;
-		float right_edge = ImGui::GetWindowContentRegionMax().x;
-		ImVec2 button_size(button_dim, button_dim);
-		ImGui::SameLine(right_edge - total_button_width);
-		ImGui::ImageButton("##Minimize", m_MinimizeIcon.handle(), button_size); 
-		ImGui::SameLine();
-		ImGui::ImageButton("##Maximize", m_MaximizeIcon.handle(), button_size);
-		ImGui::SameLine();
-		ImGui::ImageButton("##Exit",	 m_ExitIcon.handle(),	  button_size);
+
+
+		// === Buttons ===
+		constexpr float button_dim   = 18.0f;
+		constexpr float button_count = 3.f;
+		constexpr float padding      = 5.f;
+		constexpr float bttn_width   = (button_count + 1) * button_dim;
+
+		auto  button_size = ImVec2(button_dim, button_dim);
+		float right_edge  = ImGui::GetWindowContentRegionMax().x;
+		auto& textures    = m_App->ctx().textures();
+		auto  minimize    = textures.at(m_MinimizeIcon);
+		auto  maximize    = textures.at(m_MaximizeIcon);
+		auto  exit        = textures.at(m_ExitIcon);
+
+		ImGui::SetCursorPosX(right_edge - bttn_width - padding);
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+		if (ImGui::ImageButton("Minimize", minimize->imgui_id(), button_size)) {
+			m_App->window()->set_minimized(true);
+		}
+		ImGui::SameLine(0.0f);
+		if (ImGui::ImageButton("Maximize", maximize->imgui_id(), button_size)) {
+			m_App->window()->set_maximized(!m_App->window()->is_maximized());
+		}
+		ImGui::SameLine(0.0f);
+		if (ImGui::ImageButton("Exit", exit->imgui_id(), button_size)) {
+			m_App->quit();
+		}
+		ImGui::PopStyleVar();
+
+		if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0) && !ImGui::IsAnyItemHovered())
+		{
+			m_App->window()->begin_drag();
+		}
 
 		ImGui::EndMenuBar();
 	}

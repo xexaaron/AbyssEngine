@@ -24,6 +24,8 @@ namespace aby::vk {
         DeviceManager& devices();
         Surface&       surface();
     private:
+        void imgui_setup_style();
+    private:
         Instance m_Instance;
         Debugger m_Debugger;
         DeviceManager m_Devices;
