@@ -12,7 +12,8 @@ namespace aby::vk {
         m_Image(VK_NULL_HANDLE),
         m_View(VK_NULL_HANDLE),
         m_ImageMemory(VK_NULL_HANDLE),
-        m_Sampler(VK_NULL_HANDLE)
+        m_Sampler(VK_NULL_HANDLE),
+        m_ImGuiID(VK_NULL_HANDLE)
     {
     }
 
@@ -24,7 +25,8 @@ namespace aby::vk {
         m_Image(VK_NULL_HANDLE),
         m_View(VK_NULL_HANDLE),
         m_ImageMemory(VK_NULL_HANDLE),
-        m_Sampler(VK_NULL_HANDLE)
+        m_Sampler(VK_NULL_HANDLE),
+        m_ImGuiID(VK_NULL_HANDLE)
     {
         init(ctx);
     }
@@ -37,7 +39,8 @@ namespace aby::vk {
         m_Image(VK_NULL_HANDLE),
         m_View(VK_NULL_HANDLE),
         m_ImageMemory(VK_NULL_HANDLE),
-        m_Sampler(VK_NULL_HANDLE) 
+        m_Sampler(VK_NULL_HANDLE),
+        m_ImGuiID(VK_NULL_HANDLE)
     {
         init(ctx);
     }
@@ -50,7 +53,8 @@ namespace aby::vk {
         m_Image(VK_NULL_HANDLE),
         m_View(VK_NULL_HANDLE),
         m_ImageMemory(VK_NULL_HANDLE),
-        m_Sampler(VK_NULL_HANDLE) 
+        m_Sampler(VK_NULL_HANDLE),
+        m_ImGuiID(VK_NULL_HANDLE)
     {
         init(ctx);
     }
@@ -64,7 +68,8 @@ namespace aby::vk {
         m_Image(other.m_Image),
         m_View(other.m_View),
         m_ImageMemory(other.m_ImageMemory),
-        m_Sampler(other.m_Sampler)
+        m_Sampler(other.m_Sampler),
+        m_ImGuiID(other.m_ImGuiID)
     {
 
     }
@@ -77,7 +82,8 @@ namespace aby::vk {
         m_Image(std::move(other.m_Image)),
         m_View(std::move(other.m_View)),
         m_ImageMemory(std::move(other.m_ImageMemory)),
-        m_Sampler(std::move(other.m_Sampler))
+        m_Sampler(std::move(other.m_Sampler)),
+        m_ImGuiID(std::move(other.m_ImGuiID))
     {
     }
 
@@ -202,6 +208,14 @@ namespace aby::vk {
 
     VkImageLayout Texture::layout() const {
         return m_Layout;
+    }
+
+    VkDescriptorSet& Texture::imgui_descriptor() {
+        return m_ImGuiID;
+    }
+
+    ImTextureID Texture::imgui_id() const {
+        return reinterpret_cast<ImTextureID>(m_ImGuiID);
     }
 
 

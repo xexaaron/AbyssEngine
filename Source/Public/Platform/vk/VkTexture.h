@@ -22,6 +22,8 @@ namespace aby::vk {
         VkSampler sampler();
         VkFormat format() const;
         VkImageLayout layout() const;
+        VkDescriptorSet& imgui_descriptor();
+        ImTextureID imgui_id() const override;
     protected:
         void init(vk::Context* ctx);
     private:
@@ -32,6 +34,7 @@ namespace aby::vk {
         VkImageView m_View;
         VkDeviceMemory m_ImageMemory;
         VkSampler m_Sampler;
+        VkDescriptorSet m_ImGuiID;
     };
 
 }

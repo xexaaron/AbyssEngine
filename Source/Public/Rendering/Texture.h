@@ -3,6 +3,7 @@
 #include "Core/Resource.h"
 #include <span>
 #include <glm/glm.hpp>
+#include <imgui/imgui.h>
 
 namespace aby {
 
@@ -21,6 +22,7 @@ namespace aby {
         u32 channels() const;
         u64 bytes() const;
         std::span<const std::byte> data() const;
+        virtual ImTextureID imgui_id() const = 0;
     protected:
         Texture();
         Texture(const fs::path& path);

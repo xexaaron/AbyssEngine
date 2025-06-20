@@ -248,36 +248,72 @@ namespace aby::vk {
 
     class TextureResourceHandler : public IResourceHandler<aby::Texture> {
     public:
-        TextureResourceHandler(ShaderModule* shader) : IResourceHandler(shader) {}
+        TextureResourceHandler(ShaderModule* shader_module) : 
+            IResourceHandler(shader_module) 
+        {
+            auto logical = shader_module->m_Ctx->devices().logical();
+            VkDescriptorSetLayoutBinding binding[1] = {};
+            binding[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            binding[0].descriptorCount = 1;
+            binding[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            VkDescriptorSetLayoutCreateInfo info = {};
+            info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            info.bindingCount = 1;
+            info.pBindings = binding;
+            VK_CHECK(vkCreateDescriptorSetLayout(logical, &info, vk::Allocator::get(), &m_ImGuiLayout));
+        }
 
         void on_add(Handle handle, Ref<aby::Texture> texture) override {
             auto  tex = std::static_pointer_cast<vk::Texture>(texture);
             auto* shader_module = std::any_cast<ShaderModule*>(m_UserData);
+            auto logical = shader_module->m_Ctx->devices().logical();
 
             VkDescriptorImageInfo img_info{
-                .sampler     = tex->sampler(),
-                .imageView   = tex->view(),
-                .imageLayout = tex->layout(),
+               .sampler = tex->sampler(),
+               .imageView = tex->view(),
+               .imageLayout = tex->layout(),
             };
 
-            VkWriteDescriptorSet write{
-                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                .pNext = nullptr,
-                .dstSet = shader_module->m_Descriptors[1],
-                .dstBinding = BINDLESS_TEXTURE_BINDING,
-                .dstArrayElement = handle,
-                .descriptorCount = 1,
-                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                .pImageInfo = &img_info,
-                .pBufferInfo = nullptr,
-                .pTexelBufferView = nullptr,
-            };
-            vkUpdateDescriptorSets(shader_module->m_Ctx->devices().logical(), 1, &write, 0, nullptr);
+            // Write to bindless texture array.
+            {
+                VkWriteDescriptorSet write{
+                    .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                    .pNext = nullptr,
+                    .dstSet = shader_module->m_Descriptors[1],
+                    .dstBinding = BINDLESS_TEXTURE_BINDING,
+                    .dstArrayElement = handle,
+                    .descriptorCount = 1,
+                    .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                    .pImageInfo = &img_info,
+                    .pBufferInfo = nullptr,
+                    .pTexelBufferView = nullptr,
+                };
+                vkUpdateDescriptorSets(logical, 1, &write, 0, nullptr);
+            }
+            // Write to vk::Texture::m_ImGuiID
+            {
+                VkDescriptorSetAllocateInfo alloc_info;
+                alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+                alloc_info.pNext = nullptr;
+                alloc_info.descriptorSetCount = 1;
+                alloc_info.descriptorPool = shader_module->pool();
+                alloc_info.pSetLayouts = &m_ImGuiLayout;
+                vkAllocateDescriptorSets(logical, &alloc_info, &tex->imgui_descriptor());
+                
+                VkWriteDescriptorSet write{};
+                write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                write.dstSet = tex->imgui_descriptor();
+                write.descriptorCount = 1;
+                write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                write.pImageInfo = &img_info;
+                vkUpdateDescriptorSets(logical, 1, &write, 0, nullptr);
+            }
         }
         void on_erase(Handle handle, Ref<aby::Texture> texture) override {
 
         }
     private:
+        VkDescriptorSetLayout m_ImGuiLayout;
     };
 
     Shader::Shader(App* app, DeviceManager& devices, const fs::path& path, EShader type) :
@@ -569,7 +605,7 @@ namespace aby::vk {
         if (m_Uniforms == VK_NULL_HANDLE || m_UniformMemory == VK_NULL_HANDLE) {
             create_uniform_buffer(bytes);
         }
-
+        
         update_uniform_memory(data, bytes);
         update_descriptor_set(binding, bytes);
     }
