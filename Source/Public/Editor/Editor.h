@@ -4,14 +4,31 @@
 #include "Widget/UI.h"
 #include "Rendering/Font.h"
 #include "Platform/Platform.h"
+#include "Platform/imgui/imtheme.h"
 #include "Utility/Delegate.h"
-#include "Widget/WidgetSwitcher.h"  
 
 #include <filesystem>
 
-#include <imgui/imgui.h>
-
 namespace aby::editor {
+
+    enum class ESettingsPage {
+        NONE = 0,
+        THEME,
+        FONTS,
+    };
+
+    struct Settings {
+        ESettingsPage current_page;
+        imgui::Theme  current_theme;
+        bool          show_settings;
+    };
+
+    struct Icons {
+        Resource minimize;
+        Resource maximize;
+        Resource exit;
+        Resource plus;
+    };
 
     class Editor  {
     public:
@@ -29,13 +46,19 @@ namespace aby::editor {
         EditorUI(App* app);
         void on_create(App* app, bool) override;
         void on_tick(App* app, Time deltatime) override;
+        
+    private:
         void draw_dockspace();
         void draw_menubar();
+        void draw_settings();
+        void draw_settings_category(std::string_view name, ESettingsPage type);
+        void draw_theme_settings();
+        void draw_font_settings();
     private:
-        App* m_App;
-        Resource m_MinimizeIcon;
-        Resource m_MaximizeIcon;
-        Resource m_ExitIcon;
+        App*     m_App;
+        Icons    m_Icons;
+        Settings m_Settings;
+
     };
 
 }

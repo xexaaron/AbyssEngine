@@ -70,8 +70,8 @@ namespace aby {
         virtual float menubar_height() const = 0;
         GLFWwindow*   glfw() const;
         double        scale() const;
-        u32 width() const;
-        u32 height() const;
+        u32           width() const;
+        u32           height() const;
         glm::u32vec2  size() const;
         glm::fvec2    mouse_pos() const;
         int           refresh_rate() const;

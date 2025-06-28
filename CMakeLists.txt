@@ -208,7 +208,8 @@ set(CPP_SOURCES
     Source/Private/Platform/Platform.cpp
     Source/Private/Platform/Platform.cpp
     Source/Private/Platform/Process.cpp
-#    Source/Private/Platform/imgui/imgui_impl_vulkan.cpp
+    Source/Private/Platform/imgui/imtheme.cpp
+    Source/Private/Platform/imgui/imwidget.cpp
     Source/Private/Platform/posix/PlatformPosix.cpp
     Source/Private/Platform/posix/ProcessPosix.cpp
     Source/Private/Platform/posix/WindowPosix.cpp
@@ -244,18 +245,6 @@ set(CPP_SOURCES
     Source/Private/Utility/MaxEmptyRectFinder.cpp
     Source/Private/Utility/Random.cpp
     Source/Private/Utility/TagParser.cpp
-    Source/Private/Widget/Button.cpp
-    Source/Private/Widget/Canvas.cpp
-    Source/Private/Widget/Console.cpp
-    Source/Private/Widget/Dropdown.cpp
-    Source/Private/Widget/Image.cpp
-    Source/Private/Widget/InputTextbox.cpp
-    Source/Private/Widget/LayoutContainer.cpp
-    Source/Private/Widget/Panel.cpp
-    Source/Private/Widget/Textbox.cpp
-    Source/Private/Widget/UICommon.cpp
-    Source/Private/Widget/Widget.cpp
-    Source/Private/Widget/WidgetSwitcher.cpp
     ${STB_IMPL}
 )
 
@@ -272,7 +261,8 @@ set(HEADER_FILES
     Source/Public/Core/Window.h
     Source/Public/Editor/Editor.h
     Source/Public/Platform/imgui/imconfig.h
- #   Source/Public/Platform/imgui/imgui_impl_vulkan.h
+    Source/Public/Platform/imgui/imtheme.h
+    Source/Public/Platform/imgui/imwidget.h
     Source/Public/Platform/Platform.h
     Source/Public/Platform/Process.h
     Source/Public/Platform/posix/PlatformPosix.h
@@ -311,19 +301,6 @@ set(HEADER_FILES
     Source/Public/Utility/MaxEmptyRectFinder.h
     Source/Public/Utility/Random.h
     Source/Public/Utility/TagParser.h
-    Source/Public/Widget/Button.h
-    Source/Public/Widget/Canvas.h
-    Source/Public/Widget/Console.h
-    Source/Public/Widget/Dropdown.h
-    Source/Public/Widget/Image.h
-    Source/Public/Widget/InputTextbox.h
-    Source/Public/Widget/LayoutContainer.h
-    Source/Public/Widget/Panel.h
-    Source/Public/Widget/Textbox.h
-    Source/Public/Widget/UI.h
-    Source/Public/Widget/UICommon.h
-    Source/Public/Widget/Widget.h
-    Source/Public/Widget/WidgetSwitcher.h
 )
 
 # Setup virtual folders (Functions.cmake)

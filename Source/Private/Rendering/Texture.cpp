@@ -72,6 +72,7 @@ namespace aby {
         }
         return {};
     }
+    
     Resource Texture::create(Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels) {
         ABY_ASSERT(ctx, "(aby::Context*)ctx is invalid!");
         switch (ctx->backend()) {
@@ -95,11 +96,9 @@ namespace aby {
         return {};
     }
 
-
     Texture::Texture() :
         m_Size(0, 0),
         m_Channels(0) { }
-
 
     Texture::Texture(const fs::path& path) :
         m_Size(0, 0),

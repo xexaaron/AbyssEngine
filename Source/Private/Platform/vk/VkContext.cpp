@@ -3,7 +3,6 @@
 #include "Platform/vk/VkContext.h"
 #include "Platform/vk/VkRenderer.h"
 #include "Platform/vk/VkAllocator.h"
-
 #include <vector>
 
 #ifdef _WIN32
@@ -26,6 +25,9 @@
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_vulkan.h>
 #include <imgui/imgui_internal.h>
+
+#include "Platform/imgui/imtheme.h"
+
 
 namespace aby::vk {
     void check_vk_result(VkResult err) {
@@ -88,7 +90,6 @@ namespace aby::vk {
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
             style.WindowRounding = 0.0f;
-            style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
         ImGui_ImplGlfw_InitForVulkan(m_Window->glfw(), true);
         ImGui_ImplVulkan_InitInfo init_info = {};
@@ -113,6 +114,7 @@ namespace aby::vk {
 
         auto font = app()->bin() / "Fonts" / "JetBrainsMonoNerdFontMono-Regular.ttf";
         io.Fonts->AddFontFromFileTTF(font.string().c_str(), 16.0f, nullptr, io.Fonts->GetGlyphRangesDefault());
+        
     }
 
     void Context::imgui_new_frame() {
@@ -131,12 +133,21 @@ namespace aby::vk {
     }
 
     void Context::imgui_setup_style() {
-        ImGuiStyle* style = &ImGui::GetStyle();
+        auto theme_dir = app()->cache() / "Themes";
+        if (imgui::Theme::exists("Default", theme_dir)) {
+            imgui::Theme default_theme("Default", theme_dir);
+            default_theme.set_current();
+            return;
+        }
+
+        imgui::Theme theme("Default");
+
+        ImGuiStyle* style = theme.style();
         ImVec4* colors = style->Colors;
 
         colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
         colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-        colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 0.94f);
+        colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 1.f);
         colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
         colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
         colors[ImGuiCol_Border] = ImVec4(0.43f, 0.43f, 0.50f, 0.50f);
@@ -195,6 +206,9 @@ namespace aby::vk {
         colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
         colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
         colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+
+        theme.set_current();
+        theme.save(theme_dir);
     }
 
     Instance& Context::inst() {
