@@ -120,7 +120,6 @@ namespace aby {
             closedir(dir);
         }
     #endif
-        return false;
     }
 }
 

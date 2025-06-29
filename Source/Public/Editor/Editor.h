@@ -1,7 +1,6 @@
 #pragma once
 #include "Core/App.h"
 #include "Core/Resource.h"
-#include "Widget/UI.h"
 #include "Rendering/Font.h"
 #include "Platform/Platform.h"
 #include "Platform/imgui/imtheme.h"

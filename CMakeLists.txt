@@ -242,7 +242,6 @@ set(CPP_SOURCES
     Source/Private/Rendering/Vertex.cpp
     Source/Private/Utility/CursorString.cpp
     Source/Private/Utility/Inserter.cpp
-    Source/Private/Utility/MaxEmptyRectFinder.cpp
     Source/Private/Utility/Random.cpp
     Source/Private/Utility/TagParser.cpp
     ${STB_IMPL}
@@ -298,7 +297,6 @@ set(HEADER_FILES
     Source/Public/Utility/CursorString.h
     Source/Public/Utility/Delegate.h
     Source/Public/Utility/Inserter.h
-    Source/Public/Utility/MaxEmptyRectFinder.h
     Source/Public/Utility/Random.h
     Source/Public/Utility/TagParser.h
 )
