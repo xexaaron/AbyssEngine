@@ -4,6 +4,7 @@
 #include "Rendering/Font.h"
 #include "Platform/Platform.h"
 #include "Platform/imgui/imtheme.h"
+#include "Platform/imgui/imconsole.h"
 #include "Utility/Delegate.h"
 
 #include <filesystem>
@@ -20,6 +21,7 @@ namespace aby::editor {
         ESettingsPage current_page;
         imgui::Theme  current_theme;
         bool          show_settings;
+        bool          show_console;
     };
 
     struct Icons {
@@ -57,7 +59,7 @@ namespace aby::editor {
         App*     m_App;
         Icons    m_Icons;
         Settings m_Settings;
-
+        imgui::Console m_Console;
     };
 
 }

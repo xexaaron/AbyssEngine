@@ -25,6 +25,8 @@ namespace aby::util {
         return {
             Tag(ETextDecor::UNDERLINE, "ul"),
             Tag(ETextDecor::HIGHLIGHT, "hl"),
+            Tag(ETextDecor::FILE_PATH, "fp"),
+            Tag(ETextDecor::URI_LINK,  "ur"),
         };
     }
 
@@ -71,6 +73,22 @@ namespace aby::util {
         }
         return decors;
     }
+
+    bool contains_tag(const std::string& text, ETextDecor decor) {
+        switch (decor) {
+            case ETextDecor::NONE:      return false;
+            case ETextDecor::UNDERLINE: return text.contains("<ul>");
+            case ETextDecor::HIGHLIGHT: return text.contains("<hl>");
+            case ETextDecor::FILE_PATH: return text.contains("<fp>");
+            case ETextDecor::URI_LINK:  return text.contains("<ur>");
+        }
+    }
+    bool contains_tags(const std::string& text) {
+        return contains_tag(text, ETextDecor::UNDERLINE) ||
+               contains_tag(text, ETextDecor::HIGHLIGHT) ||
+               contains_tag(text, ETextDecor::FILE_PATH) ||
+               contains_tag(text, ETextDecor::URI_LINK);
+    }           
 }
 
 std::string std::to_string(aby::util::ETagComparison compare) {
@@ -85,6 +103,8 @@ std::string std::to_string(aby::util::ETextDecor type) {
     switch (type) {
         case aby::util::ETextDecor::UNDERLINE: return "UNDERLINE";
         case aby::util::ETextDecor::HIGHLIGHT: return "HIGHLIGHT";
+        case aby::util::ETextDecor::FILE_PATH: return "FILE_PATH";
+        case aby::util::ETextDecor::URI_LINK:  return "URI_LINK";
         default: return "NONE";
     }
 }

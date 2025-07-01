@@ -1,4 +1,6 @@
 #include "Platform/imgui/imwidget.h"
+#include "Utility/TagParser.h"
+#include <imgui/imgui_internal.h>
 
 namespace aby::imgui {
 
@@ -99,4 +101,120 @@ namespace aby::imgui {
 
 		return result;
 	}
+
+	void UnderlinePreviousText(ImGuiCol col) {
+		ImVec2 text_pos = ImGui::GetItemRectMin();
+		ImVec2 text_size = ImGui::GetItemRectSize();
+		ImDrawList* draw_list = ImGui::GetWindowDrawList();
+		ImVec4 color = ImGui::GetStyle().Colors[ImGuiCol_TextDisabled];
+		ImU32 packed_color = ImGui::ColorConvertFloat4ToU32(color);
+		draw_list->AddLine(
+			ImVec2(text_pos.x, text_pos.y + text_size.y),
+			ImVec2(text_pos.x + text_size.x, text_pos.y + text_size.y),
+			packed_color,
+			1.0f
+		);
+	}
+
+	void TextWithTags(const std::string& text, bool wrapped) {
+		std::string ctext = text;
+		auto decors = util::parse_and_strip_tags(ctext);
+		int pos = 0;
+		bool first = true;
+
+		for (const auto& decor : decors) {
+			// Normal (unstyled) text before tag
+			if (pos < decor.range.start) {
+				std::string segment = ctext.substr(pos, decor.range.start - pos);
+				if (!first) ImGui::SameLine(0.f, 0.f);
+				ImGui::TextUnformatted(segment.c_str());
+				first = false;
+			}
+
+			// Tagged segment
+			std::string segment = ctext.substr(decor.range.start, decor.range.end - decor.range.start + 1);
+
+			if (!first) ImGui::SameLine(0.f, 0.f);
+
+			switch (decor.type) {
+				case util::ETextDecor::FILE_PATH: {
+					fs::path path(segment);
+					std::string name = "\"" + path.filename().string();
+					TextLink(name.c_str(), segment.c_str());
+				} break;
+				case util::ETextDecor::URI_LINK:
+					TextLink(segment.c_str());
+					break;
+				default:
+					throw std::runtime_error("Unsupported text tag");
+			}
+			first = false;
+			pos = decor.range.end + 1;
+		}
+
+		// Remaining plain text
+		if (pos < ctext.size()) {
+			std::string segment = ctext.substr(pos);
+			if (!first) ImGui::SameLine(0.f, 0.f);
+			ImGui::TextUnformatted(segment.c_str());
+		}
+	}
+
+	void TextLink(const std::string& text, std::string url) {
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+		if (window->SkipItems)
+			return;
+
+		ImGuiContext& g = *GImGui;
+		const char* label = text.c_str();
+		const ImGuiID id = window->GetID(label);
+		const char* label_end = ImGui::FindRenderedTextEnd(label);
+		ImVec2 pos(window->DC.CursorPos.x, window->DC.CursorPos.y + window->DC.CurrLineTextBaseOffset);
+		ImVec2 size = ImGui::CalcTextSize(label, label_end, true);
+		ImRect bb(pos, pos + size);
+		bool hovered, held;
+		ImVec4 text_colf = g.Style.Colors[ImGuiCol_TextLink];
+		ImVec4 line_colf = text_colf;
+
+		if (url.empty())
+			url = text;
+		
+		ImGui::ItemSize(size, 0.0f);
+		if (!ImGui::ItemAdd(bb, id))
+			return;
+
+		bool pressed = ImGui::ButtonBehavior(bb, id, &hovered, &held);
+
+		ImGui::RenderNavCursor(bb, id);
+
+		if (hovered)
+			ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+
+		{
+			float h, s, v;
+			ImGui::ColorConvertRGBtoHSV(text_colf.x, text_colf.y, text_colf.z, h, s, v);
+			if (held || hovered)
+			{
+				v = ImSaturate(v + (held ? 0.4f : 0.3f));
+				h = ImFmod(h + 0.02f, 1.0f);
+			}
+			ImGui::ColorConvertHSVtoRGB(h, s, v, text_colf.x, text_colf.y, text_colf.z);
+			v = ImSaturate(v - 0.20f);
+			ImGui::ColorConvertHSVtoRGB(h, s, v, line_colf.x, line_colf.y, line_colf.z);
+		}
+
+		float line_y = bb.Max.y + ImFloor(g.Font->Descent * g.FontScale * 0.20f);
+		window->DrawList->AddLine(ImVec2(bb.Min.x, line_y), ImVec2(bb.Max.x, line_y), ImGui::GetColorU32(line_colf)); // FIXME-TEXT: Underline mode // FIXME-DPI
+
+		ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(text_colf));
+		ImGui::RenderText(bb.Min, label, label_end);
+		ImGui::PopStyleColor();
+
+		if (pressed && ImGui::IsKeyDown(ImGuiMod_Ctrl)) {
+			if (g.PlatformIO.Platform_OpenInShellFn != NULL)
+				g.PlatformIO.Platform_OpenInShellFn(&g, url.c_str());
+		}
+	}
+
+
 }

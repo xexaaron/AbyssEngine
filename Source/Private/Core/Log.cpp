@@ -10,6 +10,10 @@ namespace aby {
         m_ErrStream = &err_stream;
     }
 
+    void Logger::set_only_do_cb(bool only_do_cb) {
+        bOnlyDoCallbacks = only_do_cb;
+    }
+
     std::size_t Logger::add_callback(Callback&& callback) {
         const std::size_t idx = m_Callbacks.size();
         m_Callbacks.push_back(callback);
@@ -30,7 +34,8 @@ namespace aby {
 
         while (!m_MsgBuff.empty()) {
             auto& msg = m_MsgBuff.front();
-            switch (msg.level) {
+            if (!bOnlyDoCallbacks) {
+                switch (msg.level) {
                 case ELogLevel::LOG:
                 case ELogLevel::DEBUG:
                     *m_LogStream << "\033[" << static_cast<int>(msg.color()) << "m" << msg.text << "\033[0m" << '\n';
@@ -39,8 +44,8 @@ namespace aby {
                 case ELogLevel::ERR:
                     *m_ErrStream << "\033[" << static_cast<int>(msg.color()) << "m" << msg.text << "\033[0m" << '\n';
                     break;
+                }
             }
-
             for (auto& cb : m_Callbacks) {
                 cb(msg);
             }

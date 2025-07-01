@@ -15,6 +15,8 @@ namespace aby::imgui {
 	bool InputVec2(const std::string& label,  ImVec2& v, const InputConstraints& constraints = {});
 	bool InputVec4(const std::string& label,  ImVec4& v, const InputConstraints& constraints = {});
 	bool InputColor(const std::string& label, ImVec4& v, const InputConstraints& constraints = {});
-
+	void UnderlinePreviousText(ImGuiCol col = ImGuiCol_TextDisabled);
+	void TextWithTags(const std::string& text, bool wrapped = false);
+	void TextLink(const std::string& text, std::string url = "");
 
 }

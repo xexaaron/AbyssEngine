@@ -194,7 +194,12 @@ target_compile_options(ImGui PUBLIC ${COMPILE_OPTS})
 set_target_properties(ImGui PROPERTIES FOLDER "Dependencies/ImGui")
 # List Sources
 
+set(IMWEB_DIR "Vendor/AbyssImWeb")
+set(IMWEB_INCLUDE_DIR "Vendor/AbyssImWeb/Source/Public")
+add_subdirectory(${IMWEB_DIR})
+
 set(CPP_SOURCES
+    Source/Private/Browser/Browser.cpp
     Source/Private/Core/App.cpp
     Source/Private/Core/Event.cpp
     Source/Private/Core/Log.cpp
@@ -208,6 +213,7 @@ set(CPP_SOURCES
     Source/Private/Platform/Platform.cpp
     Source/Private/Platform/Platform.cpp
     Source/Private/Platform/Process.cpp
+    Source/Private/Platform/imgui/imconsole.cpp
     Source/Private/Platform/imgui/imtheme.cpp
     Source/Private/Platform/imgui/imwidget.cpp
     Source/Private/Platform/posix/PlatformPosix.cpp
@@ -248,6 +254,7 @@ set(CPP_SOURCES
 )
 
 set(HEADER_FILES
+    Source/Public/Browser/Browser.h
     Source/Public/Core/App.h
     Source/Public/Core/Common.h
     Source/Public/Core/Event.h
@@ -260,6 +267,7 @@ set(HEADER_FILES
     Source/Public/Core/Window.h
     Source/Public/Editor/Editor.h
     Source/Public/Platform/imgui/imconfig.h
+    Source/Public/Platform/imgui/imconsole.h
     Source/Public/Platform/imgui/imtheme.h
     Source/Public/Platform/imgui/imwidget.h
     Source/Public/Platform/Platform.h
@@ -303,6 +311,7 @@ set(HEADER_FILES
 
 # Setup virtual folders (Functions.cmake)
 make_source_groups(
+    Browser
     Core
     Editor
     Platform
@@ -347,6 +356,7 @@ target_include_directories(${ENGINE} PUBLIC
     ${GCH_SMALL_VEC_INCLUDE_DIR} 
     ${ABYSS_FREETYPE_INCLUDE_DIR}
     ${ABY_FT_PP_INCLUDE_DIR}
+    ${IMWEB_INCLUDE_DIR}
 )
 target_include_directories(${EDITOR} PUBLIC Source/Public ${COMMON_INCLUDE_DIRS} ${ABY_FT_PP_INCLUDE_DIR})
 set_target_properties(${ENGINE} PROPERTIES FOLDER "Abyss")
@@ -363,6 +373,7 @@ target_link_libraries(${ENGINE} PRIVATE
     AbyssFTLib
     glfw
     ImGui
+    AbyssImWeb
 )
  
 target_link_libraries(${EDITOR} PRIVATE ${ENGINE})

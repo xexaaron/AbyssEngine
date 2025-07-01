@@ -9,7 +9,7 @@ namespace aby::imgui {
         Theme(const std::string& name);
         Theme(const std::string& name, const std::filesystem::path& dir);
         Theme(const std::string& name, ImGuiStyle* style);
-
+        
         static bool exists(const std::string& name, const std::filesystem::path& dir); 
 
         void save(const std::filesystem::path& dir);

@@ -9,8 +9,10 @@ namespace aby::util {
 
     enum class ETextDecor {
         NONE = 0,
-        UNDERLINE,
-        HIGHLIGHT,
+        UNDERLINE,  // ul
+        HIGHLIGHT,  // hl
+        FILE_PATH,  // fp
+        URI_LINK,   // ur
     };
 
     enum class ETagComparison {
@@ -55,6 +57,8 @@ namespace aby::util {
 
     std::vector<TextDecor> parse_and_strip_tags(std::string& text);
 
+    bool contains_tag(const std::string& text, ETextDecor decor);
+    bool contains_tags(const std::string& text);
 }
 
 namespace std {

@@ -385,7 +385,7 @@ namespace aby::vk {
         VK_CHECK(vkCreateDescriptorSetLayout(m_Logical, &layoutInfo, IAllocator::get(), &m_Layout));
    
         ABY_LOG("Loaded Shader: {}ms", timer.elapsed().milli());
-        ABY_LOG("  Path:    \"{}\"", path);
+        ABY_LOG("  Path:     {}", path);
         ABY_LOG("  Type:     {}", std::to_string(type));
         ABY_LOG("  Inputs:   {}", m_Descriptor.inputs.size());
         ABY_LOG("  Uniforms: {}", m_Descriptor.uniforms.size());

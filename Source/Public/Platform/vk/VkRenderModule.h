@@ -66,6 +66,7 @@ namespace aby::vk {
     class RenderModule {
     public:
         RenderModule(Ref<vk::Context> ctx, vk::Swapchain& swapchain, const std::vector<fs::path>& shaders);
+        RenderModule(Ref<vk::Context> ctx, vk::Swapchain& swapchain, Ref<ShaderModule> module);
 
         void destroy();
         void reset();
@@ -81,6 +82,8 @@ namespace aby::vk {
         vk::Pipeline&     pipeline();
         RenderPrimitive&  quads();
         RenderPrimitive&  tris();
+    private:
+        void init();
     private:
         vk::Context*          m_Ctx;
         Ref<ShaderModule>     m_Module;

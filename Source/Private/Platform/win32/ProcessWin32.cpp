@@ -90,48 +90,55 @@ namespace aby::sys::win32 {
 	}
 
     void Process::loop() {
+        std::string pending;
         char buffer[1024];
-        while (bRunning.load() == true) {
-            DWORD ec;   
+
+        while (bRunning.load()) {
+            DWORD ec;
             if (GetExitCodeProcess(m_Handles.proc, &ec) && ec != STILL_ACTIVE) {
                 ABY_LOG("Process exited with code: {}", ec);
                 bRunning.store(false);
                 break;
             }
+
             while (!m_Writes.empty()) {
                 std::string input = m_Writes.front();
                 m_Writes.pop();
                 DWORD bytes_written;
                 WriteFile(m_Handles.in.write, input.c_str(), static_cast<DWORD>(input.size()), &bytes_written, NULL);
+                FlushFileBuffers(m_Handles.in.write);
             }
+
             DWORD bytes_avail = 0;
-            if (PeekNamedPipe(m_Handles.out.read, NULL, 0, NULL, &bytes_avail, NULL)) {
-                if (bytes_avail > 0) {
-                    DWORD bytes_read;
-                    if (ReadFile(m_Handles.out.read, buffer, sizeof(buffer) - 1, &bytes_read, NULL)) {
-                        buffer[bytes_read] = '\0';
-                        std::string str(buffer);
-                        sanitize(str);
-                        std::istringstream stream(str);
-                        std::string line;
-                        while (std::getline(stream, line)) {
-                            m_Read(line);
-                        }
-                    } else {
-                        DWORD error = GetLastError();
-                        if (error == ERROR_BROKEN_PIPE || error == ERROR_NO_DATA) {
-                            break;  // Exit loop if no more data
-                        }
-                        else {
-                            ABY_LOG("Failed to read process stdin: {}", get_last_err());  // Log any other errors
-                        }
+            if (PeekNamedPipe(m_Handles.out.read, NULL, 0, NULL, &bytes_avail, NULL) && bytes_avail > 0) {
+                DWORD bytes_read;
+                if (ReadFile(m_Handles.out.read, buffer, sizeof(buffer) - 1, &bytes_read, NULL)) {
+                    buffer[bytes_read] = '\0';
+                    pending += buffer;
+
+                    // Look for complete lines
+                    std::size_t pos = 0;
+                    while ((pos = pending.find('\n')) != std::string::npos) {
+                        std::string line = pending.substr(0, pos);
+                        pending.erase(0, pos + 1);
+
+                        sanitize(line);
+                        m_Read(line);
                     }
+                }
+                else {
+                    DWORD error = GetLastError();
+                    if (error == ERROR_BROKEN_PIPE || error == ERROR_NO_DATA)
+                        break;
+                    else
+                        ABY_LOG("Read error: {}", get_last_err());
                 }
             }
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));  // Avoid busy-waiting
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
     }
+
 
     void Process::write(const std::string& data) {
         m_Writes.push(data + "\r\n");  
@@ -232,20 +239,21 @@ namespace aby::sys::win32 {
     }
 
     void Process::sanitize(std::string& buffer) {
-        // Remove ANSI escape codes
-        std::regex ansi_regex("\x1B\\[[0-9;]*[mG]");
-        // Remove common Windows terminal control sequences
-        std::regex win_regex("\x1B\\[(2J|H|25h)");
+        // Remove ANSI CSI sequences (e.g., \x1B[31m, \x1B[?25h, etc.)
+        std::regex csi_regex(R"(\x1B\[[0-9;?]*[A-Za-z])");
 
-        buffer = std::regex_replace(buffer, ansi_regex, "");
-        buffer = std::regex_replace(buffer, win_regex, "");
+        // Remove OSC sequences (e.g., \x1B]0;some title\x07)
+        std::regex osc_regex(R"(\x1B\][^\x07]*\x07)");
+
+        buffer = std::regex_replace(buffer, csi_regex, "");
+        buffer = std::regex_replace(buffer, osc_regex, "");
 
         std::string sanitized;
-        sanitized.reserve(buffer.size() * 2); 
+        sanitized.reserve(buffer.size() * 2);
         for (char ch : buffer) {
             if (ch == '\\') {
                 // Convert Windows-style paths to Unix-style
-                sanitized += "/"; 
+                sanitized += "/";
             }
             else if (ch == '\t') {
                 sanitized += "    ";
@@ -255,30 +263,6 @@ namespace aby::sys::win32 {
             }
         }
 
-        // Remove beginning of msg esc sequence.
-        constexpr char esc = '\x1b';
-        constexpr std::array begin_of_msg = { esc, '[', '?', '2', '5', '1' };
-        if (sanitized[0]) {
-            std::size_t i = 0;
-            for (; i < begin_of_msg.size() && sanitized[i] == begin_of_msg[i]; ++i) {}
-            if (i == begin_of_msg.size() - 1) {
-                sanitized = sanitized.substr(begin_of_msg.size());
-            }
-        }
-        // Remove ']0;FILE' from end of msg
-        constexpr std::array end_of_msg = { esc, ']', '0', ';', };
-        if (sanitized.length() >= end_of_msg.size()) {
-            for (std::size_t i = 0; i < sanitized.size() - end_of_msg.size() + 1; i++) {
-                if (sanitized[i + 0] == end_of_msg[0] &&
-                    sanitized[i + 1] == end_of_msg[1] &&
-                    sanitized[i + 2] == end_of_msg[2] &&
-                    sanitized[i + 3] == end_of_msg[3])
-                {
-                    sanitized.erase(i);
-                    break;
-                }
-            }
-        }
         buffer = replace_cursor_right_with_spaces(sanitized);
     }
 

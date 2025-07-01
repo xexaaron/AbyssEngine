@@ -25,10 +25,7 @@ namespace aby::vk {
             ctx->app()->bin() / "Shaders/Vertex.glsl",
             ctx->app()->bin() / "Shaders/Fragment.glsl" 
         }),
-        m_3D(ctx, m_Swapchain, { 
-            ctx->app()->bin() / "Shaders/Vertex.glsl",
-            ctx->app()->bin() / "Shaders/Fragment.glsl" 
-        }),
+        m_3D(ctx, m_Swapchain, m_2D.module()),
         m_RecycledSemaphores{},
         m_Img(0)
     {

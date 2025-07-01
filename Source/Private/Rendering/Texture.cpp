@@ -18,7 +18,7 @@ namespace aby {
                     auto tex = create_ref<vk::Texture>(static_cast<vk::Context*>(ctx), path);
                     auto elapsed = timer.elapsed();
                     ABY_LOG("Loaded Texture: {}ms", elapsed.milli());
-                    ABY_LOG("  Path:    \"{}\"", path);
+                    ABY_LOG("  Path:     {}", path);
                     ABY_LOG("  Size:     ({}, {})", EXPAND_VEC2(tex->size()));
                     ABY_LOG("  Channels: {}", tex->channels());
                     ABY_LOG("  Bytes:    {}", tex->bytes());

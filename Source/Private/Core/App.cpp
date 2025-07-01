@@ -1,6 +1,5 @@
 #include "Core/App.h"
 #include "Core/Log.h"
-#include "Widget/Widget.h"
 #include "Platform/vk/VkRenderer.h"
 #include "Platform/Platform.h"
 
@@ -38,6 +37,7 @@ namespace aby {
         if (!fs::exists(object_cache)) {
             fs::create_directories(object_cache);
         }
+        Logger::set_only_do_cb(true);
     }
 
     App::~App() {

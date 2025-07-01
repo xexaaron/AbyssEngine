@@ -41,14 +41,16 @@ namespace aby::editor {
 
 namespace aby::editor {
 
-    EditorUI::EditorUI(App* app) : 
+	EditorUI::EditorUI(App* app) :
 		m_App(app),
 		m_Icons{},
 		m_Settings{
 			.current_page  = ESettingsPage::NONE,
 			.current_theme = imgui::Theme("Default"),
-			.show_settings = true // TODO: set to false. (testing purposes)
-		}
+			.show_settings = false, 
+			.show_console  = false,
+		},
+		m_Console()
 	{
 	}
 	
@@ -58,13 +60,18 @@ namespace aby::editor {
 		m_Icons.maximize = Texture::create(&app->ctx(), path / "MaximizeIcon.png");
 		m_Icons.exit     = Texture::create(&app->ctx(), path / "ExitIcon.png");
 		m_Icons.plus	 = Texture::create(&app->ctx(), path / "PlusIcon.png");
+		Logger::add_callback([&](const LogMsg& msg) {
+			m_Console.add_msg(msg);
+		});
 	}
 
     void EditorUI::on_tick(App* app, Time deltatime) {
 		draw_dockspace();
 		draw_settings();
+		m_Console.draw("Console", &m_Settings.show_console);
 		ImGui::Begin("Viewport");
 		ImGui::End();
+		ImGui::ShowStyleEditor();
     }
 
 	void EditorUI::draw_settings() {
@@ -117,20 +124,20 @@ namespace aby::editor {
 	void EditorUI::draw_theme_settings() {
 		auto theme_dir = m_App->cache() / "Themes";
 		auto curr_theme_name = m_Settings.current_theme.name().c_str();
-		if (ImGui::BeginCombo("##Theme", curr_theme_name)) {
-			auto it = std::filesystem::directory_iterator(theme_dir);
-			for (auto& theme : it) {
-				auto name = theme.path().filename().replace_extension("").string();
-				if (ImGui::Selectable(name.c_str(), curr_theme_name == name)) {
-					imgui::Theme theme(name, theme_dir);
-					theme.set_current();
-					m_Settings.current_theme = theme;
-				}
-			}
-			ImGui::EndCombo();
-		}
+		// if (ImGui::BeginCombo("##Theme", curr_theme_name)) {
+		// 	auto it = std::filesystem::directory_iterator(theme_dir);
+		// 	for (auto& theme : it) {
+		// 		auto name = theme.path().filename().replace_extension("").string();
+		// 		if (ImGui::Selectable(name.c_str(), curr_theme_name == name)) {
+		// 			imgui::Theme theme(name, theme_dir);
+		// 			theme.set_current();
+		// 			m_Settings.current_theme = theme;
+		// 		}
+		// 	}
+		// 	ImGui::EndCombo();
+		// }
 		
-		bool disable_opts = m_Settings.current_theme.name().starts_with("Default");
+		bool disable_opts = true; // m_Settings.current_theme.name().starts_with("Default");
 
 
 		ImGui::SameLine();
@@ -352,6 +359,17 @@ namespace aby::editor {
 			if (ImGui::MenuItem("Exit", "alt+f4")) {
 				m_App->quit();
 			}
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("View")) {
+
+			ImGui::MenuItem("Console", "", &m_Settings.show_console);
+			
+			ImGui::Separator();
+			
+			ImGui::MenuItem("Settings", "", &m_Settings.show_settings);
+
 			ImGui::EndMenu();
 		}
 

@@ -21,6 +21,8 @@ namespace aby::vk {
        
     }
 
+
+
     void RenderPrimitive::destroy() {
         m_VertexBuffer.destroy();
         if (m_Descriptor.IndicesPer != m_Descriptor.VerticesPer) {
@@ -142,6 +144,9 @@ namespace aby::vk {
         return glm::translate(UNIT_MATRIX, pos) * glm::scale(UNIT_MATRIX, size);
     }
 
+
+
+
     RenderModule::RenderModule(Ref<vk::Context> ctx, vk::Swapchain& swapchain, const std::vector<fs::path>& shaders) :
         m_Ctx(ctx.get()),
         m_Module(ShaderModule::create(ctx.get(), shaders[0], shaders[1])),
@@ -161,9 +166,35 @@ namespace aby::vk {
             }) // Quads
         }
     {
+        init();
+    }
+
+    RenderModule::RenderModule(Ref<vk::Context> ctx, vk::Swapchain& swapchain, Ref<ShaderModule> module) :
+        m_Ctx(ctx.get()),
+        m_Module(module),
+        m_Pipeline(ctx->window(), ctx->devices(), m_Module, swapchain),
+        m_Primitives{
+            RenderPrimitive(ctx, m_Module->vertex_descriptor(), PrimitiveDescriptor{
+                .MaxVertices = 10000,
+                .MaxIndices = 30000,
+                .IndicesPer = 3,
+                .VerticesPer = 3
+            }), // Triangles
+            RenderPrimitive(ctx, m_Module->vertex_descriptor(), PrimitiveDescriptor{
+                .MaxVertices = 10000 * 2,
+                .MaxIndices = 60000 * 2,
+                .IndicesPer = 6,
+                .VerticesPer = 4
+            }) // Quads
+        }
+    {
+        init();
+    }
+
+    void RenderModule::init() {
         auto& quad_prim = this->quads();
         auto& prim_desc = quad_prim.descriptor();
-    #ifdef NDEBUG
+#ifdef NDEBUG
         uint32_t* indices = new uint32_t[prim_desc.MaxIndices];
         for (uint32_t i = 0, offset = 0; i < prim_desc.MaxIndices; i += prim_desc.IndicesPer, offset += prim_desc.VerticesPer) {
             indices[i + 0] = offset + 0;
@@ -173,9 +204,9 @@ namespace aby::vk {
             indices[i + 4] = offset + 3;
             indices[i + 5] = offset + 0;
         }
-        quad_prim.set_index_data(indices, ctx->devices());
+        quad_prim.set_index_data(indices, m_Ctx->devices());
         delete[] indices;
-    #else
+#else
         std::vector<uint32_t> indices(prim_desc.MaxIndices);
         for (uint32_t i = 0, offset = 0; i < prim_desc.MaxIndices; i += prim_desc.IndicesPer, offset += prim_desc.VerticesPer) {
             indices[i + 0] = offset + 0;
@@ -185,8 +216,8 @@ namespace aby::vk {
             indices[i + 4] = offset + 3;
             indices[i + 5] = offset + 0;
         }
-        quad_prim.set_index_data(indices.data(), ctx->devices());
-    #endif
+        quad_prim.set_index_data(indices.data(), m_Ctx->devices());
+#endif
     }
 
     void RenderModule::destroy() {

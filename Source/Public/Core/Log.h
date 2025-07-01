@@ -47,15 +47,17 @@ namespace aby {
         #ifdef ABY_BUFFERED_LOGGING
             m_MsgBuff.emplace(static_cast<ELogLevel>(color), out);
         #else
-            switch (static_cast<ELogLevel>(color)) {
-                case ELogLevel::LOG:
-                case ELogLevel::DEBUG:
-                    *m_LogStream << "\033[" << static_cast<int>(color) << "m" << out << "\033[0m" << '\n';
-                    break;
-                case ELogLevel::WARN:
-                case ELogLevel::ERR:
+            if (!bOnlyDoCallbacks) {
+                switch (static_cast<ELogLevel>(color)) {
+                    case ELogLevel::LOG:
+                    case ELogLevel::DEBUG:
+                        *m_LogStream << "\033[" << static_cast<int>(color) << "m" << out << "\033[0m" << '\n';
+                        break;
+                    case ELogLevel::WARN:
+                    case ELogLevel::ERR:
                     *m_ErrStream << "\033[" << static_cast<int>(color) << "m" << out << "\033[0m" << '\n';
-                    break;
+                        break;
+                }
             }
             for (auto& cb : m_Callbacks) {
                 cb(LogMsg{ static_cast<ELogLevel>(color), out });
@@ -67,6 +69,7 @@ namespace aby {
 
         static void        flush();
         static void        set_streams(std::ostream& log_stream = std::clog, std::ostream& err_stream = std::cerr);
+        static void        set_only_do_cb(bool only_do_cb);
         static std::size_t add_callback(Callback&& callback);
         static void        remove_callback(std::size_t idx);
         static std::string time_date_now_header();
@@ -103,6 +106,7 @@ namespace aby {
         static inline std::vector<Callback> m_Callbacks = {};
         static inline std::recursive_mutex m_Mutex = {};
         static inline std::queue<LogMsg> m_MsgBuff = {};
+        static inline bool bOnlyDoCallbacks = false;
     };
 
 } 
@@ -130,7 +134,7 @@ namespace std {
 
         template <typename FmtContext>
         typename FmtContext::iterator format(const filesystem::path& path, FmtContext& ctx) const {
-            return format_to(ctx.out(), "{}", path.generic_string());
+            return format_to(ctx.out(), "<fp>\"{}\"</fp>", path.generic_string());
         }
     };
 
