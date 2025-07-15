@@ -2,6 +2,11 @@
 #include "Core/Common.h"
 #include <imgui/imgui.h>
 #include <limits>
+
+#ifdef max
+#undef max
+#endif
+
 namespace aby::imgui {
 	
 	struct InputConstraints {

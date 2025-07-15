@@ -7,6 +7,7 @@ freetype-demos/
 MTuner/
 out/
 
+Vendor/cef/
 
 tool.exe
 /tool

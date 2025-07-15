@@ -149,7 +149,7 @@ namespace aby::imgui {
 					throw std::runtime_error("Unsupported text tag");
 			}
 			first = false;
-			pos = decor.range.end + 1;
+			pos = static_cast<int>(decor.range.end) + 1;
 		}
 
 		// Remaining plain text
@@ -202,8 +202,7 @@ namespace aby::imgui {
 			v = ImSaturate(v - 0.20f);
 			ImGui::ColorConvertHSVtoRGB(h, s, v, line_colf.x, line_colf.y, line_colf.z);
 		}
-
-		float line_y = bb.Max.y + ImFloor(g.Font->Descent * g.FontScale * 0.20f);
+		float line_y = bb.Max.y + ImFloor(g.Font->LastBaked->Descent * g.FontBakedScale * 0.20f);
 		window->DrawList->AddLine(ImVec2(bb.Min.x, line_y), ImVec2(bb.Max.x, line_y), ImGui::GetColorU32(line_colf)); // FIXME-TEXT: Underline mode // FIXME-DPI
 
 		ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(text_colf));

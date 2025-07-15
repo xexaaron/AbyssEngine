@@ -45,4 +45,17 @@ namespace aby::sys {
         return PLATFORM_NAMESPACE::get_pid();
     }
 
+    auto get_args(int& argc, char**& argv) -> void {
+        return PLATFORM_NAMESPACE::get_args(argc, argv);
+    }
+
+    auto free_args(int argc, char** argv) -> void {
+        return PLATFORM_NAMESPACE::free_args(argc, argv);
+    }
+
+    auto glfw_to_platform_keycode(int glfw_key) -> int {
+        return PLATFORM_NAMESPACE::glfw_to_platform_keycode(glfw_key);
+    }
+
+
 }

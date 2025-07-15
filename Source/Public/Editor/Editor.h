@@ -6,7 +6,7 @@
 #include "Platform/imgui/imtheme.h"
 #include "Platform/imgui/imconsole.h"
 #include "Utility/Delegate.h"
-
+#include "Browser/Browser.h"
 #include <filesystem>
 
 namespace aby::editor {
@@ -47,7 +47,9 @@ namespace aby::editor {
         EditorUI(App* app);
         void on_create(App* app, bool) override;
         void on_tick(App* app, Time deltatime) override;
-        
+        void on_event(App* app, Event& event) override;
+        void on_destroy(App* app) override;
+
     private:
         void draw_dockspace();
         void draw_menubar();
@@ -60,6 +62,7 @@ namespace aby::editor {
         Icons    m_Icons;
         Settings m_Settings;
         imgui::Console m_Console;
+        web::Browser m_Browser;
     };
 
 }

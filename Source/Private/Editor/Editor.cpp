@@ -1,5 +1,6 @@
 #include "Editor/Editor.h"
 #include "Platform/imgui/imwidget.h"
+
 namespace aby::editor {
 
     Editor::Editor() : 
@@ -50,8 +51,10 @@ namespace aby::editor {
 			.show_settings = false, 
 			.show_console  = false,
 		},
-		m_Console()
+		m_Console("Console", false),
+		m_Browser(app->window())
 	{
+
 	}
 	
 	void EditorUI::on_create(App* app, bool) {
@@ -63,16 +66,31 @@ namespace aby::editor {
 		Logger::add_callback([&](const LogMsg& msg) {
 			m_Console.add_msg(msg);
 		});
+		m_Browser.on_create(app, false);
 	}
 
     void EditorUI::on_tick(App* app, Time deltatime) {
 		draw_dockspace();
 		draw_settings();
-		m_Console.draw("Console", &m_Settings.show_console);
-		ImGui::Begin("Viewport");
+		m_Browser.on_tick(app, deltatime);
+
+		if (ImGui::Begin("Viewport")) {
+		}
+		
+		m_Console.draw(&m_Settings.show_console);
+
 		ImGui::End();
+
 		ImGui::ShowStyleEditor();
     }
+
+	void EditorUI::on_event(App* app, Event& event) {
+		m_Browser.on_event(app, event);
+	}
+
+	void EditorUI::on_destroy(App* app) {
+		m_Browser.on_destroy(app);
+	}
 
 	void EditorUI::draw_settings() {
 		if (!m_Settings.show_settings) return;
@@ -81,11 +99,10 @@ namespace aby::editor {
 			return;
 		}
 
-		auto size   = ImGui::GetWindowSize();
-		auto width  = size.x;
-		auto height = size.y;
-		auto category_width = size.x * 0.2f;
-		auto settings_width = width - category_width - 22.5;
+		ImVec2 size   = ImGui::GetWindowSize();
+		float  width  = size.x;
+		float  category_width = size.x * 0.2f;
+		float  settings_width = width - category_width - 22.5;
 
 		if (ImGui::BeginChild("Categories", ImVec2(category_width, 0), ImGuiChildFlags_Border)) {
 			ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_DefaultOpen;
@@ -123,7 +140,6 @@ namespace aby::editor {
 
 	void EditorUI::draw_theme_settings() {
 		auto theme_dir = m_App->cache() / "Themes";
-		auto curr_theme_name = m_Settings.current_theme.name().c_str();
 		// if (ImGui::BeginCombo("##Theme", curr_theme_name)) {
 		// 	auto it = std::filesystem::directory_iterator(theme_dir);
 		// 	for (auto& theme : it) {
@@ -288,6 +304,7 @@ namespace aby::editor {
 	void EditorUI::draw_font_settings() {
 
 	}
+
 
 	void EditorUI::draw_dockspace() {
 		static bool dockspaceOpen = true;

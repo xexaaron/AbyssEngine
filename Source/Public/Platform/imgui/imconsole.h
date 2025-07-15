@@ -8,13 +8,14 @@ namespace aby::imgui {
 
     class Console  {
     public:
-        Console();
+        Console(const std::string& title = "Console", bool is_child_window = true);
         ~Console();
+
 
         void add_msg(const char* fmt, ...);
         void add_msg(const LogMsg& msg);
         void clear();
-        void draw(const char* title, bool* p_open);
+        void draw(bool* p_open);
         void exec_cmd(const char* command_line);
     private:
         void draw_options(bool* p_open);
@@ -25,6 +26,7 @@ namespace aby::imgui {
     private:
         static void strtrim(char* s);
     private:
+        std::string           m_Title;
         char                  m_InputBuf[256];
         Unique<sys::Process>  m_OpenProc;
         std::vector<LogMsg>   m_Items;
@@ -35,6 +37,7 @@ namespace aby::imgui {
         bool                  bAutoScroll;
         bool                  bScrollToBottom;
         bool                  bCopyToClipboard;
+        bool                  bChildWindow;
     };
 
 }

@@ -266,7 +266,19 @@ namespace aby::vk {
         void on_add(Handle handle, Ref<aby::Texture> texture) override {
             auto  tex = std::static_pointer_cast<vk::Texture>(texture);
             auto* shader_module = std::any_cast<ShaderModule*>(m_UserData);
-            auto logical = shader_module->m_Ctx->devices().logical();
+            auto  logical = shader_module->m_Ctx->devices().logical();
+            tex->m_Handler      = this;
+            tex->m_Handle       = handle;
+            update_descriptor_sets(handle, tex);
+        }
+        
+        void on_erase(Handle handle, Ref<aby::Texture> texture) override {
+
+        }
+
+        void update_descriptor_sets(Handle handle, Ref<vk::Texture> tex) {
+            auto* shader_module = std::any_cast<ShaderModule*>(m_UserData);
+            auto logical        = shader_module->m_Ctx->devices().logical();
 
             VkDescriptorImageInfo img_info{
                .sampler = tex->sampler(),
@@ -299,7 +311,7 @@ namespace aby::vk {
                 alloc_info.descriptorPool = shader_module->pool();
                 alloc_info.pSetLayouts = &m_ImGuiLayout;
                 vkAllocateDescriptorSets(logical, &alloc_info, &tex->imgui_descriptor());
-                
+
                 VkWriteDescriptorSet write{};
                 write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
                 write.dstSet = tex->imgui_descriptor();
@@ -308,9 +320,6 @@ namespace aby::vk {
                 write.pImageInfo = &img_info;
                 vkUpdateDescriptorSets(logical, 1, &write, 0, nullptr);
             }
-        }
-        void on_erase(Handle handle, Ref<aby::Texture> texture) override {
-
         }
     private:
         VkDescriptorSetLayout m_ImGuiLayout;

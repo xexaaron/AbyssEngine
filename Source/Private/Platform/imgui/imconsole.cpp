@@ -5,19 +5,20 @@
 namespace aby::imgui {
    
 
-    Console::Console() {
+    Console::Console(const std::string& title, bool is_child_window) : 
+        m_Title(title),
+        m_OpenProc(nullptr),
+        m_HistoryPos(-1),
+        bAutoScroll(true),
+        bScrollToBottom(false),
+        bCopyToClipboard(false),
+        bChildWindow(is_child_window)
+    { 
         clear();
         memset(m_InputBuf, 0, sizeof(m_InputBuf));
-        m_HistoryPos = -1;
-        m_OpenProc = nullptr;
-        // "CLASSIFY" is here to provide the test case where "C"+[tab] completes to "CL" and display multiple matches.
         m_Commands.push_back("aby.help");
         m_Commands.push_back("aby.history");
         m_Commands.push_back("aby.clear");
-        m_Commands.push_back("aby.classify");
-        bAutoScroll = true;
-        bScrollToBottom = false;
-        bCopyToClipboard = false;
     }
 
     Console::~Console() {
@@ -45,13 +46,23 @@ namespace aby::imgui {
         m_Items.push_back(msg);
     }
 
-    void Console::draw(const char* title, bool* p_open) {
+    void Console::draw(bool* p_open) {
         ImGui::SetNextWindowSize(ImVec2(520, 600), ImGuiCond_FirstUseEver);
-        if (!ImGui::Begin(title, p_open))
-        {
-            ImGui::End();
-            return;
+        if (bChildWindow) {
+            if (!ImGui::BeginChild(m_Title.c_str())) {
+                ImGui::EndChild();
+                return;
+            }
         }
+        else {
+            if (!ImGui::Begin(m_Title.c_str(), p_open))
+            {
+                ImGui::End();
+                return;
+            }
+        }
+        
+
         ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 0);
         ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 0); 
         draw_options(p_open);
@@ -63,8 +74,14 @@ namespace aby::imgui {
         draw_log();
         draw_cmdline();
 
-        ImGui::End();
+        if (bChildWindow) {
+            ImGui::EndChild();
+        }
+        else {
+            ImGui::End();
+        }
     }
+
     void Console::draw_options(bool* p_open) {
         if (ImGui::BeginPopupContextItem())
         {

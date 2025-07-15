@@ -9,6 +9,18 @@
 
 namespace aby {
 
+    bool check_format_channels(u32 channels, ETextureFormat format) {
+        ABY_ASSERT(channels > 0 && channels <= 4, "Invalid channel range");
+        switch (channels) {
+            case 1: return format == ETextureFormat::R;
+            case 2: return format == ETextureFormat::RG;
+            case 3: return format == ETextureFormat::RGB;
+            case 4: return format == ETextureFormat::RGBA || format == ETextureFormat::BGRA;
+            default: std::unreachable();
+        }
+        return false;
+    }
+
     Resource Texture::create(Context* ctx, const fs::path& path) {
         ABY_ASSERT(ctx, "(aby::Context*)ctx is invalid!");
         switch (ctx->backend()) {
@@ -73,14 +85,14 @@ namespace aby {
         return {};
     }
     
-    Resource Texture::create(Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels) {
+    Resource Texture::create(Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels, ETextureFormat format) {
         ABY_ASSERT(ctx, "(aby::Context*)ctx is invalid!");
         switch (ctx->backend()) {
             case EBackend::VULKAN:
             {
-                return ctx->load_thread().add_task(EResource::TEXTURE, [ctx, size, data, channels]() {
+                return ctx->load_thread().add_task(EResource::TEXTURE, [ctx, size, data, channels, format]() {
                     Timer timer;
-                    auto tex = create_ref<vk::Texture>(static_cast<vk::Context*>(ctx), size, data, channels);
+                    auto tex = create_ref<vk::Texture>(static_cast<vk::Context*>(ctx), size, data, channels, format);
                     auto elapsed = timer.elapsed();
                     ABY_LOG("Loaded Texture: {}ms", elapsed.milli());
                     ABY_LOG("  Size:     ({}, {})", EXPAND_VEC2(tex->size()));
@@ -96,13 +108,42 @@ namespace aby {
         return {};
     }
 
+    Resource Texture::create(Context* ctx, const glm::u32vec2& size, const void* data, u32 channels, ETextureFormat format) {
+        ABY_ASSERT(ctx, "(aby::Context*)ctx is invalid!");
+        switch (ctx->backend()) {
+        case EBackend::VULKAN: {
+            return ctx->load_thread().add_task(EResource::TEXTURE, [ctx, size, data, channels, format]() {
+                Timer timer;
+                auto tex = create_ref<vk::Texture>(static_cast<vk::Context*>(ctx), size, data, channels, format);
+                auto elapsed = timer.elapsed();
+                ABY_LOG("Loaded Texture: {}ms", elapsed.milli());
+                ABY_LOG("  Size:     ({}, {})", EXPAND_VEC2(tex->size()));
+                ABY_LOG("  Channels: {}", tex->channels());
+                ABY_LOG("  Bytes:    {}", tex->bytes());
+                return ctx->textures().add(tex);
+            });
+        }
+        default:
+            ABY_ASSERT(false, "Unsupported ctx backend");
+            break;
+        }
+        return {};
+    }
+
+
     Texture::Texture() :
         m_Size(0, 0),
-        m_Channels(0) { }
+        m_Channels(0),
+        m_AbyFormat(ETextureFormat::RGBA),
+        m_State(ETextureState::GOOD)
+    { }
 
     Texture::Texture(const fs::path& path) :
         m_Size(0, 0),
-        m_Channels(0)
+        m_Channels(0),
+        m_AbyFormat(ETextureFormat::RGBA),
+        m_State(ETextureState::GOOD)
+
     {
         auto str = path.string();
         const char* file = str.c_str();
@@ -120,11 +161,20 @@ namespace aby {
         m_Channels = static_cast<unsigned int>(c);
         m_Data.assign(ptr, ptr + (w * h * c));
         stbi_image_free(data);
+
+        switch (c) {
+            case 1: m_AbyFormat = ETextureFormat::R;    break;
+            case 2: m_AbyFormat = ETextureFormat::RG;   break;
+            case 3: m_AbyFormat = ETextureFormat::RGB;  break;
+            case 4: m_AbyFormat = ETextureFormat::RGBA; break;
+        }
     }
 
     Texture::Texture(const glm::u32vec2& size, const glm::vec4& color) :
         m_Size(size),
-        m_Channels(4)  
+        m_Channels(4),
+        m_AbyFormat(ETextureFormat::RGBA),
+        m_State(ETextureState::GOOD)
     {
         size_t byte_count = m_Size.x * m_Size.y * m_Channels;
         std::array<std::byte, 4> rgba = {
@@ -143,30 +193,70 @@ namespace aby {
         }
     }
     
-    Texture::Texture(const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels) :
+    Texture::Texture(const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels, ETextureFormat format) :
         m_Size(size),
         m_Channels(channels), 
-        m_Data(data) 
+        m_Data(data),
+        m_AbyFormat(format),
+        m_State(ETextureState::GOOD)
     {
         ABY_ASSERT(data.size() % channels == 0, "Invalid texture data size");
         ABY_ASSERT(m_Size.x * m_Size.y * channels == data.size(), "Data size does not match square image");
+        ABY_ASSERT(check_format_channels(channels, format), "Channel count does not align with texture format");
+    }
+
+    Texture::Texture(const glm::u32vec2& size, const void* data, u32 channels, ETextureFormat format) :
+        m_Size(size), 
+        m_Channels(channels),
+        m_AbyFormat(format),
+        m_State(ETextureState::GOOD)
+    {
+        ABY_ASSERT(data != nullptr, "Input texture data pointer is null");
+        ABY_ASSERT(check_format_channels(channels, format), "Channel count does not align with texture format");
+        const std::size_t byte_ct = size.x * size.y * channels;
+        m_Data.resize(byte_ct);
+        std::memcpy(m_Data.data(), data, byte_ct);
     }
 
     Texture::Texture(const Texture& other) :
         m_Size(other.m_Size),
         m_Channels(other.m_Channels),
-        m_Data(other.m_Data)
+        m_Data(other.m_Data),
+        m_AbyFormat(other.m_AbyFormat),
+        m_State(other.m_State)
     {
 
     }
-    
+
     Texture::Texture(Texture&& other) noexcept :
         m_Size(std::move(other.m_Size)),
         m_Channels(std::move(other.m_Channels)),
-        m_Data(std::move(other.m_Data))
+        m_Data(std::move(other.m_Data)),
+        m_AbyFormat(std::move(other.m_AbyFormat)),
+        m_State(std::move(other.m_State))
     {
 
     }
+
+    void Texture::write(const glm::u32vec2& size, const std::vector<std::byte>& data) {
+        bool resized = m_Size != size;
+        m_State = resized ? ETextureState::RECREATE : ETextureState::UPLOAD;
+        m_Data  = data;
+        m_Size  = size;
+    }
+    
+    void Texture::write(const glm::u32vec2& size, const void* data) {
+        bool        resized = m_Size != size;
+        std::size_t byte_ct = size.x * size.y * m_Channels;
+
+        m_State = resized ? ETextureState::RECREATE : ETextureState::UPLOAD;
+        m_Size = size;
+        m_Data.resize(byte_ct);
+        
+        std::memcpy(m_Data.data(), data, byte_ct);
+    }
+
+
 
     const glm::u32vec2& Texture::size() const {
         return m_Size;
@@ -179,6 +269,11 @@ namespace aby {
     std::size_t Texture::bytes() const {
         return m_Data.size();
     }
+
+    bool Texture::dirty() const {
+        return m_State != ETextureState::GOOD;
+    }
+
 
     std::span<const std::byte> Texture::data() const {
         return std::span(m_Data.cbegin(), m_Data.size());

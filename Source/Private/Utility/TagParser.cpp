@@ -82,6 +82,7 @@ namespace aby::util {
             case ETextDecor::FILE_PATH: return text.contains("<fp>");
             case ETextDecor::URI_LINK:  return text.contains("<ur>");
         }
+        return false;
     }
     bool contains_tags(const std::string& text) {
         return contains_tag(text, ETextDecor::UNDERLINE) ||
