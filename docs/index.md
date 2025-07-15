@@ -1,30 +1,31 @@
-# Abyss Documentation
+# Welcome to Abyss Engine Docs
 
+## Choose a Section
 
-## Main Topics
+<div class="grid cards" markdown>
 
-<div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+-   :material-cube-outline:{ .lg .middle } [__Object__](pages/Object/)
+    
+    ---
 
-<a href="pages/Object/" style="flex: 1 1 200px; text-decoration: none; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9; color: black;">
-  <strong>Object</strong><br/>
-  <span style="color: black;">Learn how to use the object model.</span>
-</a>
+    Learn how to use the object interface.
 
-<a href="pages/Resource/" style="flex: 1 1 200px; text-decoration: none; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9; color: black;">
-  <strong>Resource</strong><br/>
-  <span style="color: black;">Learn how to use Resource objects.</span>
-</a>
+-   :material-book-multiple:{ .lg .middle } [__Resource__](#pages/Resource/)
 
-<a href="pages/Shaders/" style="flex: 1 1 200px; text-decoration: none; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9; color: black;">
-  <strong>Shaders</strong><br/>
-  <span style="color: black;">Learn what goes into shaders in the engine.</span>
-</a>
+    ---
 
-<a href="pages/Text/" style="flex: 1 1 200px; text-decoration: none; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9; color: black;">
-  <strong>Text</strong><br/>
-  <span style="color: black;">Learn how to customize text for rendering.</span>
-</a>
+    Learn how to use resources.
+
+-   :material-cube:{ .lg .middle } [__Shaders__](#pages/Shaders/)
+
+    ---
+
+    Learn how to use shaders.
+
+-   :material-format-text:{ .lg .middle } [__Text__](#pages/Text/)
+
+    ---
+
+    Learn how to use text decor and mods.
 
 </div>
-
-<div style="height: 20px"></div>

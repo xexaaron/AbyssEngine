@@ -12,7 +12,7 @@ interchangeably.
 Resources each have their own create method as shown below.
 To create a resource you need the application rendering context.
 
-```cpp
+```cpp title="Resource Creation", linenums="1"
 Resource font    = Font::create(ctx, ...)
 Resource shader  = Shader::create(ctx, ...)
 Resource texture = Texture::create(ctx, ...)
@@ -36,7 +36,7 @@ data has been loaded.
 The code looks the exact same for the texture as it does
 any other resource.
 
-```cpp
+```cpp title="Resource Data Access", linenums="1"
 
 class MyObject : public Object {
 public:
