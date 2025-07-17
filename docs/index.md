@@ -4,28 +4,13 @@
 
 <div class="grid cards" markdown>
 
--   :material-cube-outline:{ .lg .middle } [__Object__](pages/Object/)
-    
-    ---
-
-    Learn how to use the object interface.
-
--   :material-book-multiple:{ .lg .middle } [__Resource__](#pages/Resource/)
+{% for section in get_sections() %}
+-   :{{ get_icon(section) }}:{ .lg .middle } [__{{ section | capitalize }}__](pages/{{ section }}/)
 
     ---
 
-    Learn how to use resources.
+    Learn how to use the {{ section }} module.
 
--   :material-cube:{ .lg .middle } [__Shaders__](#pages/Shaders/)
-
-    ---
-
-    Learn how to use shaders.
-
--   :material-format-text:{ .lg .middle } [__Text__](#pages/Text/)
-
-    ---
-
-    Learn how to use text decor and mods.
+{% endfor %}
 
 </div>

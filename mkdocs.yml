@@ -10,13 +10,12 @@ repo_url: https://github.com/xexaaron/AbyssEngine
 
 nav:
   - Home: "index.md"
-  - Object: "pages/Object.md"
-  - Resource:
-      - Overview: "pages/Resource.md"
-      - Shaders: "pages/Shaders.md"
-  - Text: "pages/Text.md" 
-
-# Theme
+  - Documentation:
+    - Object: "pages/Object.md"
+    - Resource:
+        - Overview: "pages/Resource.md"
+        - Shaders: "pages/Shaders.md"
+    - Text: "pages/Text.md" 
 
 theme: 
   name: material
@@ -28,12 +27,17 @@ theme:
     toggle:
       icon: material/weather-sunny
       name: Dark mode
-    primary: blue
-    accent: deep purple
+    primary: deep purple
+    accent: light blue
   features:
     - content.code.copy
 
 # Extensions
+plugins:
+  - search
+  - macros:
+      include_dir: docs
+      module_name: docs/main
 
 markdown_extensions:
   - md_in_html

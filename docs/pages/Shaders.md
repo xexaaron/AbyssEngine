@@ -21,21 +21,15 @@ These compile definitions are baked into any shader that is compiled by the prog
 
 ### Textures
 
-- **Required Extensions**
-
-```glsl title="Extensions" linenums="1"
+```glsl title="Required Extensions"
 #extension GL_EXT_nonuniform_qualifier : enable
 ```
 
-- **Uniforms**
-
-```glsl title="Uniforms" linenums="1"
+```glsl title="Uniforms"
 layout(set = 1, binding = BINDLESS_TEXTURE_BINDING) uniform sampler2D textures[];
 ```
 
-- **Indexing**
-
-```glsl title
+```glsl title="Indexing"
 int  tex_idx = int(nonuniformEXT(v_texinfo.z));
 vec4 sampler = textures(tex_idx, v_texinfo.xy);
 ```

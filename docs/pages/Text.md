@@ -9,7 +9,9 @@ Rendered Text can be decorated using html like tags surrounding portions of the 
 
 ## Console Modifiers
 
-Console logs can have modifiers using html like tags surrounding portions of the string. (All decorations can be used in console text).
+Console logs can have modifiers using html like tags surrounding portions of the string. 
+
+All decorations can be used in console text.
 
 These tags tell our console to display items such as links properly and have them be clickable to navigate to the link.
 
@@ -18,17 +20,21 @@ These tags tell our console to display items such as links properly and have the
 
 ## Examples
 
+!!! note "Note"
+    Unlike HTML decorations support overlapping ranges.
+
+
 === "Decorations"
 
-    ```cpp
+    ```cpp title="Highlight Followed By Underline"
     "<hl>highlighted portion</hl><ul>underlined portion</ul>"
     ```
 
-    ```cpp
+    ```cpp title="Highlight With Nested Underline"
     "<hl><ul>HEADER</ul>INFO</hl>"
     ```
 
-    ```cpp
+    ```cpp title="Highlight with overlapping Underline"
     "<hl>INFO<ul>HEADER</hl></ul>"
     ```
 
