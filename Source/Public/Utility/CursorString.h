@@ -3,7 +3,7 @@
 namespace aby::util {
 
 	/**
-	 * @brief Cursor string for easy tracking of cursor position and highlights within a buffer.
+	 * Cursor string for easy tracking of cursor position and highlights within a buffer.
 	*/
 	class CursorString {
 	public:
@@ -25,7 +25,7 @@ namespace aby::util {
 		bool is_highlighted() const;
 		std::size_t position() const;
 		/**
-		 * @brief Format the string using tags that can be parsed using utilities in TagParser.h
+		 * Format the string using tags that can be parsed using utilities in TagParser.h
 		 * @return std::string (Example: "<ul>H<hl></ul>ello</hl> world!")
 		*/
 		std::string format() const;

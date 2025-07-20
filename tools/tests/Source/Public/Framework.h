@@ -1,8 +1,8 @@
 #pragma once
 #include <vector>
-#include <memory>
 #include <string_view>
 #include <iostream>
+#include <format>
 
 #define TEST(test_name)                                                          \
 namespace test_name {                                                            \
@@ -11,7 +11,7 @@ namespace test_name {                                                           
     class test_name : public aby::Test {                                         \
     public:                                                                      \
         test_name() {                                                            \
-            aby::TestFramework::get().add(std::make_unique<test_name>());        \
+            aby::TestFramework::get().add(this);                                 \
         }                                                                        \
         auto operator()() -> bool override {                                     \
             return eval();                                                       \
@@ -19,11 +19,17 @@ namespace test_name {                                                           
         auto name() -> std::string_view override {                               \
             return #test_name;                                                   \
         }                                                                        \
+        template <typename... Args>                                              \
+        static void err(std::format_string<Args...> fmt, Args&&... args) {       \
+            std::cerr << std::format("[Test:{}] [Error] {}", #test_name, std::format(fmt, args...)) << '\n'; \
+        }                                                                        \
+        static auto err(const std::string& str) -> void {                        \
+            std::cerr << std::format("[Test:{}] [Error] {}", #test_name, str) << '\n'; \
+        }                                                                        \
     };                                                                           \
     static test_name Instance;                                                   \
 }                                                                                \
 auto test_name::eval() -> bool        
-
 
 namespace aby {
 
@@ -42,32 +48,15 @@ namespace aby {
 
     class TestFramework {
     public:
-        static TestFramework& get() {
-            static TestFramework fw;
-            return fw;
-        }
+        static TestFramework& get();
 
-        void add(std::unique_ptr<Test> test) {
-            m_Tests.push_back(std::move(test));
-        }
+        void add(Test* test);
 
-        bool run() {
-            bool success = true;
-            for (auto& test : m_Tests) {
-                bool result = (*test)();
-                success &= result;
-                std::string result_str = result ? "Success" : "Failure";
-                std::cout << "[test] [" << test->name() << "] " << result << '\n';
-            }
-            return success;
-        }
+        bool run();
     private:
-        std::vector<std::unique_ptr<Test>> m_Tests;
+        std::vector<Test*> m_Tests;
     };
 
 }
 
-TEST(foo) {
-    return false;
-}
 

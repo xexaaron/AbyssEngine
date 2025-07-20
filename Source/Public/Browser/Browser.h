@@ -33,8 +33,10 @@ namespace aby::web {
         CefRefPtr<CefLoadHandler> GetLoadHandler() override;
         CefRefPtr<CefRenderHandler> GetRenderHandler() override;
         Ref<Texture> GetDrawBuffer();
-
         void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
+        const CefRect& GetViewport() const; 
+        CefRefPtr<CefBrowser> GetBrowser();
+
         bool IsClosing() const;
         bool HasAtleastOneBrowser() const;
 

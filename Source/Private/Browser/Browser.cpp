@@ -157,7 +157,16 @@ namespace aby::web {
     void WebHandler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
         rect = m_Viewport;
     }
-    
+
+    const CefRect& WebHandler::GetViewport() const {
+        return m_Viewport;
+    }
+
+    CefRefPtr<CefBrowser> WebHandler::GetBrowser() {
+        return m_BrowserList.front();
+    }
+
+
     bool WebHandler::IsClosing() const {
         return bIsClosing;
     }
@@ -211,8 +220,8 @@ namespace aby::web {
 
     void WebHandler::SendMouseClickEvent(const CefMouseEvent& mouse_event, CefBrowserHost::MouseButtonType type, bool mouse_up, int click_count) {
         m_BrowserList.front()->GetHost()->SendMouseClickEvent(mouse_event, type, mouse_up, click_count);
-
     }
+
     
     void WebHandler::SendKeyEvent(const CefKeyEvent& mouse_event) {
         m_BrowserList.front()->GetHost()->SendKeyEvent(mouse_event);
@@ -312,21 +321,41 @@ namespace aby::web {
     }   
         
     void Browser::on_tick(App* app, Time dt) {
+        CefDoMessageLoopWork(); // Always run this, regardless of window open
+
         if (!ImGui::Begin("Browser")) {
             ImGui::End();
             return;
         }
-        CefDoMessageLoopWork();
 
-        auto size = ImGui::GetWindowSize();
-        auto pos  = ImGui::GetWindowPos();
-        set_viewport(pos, size);
-    
-        if (Ref<Texture> drawbuff = m_WebApp->GetHandler()->GetDrawBuffer()) {
-            if (drawbuff->dirty()) {
-                drawbuff->sync();
+        auto texture = m_WebApp->GetHandler()->GetDrawBuffer();
+        if (texture && texture->size().x > 0 && texture->size().y > 0) {
+            ImVec2 avail = ImGui::GetContentRegionAvail();
+            float texWidth = static_cast<float>(texture->size().x);
+            float texHeight = static_cast<float>(texture->size().y);
+
+            float aspect = texWidth / texHeight;
+            float availAspect = avail.x / avail.y;
+
+            ImVec2 drawSize;
+            if (availAspect > aspect) {
+                // Fit height
+                drawSize.y = avail.y;
+                drawSize.x = drawSize.y * aspect;
             }
-            ImGui::Image(drawbuff->imgui_id(), size);
+            else {
+                // Fit width
+                drawSize.x = avail.x;
+                drawSize.y = drawSize.x / aspect;
+            }
+
+            ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+            set_viewport(cursorPos, drawSize);
+
+            if (texture->dirty())
+                texture->sync();
+
+            ImGui::Image(texture->imgui_id(), drawSize);
         }
 
         ImGui::End();
@@ -346,9 +375,12 @@ namespace aby::web {
     }
 
     bool Browser::on_mouse_moved(MouseMovedEvent& event) {
+        auto globalMouse = ImVec2(event.x(), event.y());
+        auto localMouse = ImVec2(globalMouse.x - m_ViewportPos.x, globalMouse.y - m_ViewportPos.y);
+
         CefMouseEvent cef_event;
-        cef_event.x = static_cast<int>(event.x());
-        cef_event.y = static_cast<int>(event.y());
+        cef_event.x = static_cast<int>(localMouse.x);
+        cef_event.y = static_cast<int>(localMouse.y);
         m_WebApp->GetHandler()->SendMouseMoveEvent(cef_event, false);
         return false;
     }
@@ -411,18 +443,17 @@ namespace aby::web {
     }
 
     void Browser::set_viewport(int x, int y, int w, int h) {
-        m_WebApp->GetHandler()->SetViewport(x, y, w, h);
-        m_ViewportPos = { static_cast<float>(x), static_cast<float>(y) };
+        if (m_WebApp->GetHandler()->GetViewport() != CefRect(x, y, w, h)) {
+            m_WebApp->GetHandler()->SetViewport(x, y, w, h);
+            m_ViewportPos = { static_cast<float>(x), static_cast<float>(y) };
+            if (auto browser = m_WebApp->GetHandler()->GetBrowser()) {
+                browser->GetHost()->WasResized();
+            }
+        }
     }
     
     void Browser::set_viewport(ImVec2 pos, ImVec2 size) {
-        m_WebApp->GetHandler()->SetViewport(
-            static_cast<int>(pos.x),
-            static_cast<int>(pos.y),
-            static_cast<int>(size.x),
-            static_cast<int>(size.y)
-        );
-        m_ViewportPos = pos;
+        set_viewport(pos.x, pos.y, size.x, size.y);
     }
 
 

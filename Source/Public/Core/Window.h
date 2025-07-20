@@ -45,8 +45,8 @@ namespace aby {
         static Unique<Window> create(const WindowInfo& info);
 
         /**
-        * @brief Initialize the window based on flags provided in ctor.
-        *        Allows time to set up callbacks through register_event
+        * Initialize the window based on flags provided in ctor.
+        * Allows time to set up callbacks through register_event
         */
         void initialize();
         void poll_events() const;

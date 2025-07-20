@@ -1,4 +1,5 @@
 #include "Core/Serialize.h"
+#include "Utility/File.h"
 #include <fstream>
 
 namespace aby {
@@ -41,18 +42,13 @@ namespace aby {
     }
 
     void Serializer::read_file() {
-        std::ifstream ifs(m_Opts.file, std::ios::binary);
-        if (ifs.is_open()) {
-            ifs.seekg(0, std::ios::end);
-            std::streamsize size = ifs.tellg();
-            ifs.seekg(0, std::ios::beg);
-            m_Data.resize(size);
-            ifs.read(reinterpret_cast<char*>(m_Data.data()), size);
-            ifs.close();
+        util::MappedFile file(m_Opts.file);
+        if (!file) {
+            ABY_ERR("{}", file.error());
+            return;
         }
-        else {
-            ABY_ERR("Failed to open file for reading: {}", m_Opts.file);
-        }
+        m_Data.resize(file.size());
+        std::memcpy(m_Data.data(), file.view().data(), file.size());
     }
     
     void Serializer::create_file() {

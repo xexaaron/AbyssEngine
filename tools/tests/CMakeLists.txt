@@ -10,17 +10,15 @@ endif()
 
 set(CPP_SOURCES 
     Source/main.cpp
+    Source/Private/Framework.cpp
 )
 set(CPP_HEADERS 
     Source/Public/Framework.h
 )
 
-source_group("Public" FILES
-   Source/Public/Framework.h
-)
-source_group("Private" FILES 
-    Source/main.cpp
-)
+source_group("Public" FILES ${CPP_HEADERS})
+source_group("Private" FILES ${CPP_SOURCES})
 
 add_executable(${PROJECT_NAME} ${CPP_SOURCES} ${CPP_HEADERS})
-target_include_directories(${PROJECT_NAME} PUBLIC Source/Public)
+target_include_directories(${PROJECT_NAME} PUBLIC Source/Public "../../Source/Public")
+target_link_libraries(${PROJECT_NAME} ${ENGINE})

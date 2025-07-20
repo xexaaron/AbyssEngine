@@ -1,6 +1,7 @@
 #include "Editor/Editor.h"
 #include "Platform/imgui/imwidget.h"
 
+#include <imgui/imgui_internal.h>
 namespace aby::editor {
 
     Editor::Editor() : 
@@ -75,6 +76,7 @@ namespace aby::editor {
 		m_Browser.on_tick(app, deltatime);
 
 		if (ImGui::Begin("Viewport")) {
+
 		}
 		
 		m_Console.draw(&m_Settings.show_console);

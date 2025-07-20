@@ -14,8 +14,8 @@ namespace aby::util {
 	};
 
 	/**
-	* @brief Insert multiple strings into a buffer without having to keep track
-	*		 of offsets.
+	* Insert multiple strings into a buffer without having to keep track
+	* of offsets.
 	*/
 	void multi_insert(std::string& buffer, std::vector<Insertion> insertions);
 

@@ -18,36 +18,36 @@ namespace aby {
 		virtual ~Object() = default;
 
 		/**
-		* @brief Called before the application 'ticks' and polls for events every frame.
+		* Called before the application 'ticks' and polls for events every frame.
 		* @param app Pointer to the application.
 		* @param deserialized Indicates if the instance was deserialized before creation. 
 		* @remarks (Control per instance with flag if necessary for object class).
 		*/
 		virtual void on_create(App* app, bool deserialized) {}
 		/**
-		* @brief Called when a window, input, or application event is called.
+		* Called when a window, input, or application event is called.
 		* @param app Pointer to the application.
 		* @param event Event to be handed off to an EventDispatcher.
 		*/
 		virtual void on_event(App* app, Event& event) {}
 		/**
-		* @brief Called every application tick.
+		* Called every application tick.
 		* @param app Pointer to the application.
 		* @param deltatime The deltatime in milliseconds.
 		*/
 		virtual void on_tick(App* app, Time deltatime) {}
 		/**
-		* @brief Called when the object is removed from a container/manager.
+		* Called when the object is removed from a container/manager.
 		* @param app Pointer to the application
 		*/
 		virtual void on_destroy(App* app) {}
 		/**
-		* @brief Called before the object is destroyed.
+		* Called before the object is destroyed.
 		* @param serializer Serializer containing one derived Object instance of data.
 		*/
 		virtual void on_serialize(Serializer& serializer) {}
 		/**
-		* @brief Called before the object is created.
+		* Called before the object is created.
 		* @param serializer Serializer to write one derived Object instance to.
 		* @return true:  If deserialization occurred.
 		* @return false: If deserialization did not occur.

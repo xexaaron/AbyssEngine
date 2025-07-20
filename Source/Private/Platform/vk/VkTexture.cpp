@@ -227,7 +227,6 @@ namespace aby::vk {
             case ETextureState::GOOD:     
                 return;
             case ETextureState::RECREATE: {
-                ABY_ASSERT(m_ShaderModule, "Shader module not set? How the fuck did we get here? Goddamnit Aaron you broke it again.");
                 destroy();
                 init();
             } break;

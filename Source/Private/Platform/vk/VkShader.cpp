@@ -5,6 +5,7 @@
 #include "Core/Log.h"
 #include "Core/App.h"
 #include "Utility/Inserter.h"
+#include "Utility/File.h"
 #include <set>
 #include <fstream>
 
@@ -66,7 +67,7 @@ namespace aby::vk {
             in.seekg(0, std::ios::end);
             auto size = in.tellg();
             in.seekg(0, std::ios::beg);
-            out.resize(size / sizeof(uint32_t)); // + (size % sizeof(uint32_t) != 0 ? 1 : 0));
+            out.resize(size / sizeof(uint32_t));
             in.read(reinterpret_cast<char*>(out.data()), size);
             return out;
         }
@@ -265,8 +266,6 @@ namespace aby::vk {
 
         void on_add(Handle handle, Ref<aby::Texture> texture) override {
             auto  tex = std::static_pointer_cast<vk::Texture>(texture);
-            auto* shader_module = std::any_cast<ShaderModule*>(m_UserData);
-            auto  logical = shader_module->m_Ctx->devices().logical();
             tex->m_Handler      = this;
             tex->m_Handle       = handle;
             update_descriptor_sets(handle, tex);

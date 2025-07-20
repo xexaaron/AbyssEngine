@@ -167,10 +167,10 @@ namespace aby {
     }
 
     /**
-    * @brief CreateRefEnabler class. 
-    *        Used to disable easy creation of objects like Fonts through their own constructors
-    *        in favor of their own static T::create(...) method. Not foolproof since anyone 
-    *        can use this.
+    * CreateRefEnabler class. 
+    * Used to disable easy creation of objects like Fonts through their own constructors
+    * in favor of their own static T::create(...) method. Not foolproof since anyone 
+    * can use this.
     * @tparam T Class with protected/private ctors.
     */
     template <typename T>

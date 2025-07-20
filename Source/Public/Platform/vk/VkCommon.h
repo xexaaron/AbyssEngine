@@ -63,7 +63,7 @@ namespace aby::vk {
         std::string to_string(VkResult result);
         std::string to_string(VkPhysicalDeviceType type);
         /**
-        * @brief Check if extensions are available on this device/platform.
+        * Check if extensions are available on this device/platform.
         * @param req_exts Extensions required by the application.
         * @return Success: Empty Vector, 
         * @return Failure: Missing Extension(s) list. 
@@ -71,7 +71,7 @@ namespace aby::vk {
         std::vector<const char*> are_ext_avail(const std::vector<const char*>& req_exts);
         std::vector<VkExtensionProperties> get_extensions();
         /**
-        * @brief Check if the layers are available on this device/platform.
+        * Check if the layers are available on this device/platform.
         * @param req_layers Layers required by the application.
         * @return Success: Empty Vector,
         * @return Failure: Missing Layers(s) list.
