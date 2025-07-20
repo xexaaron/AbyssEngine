@@ -25,6 +25,8 @@ namespace aby::sys::win32 {
     auto get_args(int& argc, char**& argv) -> void;
     auto free_args(int argc, char** argv) -> void;
     auto glfw_to_platform_keycode(int glfw_key) -> int;
+    auto get_last_err() -> std::string;
+
 }
 
 #endif

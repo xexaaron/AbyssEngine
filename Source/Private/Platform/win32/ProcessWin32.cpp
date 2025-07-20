@@ -9,24 +9,7 @@
 
 namespace aby::sys::win32 {
 
-    std::string get_last_err() {
-        DWORD errorMessageID = GetLastError();
-        if (errorMessageID == 0) {
-            return std::string(); // No error message has been recorded
-        }
-
-        LPSTR messageBuffer = nullptr;
-        size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-            nullptr, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, nullptr);
-
-        std::string message(messageBuffer, size);
-
-        // Free the buffer allocated by FormatMessage()
-        LocalFree(messageBuffer);
-
-        return message;
-    }
-
+  
 	Process::Process(const std::function<void(const std::string&)>& read_callback) :
 		sys::Process(read_callback),
         bRunning(false),

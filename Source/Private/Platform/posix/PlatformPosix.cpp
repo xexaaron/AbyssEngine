@@ -29,6 +29,9 @@ namespace aby::sys::posix {
 		return getpid();
 	}
 
+	auto get_last_err() -> std::string {
+		return std::string(strerror(errno));
+	}
 
 }
 

@@ -57,5 +57,9 @@ namespace aby::sys {
         return PLATFORM_NAMESPACE::glfw_to_platform_keycode(glfw_key);
     }
 
+    auto get_last_err() -> std::string {
+        return PLATFORM_NAMESPACE::get_last_err();
+    }
+
 
 }

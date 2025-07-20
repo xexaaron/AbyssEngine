@@ -3,7 +3,7 @@
 #include <thread>
 #include <filesystem>
 #include <functional>
-
+#include <string>
 
 namespace aby::sys {
 
@@ -14,4 +14,6 @@ namespace aby::sys {
 	auto get_args(int& argc, char**& argv) -> void;
 	auto free_args(int argc, char** argv) -> void;
 	auto glfw_to_platform_keycode(int glfw_key) -> int;
+	auto get_last_err() -> std::string;
+
 }
