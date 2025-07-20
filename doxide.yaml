@@ -1,0 +1,7 @@
+title: API
+description: General API for Abyss Engine
+output: docs/api
+
+files:
+  - Source/**/*.hpp
+  - Source/**/*.h

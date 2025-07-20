@@ -1,0 +1,94 @@
+# Config
+
+site_name: Abyss Docs
+site_description: Abyss Engine Documentation
+site_author: Aaron Harwin
+repo_name: AbyssEngine
+repo_url: https://github.com/xexaaron/AbyssEngine
+
+# Navigation
+
+nav:
+  - Home: "index.md"
+  - GettingStarted.md: "pages/GettingStarted.md"
+  - Documentation:
+    - Object: "pages/Object.md"
+    - Resource:
+        - Overview: "pages/Resource.md"
+        - Shaders: "pages/Shaders.md"
+    - Text: "pages/Text.md" 
+  - API:
+    - API: "api/index.md"
+    - aby:
+      - aby: "api/aby/index.md"
+      - CreateRefEnabler: "api/aby/CreateRefEnabler.md"
+      - Object: "api/aby/Object.md"
+      - Texture: "api/aby/Texture.md"
+      - Window: "api/aby/Window.md"
+    - aby::util:
+      - util: "api/aby/util/index.md"
+      - CursorString: "api/aby/util/CursorString.md"
+      - File: "api/aby/util/File.md"
+    - aby::vk:
+      - vk: "api/aby/vk/index.md"
+      - vk::helper: 
+        - helper: "api/aby/vk/helper/index.md"
+
+
+theme: 
+  name: material
+  font: 
+    text: Merriweather Sans
+    code: Red Hat Mono
+  palette:
+    scheme: slate
+    toggle:
+      icon: material/weather-sunny
+      name: Dark mode
+    primary: deep purple
+    accent: light blue
+  features:
+    - content.code.copy
+    - navigation.indexes
+  custom_dir: docs/overrides
+
+# Extensions
+plugins:
+  - search
+  - macros:
+      include_dir: docs
+      module_name: docs/main
+  - mkdoxy:
+      config: doxide.yaml
+
+markdown_extensions:
+  - md_in_html
+  - attr_list
+  - def_list
+  - admonition
+  - pymdownx.details
+  - pymdownx.snippets
+  - pymdownx.keys
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.tabbed:
+      alternate_style: true 
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra_css:
+  - stylesheets/doxide.css
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - https://cdn.jsdelivr.net/npm/tablesort@5.3.0/src/tablesort.min.js
+  - https://cdn.jsdelivr.net/npm/tablesort@5.3.0/src/sorts/tablesort.number.js
+  - javascripts/tablesort.js
