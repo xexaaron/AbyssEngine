@@ -277,6 +277,7 @@ set(CPP_SOURCES
     Source/Private/Rendering/Texture.cpp
     Source/Private/Rendering/Vertex.cpp
     Source/Private/Utility/CursorString.cpp
+    Source/Private/Utility/File.cpp
     Source/Private/Utility/Inserter.cpp
     Source/Private/Utility/Random.cpp
     Source/Private/Utility/TagParser.cpp
@@ -334,6 +335,7 @@ set(HEADER_FILES
     Source/Public/Rendering/Vertex.h
     Source/Public/Utility/CursorString.h
     Source/Public/Utility/Delegate.h
+    Source/Public/Utility/File.h
     Source/Public/Utility/Inserter.h
     Source/Public/Utility/Random.h
     Source/Public/Utility/TagParser.h
@@ -355,6 +357,7 @@ make_source_groups(
 )
 
 source_group("Private" FILES "Source/main.cpp")
+source_group("Private/Platform/stb" FILES "Vendor/stb/stb.cpp")
 set(COMMON_INCLUDE_DIRS "Source/Public" ${GLFW_INCLUDE_DIR} ${STB_INCLUDE_DIR} ${GLM_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${IMGUI_DIR})
 set(RESOURCE_DIR "${CMAKE_SOURCE_DIR}/Source/Resources")
 
@@ -442,7 +445,10 @@ add_custom_command(
 function(copy_files_post_build TARGET_NAME FILE_LIST)
     foreach(FILE_PATH IN LISTS ${FILE_LIST})
         get_filename_component(FILE_NAME "${FILE_PATH}" NAME)
-        if(NOT FILE_NAME STREQUAL "vulkan-1.dll" AND NOT FILE_NAME STREQUAL "vulkan-1.dll.pdb")
+        if(NOT EXISTS "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${FILE_NAME}"
+           AND NOT FILE_NAME STREQUAL "vulkan-1.dll" 
+           AND NOT FILE_NAME STREQUAL "vulkan-1.dll.pdb"
+        )
             add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
                     "${FILE_PATH}"
