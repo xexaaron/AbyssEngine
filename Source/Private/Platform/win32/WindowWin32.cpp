@@ -46,12 +46,39 @@ namespace aby::sys::win32 {
         SendMessage(hwnd, WM_LBUTTONUP, 0, lparam);
     }
 
-    void* Window::native() const {
-        return glfwGetWin32Window(m_Window);
+    void Window::become_bg_task() {
+        auto hwnd = static_cast<HWND>(native());
+
+        LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+        SetWindowLong(hwnd, GWL_EXSTYLE, (exStyle & ~WS_EX_APPWINDOW) | WS_EX_TOOLWINDOW);
+        SetWindowPos(
+            hwnd, nullptr,
+            0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
+        );
+
+        ShowWindow(hwnd, SW_HIDE);
     }
 
-    float Window::menubar_height() const {
-        return ImGui::GetFrameHeight();
+    void Window::become_fg_task() {
+        auto hwnd = static_cast<HWND>(native());
+
+        LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+        SetWindowLong(hwnd, GWL_EXSTYLE, (exStyle & ~WS_EX_TOOLWINDOW) | WS_EX_APPWINDOW);
+
+        SetWindowPos(
+            hwnd, nullptr,
+            0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
+        );
+
+        ShowWindow(hwnd, SW_SHOW);
+        SetForegroundWindow(hwnd);
+    }
+
+
+    void* Window::native() const {
+        return glfwGetWin32Window(m_Window);
     }
 
     void Window::set_dark_mode() {
@@ -124,7 +151,6 @@ namespace aby::sys::win32 {
             }
             case WM_NCHITTEST: {
                 const int resize_border = 6;
-                const int menubar_height = static_cast<int>(self->menubar_height());
 
                 POINTS mouse_pos = MAKEPOINTS(lparam);
                 POINT client_mouse = { mouse_pos.x, mouse_pos.y };
@@ -274,7 +300,6 @@ namespace aby::sys::win32 {
                     hr = add_tasks_to_list(pcdl);
                     if (SUCCEEDED(hr))
                     {
-                        // Commit the list-building transaction.
                         hr = pcdl->CommitList();
                     }
                 }

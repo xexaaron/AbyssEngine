@@ -9,7 +9,7 @@
 
 namespace aby {
 
-    bool check_format_channels(u32 channels, ETextureFormat format) {
+    static bool check_format_channels(u32 channels, ETextureFormat format) {
         ABY_ASSERT(channels > 0 && channels <= 4, "Invalid channel range");
         switch (channels) {
             case 1: return format == ETextureFormat::R;
@@ -18,7 +18,6 @@ namespace aby {
             case 4: return format == ETextureFormat::RGBA || format == ETextureFormat::BGRA;
             default: std::unreachable();
         }
-        return false;
     }
 
     Resource Texture::create(Context* ctx, const fs::path& path) {
@@ -130,7 +129,6 @@ namespace aby {
         return {};
     }
 
-
     Texture::Texture() :
         m_Size(0, 0),
         m_Channels(0),
@@ -238,25 +236,22 @@ namespace aby {
 
     }
 
+   
     void Texture::write(const glm::u32vec2& size, const std::vector<std::byte>& data) {
-        bool resized = m_Size != size;
-        m_State = resized ? ETextureState::RECREATE : ETextureState::UPLOAD;
+        m_State = m_Size != size ? ETextureState::RECREATE : ETextureState::UPLOAD;
         m_Data  = data;
         m_Size  = size;
     }
     
     void Texture::write(const glm::u32vec2& size, const void* data) {
-        bool        resized = m_Size != size;
         std::size_t byte_ct = size.x * size.y * m_Channels;
 
-        m_State = resized ? ETextureState::RECREATE : ETextureState::UPLOAD;
-        m_Size = size;
+        m_State = m_Size != size ? ETextureState::RECREATE : ETextureState::UPLOAD;
+        m_Size  = size;
+
         m_Data.resize(byte_ct);
-        
         std::memcpy(m_Data.data(), data, byte_ct);
     }
-
-
 
     const glm::u32vec2& Texture::size() const {
         return m_Size;
@@ -264,6 +259,11 @@ namespace aby {
 
     u32 Texture::channels() const {
         return m_Channels;
+    }
+
+    ETextureFormat Texture::format() const
+    {
+        return m_AbyFormat;
     }
 
     std::size_t Texture::bytes() const {
@@ -277,6 +277,30 @@ namespace aby {
 
     std::span<const std::byte> Texture::data() const {
         return std::span(m_Data.cbegin(), m_Data.size());
+    }
+
+}
+
+namespace aby {
+
+    Ref<BufferedTexture> BufferedTexture::create(Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels, ETextureFormat format) {
+        switch (ctx->backend()) {
+            case EBackend::VULKAN: {
+                return create_ref<vk::BufferedTexture>(static_cast<vk::Context*>(ctx), size, data, channels, format);
+            }
+            default:
+                ABY_ASSERT(false, "Not implemented case!");
+        }
+    }
+
+    Ref<BufferedTexture> BufferedTexture::create(Context* ctx, const glm::u32vec2& size, const void* data, u32 channels, ETextureFormat format) {
+        switch (ctx->backend()) {
+            case EBackend::VULKAN: {
+                return create_ref<vk::BufferedTexture>(static_cast<vk::Context*>(ctx), size, data, channels, format);
+            }
+            default:
+                ABY_ASSERT(false, "Not implemented case!");
+        }
     }
 
 }

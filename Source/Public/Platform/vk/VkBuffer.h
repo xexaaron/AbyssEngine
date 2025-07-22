@@ -2,6 +2,7 @@
 #include "Platform/vk/VkCommon.h"
 #include "Platform/vk/VkDeviceManager.h"
 #include "Platform/vk/VkShader.h"
+#include "Platform/vk/VkShaderModule.h"
 #include "Core/Log.h"
 #include <cstring>
 
@@ -28,7 +29,6 @@ namespace aby::vk {
 
         VkDeviceMemory memory();
         std::size_t size() const;
-
         operator VkBuffer();
     protected:
         void  create(DeviceManager& manager);

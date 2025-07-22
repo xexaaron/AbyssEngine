@@ -54,9 +54,9 @@
 
 namespace aby::vk {
 
-    constexpr static std::size_t   MAX_FRAMES_IN_FLIGHT     = 2;
-    constexpr static u32 MAX_BINDLESS_RESOURCES   = 16536;
-    constexpr static u32 BINDLESS_TEXTURE_BINDING = 10;
+    const static std::size_t MAX_FRAMES_IN_FLIGHT     = 3;
+    constexpr static u32     MAX_BINDLESS_RESOURCES   = 16536;
+    constexpr static u32     BINDLESS_TEXTURE_BINDING = 10;
 
 
     namespace helper {

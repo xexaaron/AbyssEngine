@@ -10,7 +10,7 @@ repo_url: https://github.com/xexaaron/AbyssEngine
 
 nav:
   - Home: "index.md"
-  - GettingStarted.md: "pages/GettingStarted.md"
+  - Getting Started: "GettingStarted.md"
   - Documentation:
     - Object: "pages/Object.md"
     - Resource:
@@ -58,8 +58,6 @@ plugins:
   - macros:
       include_dir: docs
       module_name: docs/main
-  - mkdoxy:
-      config: doxide.yaml
 
 markdown_extensions:
   - md_in_html
@@ -76,12 +74,13 @@ markdown_extensions:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
+      use_pygments: true
   - pymdownx.arithmatex:
       generic: true
   - pymdownx.tabbed:
       alternate_style: true 
   - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_index: !!python/name:material.extensions.emoji.twemoji 
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 extra_css:

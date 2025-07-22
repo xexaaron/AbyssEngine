@@ -266,6 +266,9 @@ set(CPP_SOURCES
     Source/Private/Platform/vk/VkRenderModule.cpp
     Source/Private/Platform/vk/VkRenderer.cpp
     Source/Private/Platform/vk/VkShader.cpp
+    Source/Private/Platform/vk/VkShaderCompiler.cpp
+    Source/Private/Platform/vk/VkShaderModule.cpp
+    Source/Private/Platform/vk/VkShaderStructs.cpp
     Source/Private/Platform/vk/VkSurface.cpp
     Source/Private/Platform/vk/VkSwapchain.cpp
     Source/Private/Platform/vk/VkTexture.cpp
@@ -288,6 +291,7 @@ set(HEADER_FILES
     Source/Public/Browser/Browser.h
     Source/Public/Core/App.h
     Source/Public/Core/Common.h
+    Source/Public/Core/EntryPoint.h
     Source/Public/Core/Event.h
     Source/Public/Core/Log.h
     Source/Public/Core/Object.h
@@ -323,6 +327,9 @@ set(HEADER_FILES
     Source/Public/Platform/vk/VkRenderModule.h
     Source/Public/Platform/vk/VkRenderer.h
     Source/Public/Platform/vk/VkShader.h
+    Source/Public/Platform/vk/VkShaderCompiler.h
+    Source/Public/Platform/vk/VkShaderModule.h
+    Source/Public/Platform/vk/VkShaderStructs.h
     Source/Public/Platform/vk/VkSurface.h
     Source/Public/Platform/vk/VkSwapchain.h
     Source/Public/Platform/vk/VkTexture.h
@@ -379,8 +386,8 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT $
 target_link_options(${EDITOR} PRIVATE ${LINK_OPTS})
 target_compile_options(${ENGINE} PRIVATE ${COMPILE_OPTS})
 target_compile_options(${EDITOR} PRIVATE ${COMPILE_OPTS})
-target_compile_definitions(${ENGINE} PRIVATE ${GLM_DEFINITIONS} ABY_BUFFERED_LOGGING _CRT_SECURE_NO_WARNINGS IMGUI_USER_CONFIG="Platform/imgui/imconfig.h")
-target_compile_definitions(${EDITOR} PRIVATE ${GLM_DEFINITIONS} ABY_BUFFERED_LOGGING)
+target_compile_definitions(${ENGINE} PRIVATE ${GLM_DEFINITIONS} _CRT_SECURE_NO_WARNINGS IMGUI_USER_CONFIG="Platform/imgui/imconfig.h")
+target_compile_definitions(${EDITOR} PRIVATE ${GLM_DEFINITIONS})
 target_include_directories(${ENGINE} PUBLIC 
     ${VULKAN_INCLUDE_DIR} 
     ${COMMON_INCLUDE_DIRS} 

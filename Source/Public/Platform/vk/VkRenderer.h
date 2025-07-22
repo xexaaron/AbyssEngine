@@ -25,6 +25,7 @@ namespace aby::vk {
 
         vk::RenderModule& rm2d();
         vk::RenderModule& rm3d();
+        vk::Swapchain& swapchain();
     protected: 
         void render(u32 img);
         void start_batch(RenderModule& module);

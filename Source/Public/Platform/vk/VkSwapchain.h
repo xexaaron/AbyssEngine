@@ -32,6 +32,7 @@ namespace aby::vk {
 		std::vector<VkImageView>& views();
 		std::vector<VkImage>& images();
 
+		std::size_t frames_in_flight() const;
 		u32 width() const;
 		u32 height() const;
 		glm::u32vec2  size() const;

@@ -37,7 +37,8 @@ namespace aby {
         if (!fs::exists(object_cache)) {
             fs::create_directories(object_cache);
         }
-        Logger::set_only_do_cb(false);
+        LogCfg log_cfg = {};
+        Logger::set_cfg(log_cfg);
     }
 
     App::~App() {
@@ -56,12 +57,12 @@ namespace aby {
         m_Window->initialize();
         m_Ctx->imgui_init();
 
-        auto last_time = std::chrono::high_resolution_clock::now();
+        auto last_time   = std::chrono::high_resolution_clock::now();
         float delta_time = 0.0f;
         while (m_Window->is_open()) {
             auto current_time = std::chrono::high_resolution_clock::now();
-            delta_time = std::chrono::duration<float>(current_time - last_time).count();
-            last_time = current_time;
+            delta_time        = std::chrono::duration<float>(current_time - last_time).count();
+            last_time         = current_time;
 
             if (m_Window->is_minimized()) continue;
             
@@ -77,8 +78,16 @@ namespace aby {
             m_Ctx->imgui_end_frame();
             m_Renderer->on_end();
 
+            for (auto& [handle, tex] : m_Ctx->textures())
+                if (tex->dirty())
+                    tex->sync();
+
             Logger::flush();
+
         }
+
+        // Become a "background task" so we can clean up resources but look like we exited fast.
+        m_Window->become_bg_task();
 
         for (auto& obj : m_Objects) {
             obj->on_destroy(this);

@@ -354,7 +354,7 @@ namespace aby::vk::pfn {
         VK_LOAD_DEV_PROC(device, vkQueuePresentKHR);
         return true;
     }
-
+  
 }
 
 namespace aby::vk {

@@ -26,7 +26,7 @@ namespace aby::web {
         bIsAlloyStyle(is_alloy_style), 
         bIsClosing(false),
         m_Buffer(nullptr),
-        m_Texture{},
+        m_Texture(Texture::create(&m_App->ctx(), { 1, 1 }, { std::byte(0xFF), std::byte(0xFF), std::byte(0xFF), std::byte(0xFF) }, 4, ETextureFormat::BGRA)),
         m_Viewport(0, 0, 800, 600)
     {
     }
@@ -62,6 +62,9 @@ namespace aby::web {
 
         m_BrowserList.push_back(browser);
         browser->GetHost()->SetFocus(true);
+
+    
+        m_Buffer = m_App->ctx().textures().at(m_Texture);
     }
     
     bool WebHandler::DoClose(CefRefPtr<CefBrowser> browser) {
@@ -89,11 +92,6 @@ namespace aby::web {
                 m_BrowserList.erase(bit);
                 break;
             }
-        }
-
-        if (m_BrowserList.empty()) {
-            // All browser windows have closed. Quit the application message loop.
-            CefQuitMessageLoop();
         }
     }
     
@@ -125,12 +123,7 @@ namespace aby::web {
         if (m_Buffer) {
             m_Buffer->write({ width, height }, buffer);
         }
-        else {
-            m_Texture = Texture::create(&m_App->ctx(), { width, height }, buffer, 4, ETextureFormat::BGRA);
-            m_Buffer = m_App->ctx().textures().at(m_Texture);
-        }
     }
-  
     
     CefRefPtr<CefDisplayHandler> WebHandler::GetDisplayHandler() {
         return this;
@@ -318,6 +311,7 @@ namespace aby::web {
         auto handler = m_WebApp->GetHandler();
         handler->CloseAllBrowsers(true);
         CefShutdown();
+        m_WebApp = nullptr;
     }   
         
     void Browser::on_tick(App* app, Time dt) {
@@ -351,9 +345,6 @@ namespace aby::web {
 
             ImVec2 cursorPos = ImGui::GetCursorScreenPos();
             set_viewport(cursorPos, drawSize);
-
-            if (texture->dirty())
-                texture->sync();
 
             ImGui::Image(texture->imgui_id(), drawSize);
         }
@@ -453,7 +444,10 @@ namespace aby::web {
     }
     
     void Browser::set_viewport(ImVec2 pos, ImVec2 size) {
-        set_viewport(pos.x, pos.y, size.x, size.y);
+        set_viewport(static_cast<int>(pos.x),
+                     static_cast<int>(pos.y),
+                     static_cast<int>(size.x),
+                     static_cast<int>(size.y));
     }
 
 

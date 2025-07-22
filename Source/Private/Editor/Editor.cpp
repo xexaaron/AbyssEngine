@@ -83,7 +83,7 @@ namespace aby::editor {
 
 		ImGui::End();
 
-		ImGui::ShowStyleEditor();
+		//ImGui::ShowStyleEditor();
     }
 
 	void EditorUI::on_event(App* app, Event& event) {
@@ -104,7 +104,7 @@ namespace aby::editor {
 		ImVec2 size   = ImGui::GetWindowSize();
 		float  width  = size.x;
 		float  category_width = size.x * 0.2f;
-		float  settings_width = width - category_width - 22.5;
+		float  settings_width = width - category_width - 22.5f;
 
 		if (ImGui::BeginChild("Categories", ImVec2(category_width, 0), ImGuiChildFlags_Border)) {
 			ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_DefaultOpen;

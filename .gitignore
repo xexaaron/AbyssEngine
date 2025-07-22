@@ -6,7 +6,12 @@ VulkanSDK/
 freetype-demos/
 MTuner/
 out/
-docs/
+docs/api
+docs/__pycache__
+docs/javascripts
+docs/overrides
+docs/stylesheets
+
 Vendor/cef/
 
 tool.exe

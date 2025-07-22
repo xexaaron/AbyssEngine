@@ -103,14 +103,18 @@ namespace aby {
         u32 channels() const;
         /**
         * Get the number of bytes the texture occupies
-        */
+        */    
         u64 bytes() const;
+        /**
+        * Get the texture format
+        */
+        ETextureFormat format() const;
         /**
         * Get a non owning view of the texture data
         */
         std::span<const std::byte> data() const;
         /**
-        * Check if the texture is dirty, if so sync cpu with gpu.
+        * Check if the texture is dirty, if so sync cpu with gpu
         */
         bool dirty() const;
         /**
@@ -135,6 +139,23 @@ namespace aby {
         ETextureState   m_State;
     private:
         std::vector<std::byte> m_Data;
+    };
+
+    class BufferedTexture {
+    public:
+        Ref<BufferedTexture> create(Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels, ETextureFormat format = ETextureFormat::RGBA);
+        Ref<BufferedTexture> create(Context* ctx, const glm::u32vec2& size, const void* data, u32 channels, ETextureFormat format = ETextureFormat::RGBA);
+        virtual ~BufferedTexture() = default;
+
+        virtual void write(const glm::u32vec2& size, const std::vector<std::byte>& data) = 0;
+        virtual void write(const glm::u32vec2& size, const void* data) = 0;
+
+        virtual glm::u32vec2 size() const = 0;
+        virtual u32 channels() const = 0;
+        virtual ETextureFormat format() const = 0; 
+        virtual ImTextureID imgui_id() const = 0;
+    protected:
+        BufferedTexture() = default;
     };
 
 }

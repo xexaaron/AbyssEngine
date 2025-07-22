@@ -36,40 +36,47 @@ namespace aby {
         ELogColor   color() const;
     };
 
+    struct LogCfg {
+        bool          only_do_cb = DEBUG_FALSE; // Disable logging to stdout, but process callbacks.
+        bool          buffered   = DEBUG_FALSE; // Disable logging immediately, only log after frame end.
+        std::ostream* cout       = &std::cout;  // Log output stream
+        std::ostream* cerr       = &std::cerr;  // Error output stream
+    };
+
     class Logger {
     private:
         template <typename... Args>
         inline static void print(const std::string& context, ELogColor  color, std::format_string<Args...> fmt, Args&&... args) {
             std::lock_guard lock(m_Mutex);
             std::string prefix = std::format("{}[{}]", time_date_now_header(), context);
-            std::string msg = std::format(fmt, std::forward<Args>(args)...);
-            std::string out = prefix + "   " + msg;
-        #ifdef ABY_BUFFERED_LOGGING
-            m_MsgBuff.emplace(static_cast<ELogLevel>(color), out);
-        #else
-            if (!bOnlyDoCallbacks) {
-                switch (static_cast<ELogLevel>(color)) {
+            std::string msg    = std::format(fmt, std::forward<Args>(args)...);
+            std::string out    = prefix + "   " + msg;
+            if (m_Cfg.buffered) {
+                m_MsgBuff.emplace(static_cast<ELogLevel>(color), out);
+            }
+            else {
+                if (!m_Cfg.only_do_cb) {
+                    switch (static_cast<ELogLevel>(color)) {
                     case ELogLevel::LOG:
                     case ELogLevel::DEBUG:
-                        *m_LogStream << "\033[" << static_cast<int>(color) << "m" << out << "\033[0m" << '\n';
+                        *m_Cfg.cout << "\033[" << static_cast<int>(color) << "m" << out << "\033[0m" << '\n';
                         break;
                     case ELogLevel::WARN:
                     case ELogLevel::ERR:
-                    *m_ErrStream << "\033[" << static_cast<int>(color) << "m" << out << "\033[0m" << '\n';
+                        *m_Cfg.cerr << "\033[" << static_cast<int>(color) << "m" << out << "\033[0m" << '\n';
                         break;
+                    }
+                }
+                for (auto& cb : m_Callbacks) {
+                    cb(LogMsg{ static_cast<ELogLevel>(color), out });
                 }
             }
-            for (auto& cb : m_Callbacks) {
-                cb(LogMsg{ static_cast<ELogLevel>(color), out });
-            }
-        #endif
         }
     public:
         using Callback = std::function<void(const LogMsg&)>;
 
+        static void        set_cfg(const LogCfg& cfg);
         static void        flush();
-        static void        set_streams(std::ostream& log_stream = std::clog, std::ostream& err_stream = std::cerr);
-        static void        set_only_do_cb(bool only_do_cb);
         static std::size_t add_callback(Callback&& callback);
         static void        remove_callback(std::size_t idx);
         static std::string time_date_now_header();
@@ -90,7 +97,7 @@ namespace aby {
         }
         template <typename... Args>
         static void Assert(std::format_string<Args...> fmt, Args&&... args) {
-    #ifndef NDEBUG
+        #ifndef NDEBUG
             print("AST", ELogColor::Red, fmt, std::forward<Args>(args)...);
         #endif
         }
@@ -101,12 +108,10 @@ namespace aby {
         #endif
         }
     private:
-        static inline std::ostream* m_LogStream = &std::clog;
-        static inline std::ostream* m_ErrStream = &std::cerr;
         static inline std::vector<Callback> m_Callbacks = {};
-        static inline std::recursive_mutex m_Mutex = {};
-        static inline std::queue<LogMsg> m_MsgBuff = {};
-        static inline bool bOnlyDoCallbacks = false;
+        static inline std::recursive_mutex  m_Mutex     = {};
+        static inline std::queue<LogMsg>    m_MsgBuff   = {};
+        static inline LogCfg                m_Cfg       = {};
     };
 
 } 

@@ -1,5 +1,5 @@
-#include "Core/App.h"
 #include "Core/Log.h"
+#include "Core/EntryPoint.h"
 #include "Platform/Platform.h"
 #include <vector>
 #include <iostream>

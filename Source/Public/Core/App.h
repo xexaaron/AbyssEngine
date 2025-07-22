@@ -8,7 +8,6 @@
 
 namespace aby {
 
-	extern App& main(const std::vector<std::string>& args);
 
 	class App {
 	public:

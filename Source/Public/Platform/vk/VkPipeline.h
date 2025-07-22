@@ -2,6 +2,7 @@
 
 #include "Platform/vk/VkCommon.h"
 #include "Platform/vk/VkShader.h"
+#include "Platform/vk/VkShaderModule.h"
 #include "Platform/vk/VkDeviceManager.h"
 #include "Platform/vk/VkSwapchain.h"
 

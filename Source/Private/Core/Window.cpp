@@ -1,6 +1,7 @@
 #include "Core/Window.h"
 #include "Core/Log.h"
 #include <glfw/glfw3.h>
+#include <imgui/imgui.h>
 
 #ifdef _WIN32
    #include "Platform/win32/WindowWin32.h"
@@ -98,10 +99,23 @@ namespace aby {
         //glfwSwapBuffers(m_Window); // OpenGL
     }
 
+    void Window::hide() {
+        glfwHideWindow(m_Window);
+    }
+
+    void Window::show() {
+        glfwShowWindow(m_Window);
+    }
+
+
     void Window::close() {
         glfwSetWindowShouldClose(m_Window, GLFW_TRUE);
     }
     
+    float Window::menubar_height() const {
+        return ImGui::GetFrameHeight();
+    }
+
     GLFWwindow* Window::glfw() const {
         return m_Window;
     }

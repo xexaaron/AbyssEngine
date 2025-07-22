@@ -3,6 +3,10 @@
 The object class serves as a way to interact with the
 app through specific events.
 
+!!! Note
+    Objects have to be added to the application somehow, through another object or through
+    `#!cpp App::add_object` method.
+
 ## Lifecycle
 
 1. Application method `#!cpp run()` is called. Resource loading is synchronized.

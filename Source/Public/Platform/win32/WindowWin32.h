@@ -15,9 +15,9 @@ namespace aby::sys::win32 {
         ~Window();
 
         void begin_drag() override;
-
+        void become_bg_task() override;
+        virtual void become_fg_task() override;
         void* native() const override;
-        float menubar_height() const override;
     private:
         void restart();
         void set_dark_mode();

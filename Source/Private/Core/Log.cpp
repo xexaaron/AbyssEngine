@@ -1,17 +1,13 @@
 #include "Core/Log.h"
 
 namespace aby {
+
 	ELogColor LogMsg::color() const { 
         return static_cast<ELogColor>(level);
     }
 
-    void Logger::set_streams(std::ostream& log_stream, std::ostream& err_stream) {
-        m_LogStream = &log_stream;
-        m_ErrStream = &err_stream;
-    }
-
-    void Logger::set_only_do_cb(bool only_do_cb) {
-        bOnlyDoCallbacks = only_do_cb;
+    void Logger::set_cfg(const LogCfg& cfg) {
+        m_Cfg = cfg;
     }
 
     std::size_t Logger::add_callback(Callback&& callback) {
@@ -34,15 +30,15 @@ namespace aby {
 
         while (!m_MsgBuff.empty()) {
             auto& msg = m_MsgBuff.front();
-            if (!bOnlyDoCallbacks) {
+            if (!m_Cfg.only_do_cb) {
                 switch (msg.level) {
                 case ELogLevel::LOG:
                 case ELogLevel::DEBUG:
-                    *m_LogStream << "\033[" << static_cast<int>(msg.color()) << "m" << msg.text << "\033[0m" << '\n';
+                    *m_Cfg.cout << "\033[" << static_cast<int>(msg.color()) << "m" << msg.text << "\033[0m" << '\n';
                     break;
                 case ELogLevel::WARN:
                 case ELogLevel::ERR:
-                    *m_ErrStream << "\033[" << static_cast<int>(msg.color()) << "m" << msg.text << "\033[0m" << '\n';
+                    *m_Cfg.cerr << "\033[" << static_cast<int>(msg.color()) << "m" << msg.text << "\033[0m" << '\n';
                     break;
                 }
             }

@@ -39,6 +39,18 @@
 #endif
 #endif
 
+#ifdef NDEBUG
+// True if debug enabled
+#define DEBUG_TRUE false
+// False if debug enabled
+#define DEBUG_FALSE true
+#else
+// True if debug enabled
+#define DEBUG_TRUE true
+// False if debug enabled
+#define DEBUG_FALSE false
+#endif
+
 #ifndef ABY_DBG_BREAK
 #ifdef _MSC_VER
 #define ABY_DBG_BREAK() __debugbreak(); 

@@ -180,7 +180,7 @@ namespace aby::vk {
         colors[ImGuiCol_TabActive] = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
         colors[ImGuiCol_TabUnfocused] = ImVec4(0.18f, 0.18f, 0.18f, 1.00f);
         colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
-        colors[ImGuiCol_TabSelectedOverline] = ImVec4(0.7686, 0.7686, 0.7686, 1.f);
+        colors[ImGuiCol_TabSelectedOverline] = ImVec4(0.7686f, 0.7686f, 0.7686f, 1.f);
         colors[ImGuiCol_DockingPreview] = ImVec4(0.45f, 0.45f, 0.45f, 1.00f); // Docking preview in gray
         colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.18f, 0.18f, 0.18f, 1.00f); // Empty dock background
         // Additional styles

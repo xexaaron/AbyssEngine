@@ -273,4 +273,8 @@ namespace aby::vk {
         }
     }
 
+    std::size_t Swapchain::frames_in_flight() const {
+        return m_Images.size();
+    }
+
 }

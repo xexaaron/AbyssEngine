@@ -372,5 +372,10 @@ namespace aby::vk {
         return m_3D;
     }
 
+    vk::Swapchain& Renderer::swapchain() {
+        return m_Swapchain;
+    }
+
+
 }
 
