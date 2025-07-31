@@ -227,7 +227,7 @@ if (MSVC)
 endif()
 # List Sources
 
-set(CPP_SOURCES
+set(ENGINE_CPP_SOURCES
     Source/Private/Browser/Browser.cpp
     Source/Private/Core/App.cpp
     Source/Private/Core/EntryPoint.cpp
@@ -238,8 +238,6 @@ set(CPP_SOURCES
     Source/Private/Core/Serialize.cpp
     Source/Private/Core/Thread.cpp
     Source/Private/Core/Time.cpp
-    Source/Private/Core/Window.cpp
-    Source/Private/Editor/Editor.cpp
     Source/Private/Platform/Platform.cpp
     Source/Private/Platform/Platform.cpp
     Source/Private/Platform/Process.cpp
@@ -279,15 +277,17 @@ set(CPP_SOURCES
     Source/Private/Rendering/Shader.cpp
     Source/Private/Rendering/Texture.cpp
     Source/Private/Rendering/Vertex.cpp
+    Source/Private/Rendering/Window.cpp
     Source/Private/Utility/CursorString.cpp
     Source/Private/Utility/File.cpp
     Source/Private/Utility/Inserter.cpp
     Source/Private/Utility/Random.cpp
     Source/Private/Utility/TagParser.cpp
+    Source/Private/Utility/Profiler.cpp
     ${STB_IMPL}
 )
 
-set(HEADER_FILES
+set(ENGINE_CPP_HEADERS
     Source/Public/Browser/Browser.h
     Source/Public/Core/App.h
     Source/Public/Core/Common.h
@@ -299,8 +299,6 @@ set(HEADER_FILES
     Source/Public/Core/Serialize.h
     Source/Public/Core/Thread.h
     Source/Public/Core/Time.h
-    Source/Public/Core/Window.h
-    Source/Public/Editor/Editor.h
     Source/Public/Platform/imgui/imconfig.h
     Source/Public/Platform/imgui/imconsole.h
     Source/Public/Platform/imgui/imtheme.h
@@ -340,19 +338,27 @@ set(HEADER_FILES
     Source/Public/Rendering/Shader.h
     Source/Public/Rendering/Texture.h
     Source/Public/Rendering/Vertex.h
+    Source/Public/Rendering/Window.h
     Source/Public/Utility/CursorString.h
     Source/Public/Utility/Delegate.h
     Source/Public/Utility/File.h
     Source/Public/Utility/Inserter.h
     Source/Public/Utility/Random.h
     Source/Public/Utility/TagParser.h
+    Source/Public/Utility/Profiler.h
+)
+
+set(EDITOR_CPP_SOURCES
+    Source/Private/Editor/Editor.cpp
+)
+set(EDITOR_CPP_HEADERS
+    Source/Public/Editor/Editor.h
 )
 
 # Setup virtual folders (Functions.cmake)
 make_source_groups(
     Browser
     Core
-    Editor
     Platform
     Platform/posix
     Platform/win32
@@ -365,7 +371,7 @@ make_source_groups(
 
 source_group("Private" FILES "Source/main.cpp")
 source_group("Private/Platform/stb" FILES "Vendor/stb/stb.cpp")
-set(COMMON_INCLUDE_DIRS "Source/Public" ${GLFW_INCLUDE_DIR} ${STB_INCLUDE_DIR} ${GLM_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${IMGUI_DIR})
+set(COMMON_INCLUDE_DIRS "Source/Public" ${GLFW_INCLUDE_DIR} ${STB_INCLUDE_DIR} ${GLM_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${IMGUI_DIR} ${ABY_FT_PP_INCLUDE_DIR})
 set(RESOURCE_DIR "${CMAKE_SOURCE_DIR}/Source/Resources")
 
 # Setup subprojects
@@ -378,32 +384,21 @@ add_subproject("aby_package")
 add_subproject("tool")
 add_dependencies(tool AbyssFTLib)
 
-# Setup library/engine
-
-add_library(${ENGINE} ${CPP_SOURCES} ${HEADER_FILES} ${RESOURCES})
-add_executable(${EDITOR} Source/main.cpp ${RESOURCES})
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${EDITOR})
-target_link_options(${EDITOR} PRIVATE ${LINK_OPTS})
+# Setup engine/editor
+## Engine
+add_library(${ENGINE} ${ENGINE_CPP_SOURCES} ${ENGINE_CPP_HEADERS} ${RESOURCES})
 target_compile_options(${ENGINE} PRIVATE ${COMPILE_OPTS})
-target_compile_options(${EDITOR} PRIVATE ${COMPILE_OPTS})
 target_compile_definitions(${ENGINE} PRIVATE ${GLM_DEFINITIONS} _CRT_SECURE_NO_WARNINGS IMGUI_USER_CONFIG="Platform/imgui/imconfig.h")
-target_compile_definitions(${EDITOR} PRIVATE ${GLM_DEFINITIONS})
 target_include_directories(${ENGINE} PUBLIC 
     ${VULKAN_INCLUDE_DIR} 
     ${COMMON_INCLUDE_DIRS} 
     ${FREETYPE_INCLUDE_DIRS} 
     ${GCH_SMALL_VEC_INCLUDE_DIR} 
     ${ABYSS_FREETYPE_INCLUDE_DIR}
-    ${ABY_FT_PP_INCLUDE_DIR}
     ${CEF_INCLUDE_DIR}
     ${CEF_INTERNAL_INCLUDE_DIR}
 )
-target_include_directories(${EDITOR} PUBLIC Source/Public ${COMMON_INCLUDE_DIRS} ${ABY_FT_PP_INCLUDE_DIR})
 set_target_properties(${ENGINE} PROPERTIES FOLDER "Abyss")
-set_target_properties(${EDITOR} PROPERTIES FOLDER "Abyss")
-
-# Build Projects
-
 target_link_libraries(${ENGINE} PRIVATE
     ${VULKAN_LIB_PATH}
     ${SHADER_C_LIB_PATH}
@@ -416,10 +411,20 @@ target_link_libraries(${ENGINE} PRIVATE
     ${CEF_LIB_DIR}/libcef.lib
     libcef_dll_wrapper
 )
- 
-target_link_libraries(${EDITOR} PRIVATE ${ENGINE})
 add_dependencies(${ENGINE} AbyssFTLib glfw tool)
+
+## Editor
+add_executable(${EDITOR} ${EDITOR_CPP_SOURCES} ${EDITOR_CPP_HEADERS} ${RESOURCES})
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${EDITOR})
+target_link_options(${EDITOR} PRIVATE ${LINK_OPTS})
+target_compile_options(${EDITOR} PRIVATE ${COMPILE_OPTS})
+target_compile_definitions(${EDITOR} PRIVATE ${GLM_DEFINITIONS})
+target_include_directories(${EDITOR} PUBLIC Source/Public ${COMMON_INCLUDE_DIRS} )
+set_target_properties(${EDITOR} PROPERTIES FOLDER "Abyss")
+target_link_libraries(${EDITOR} PRIVATE ${ENGINE})
 add_dependencies(${EDITOR} ${ENGINE})
+source_group("Public" FILES ${EDITOR_CPP_HEADERS})
+source_group("Private" FILES ${EDITOR_CPP_SOURCES})
 
 # Copy Resources
 add_custom_command(
@@ -446,25 +451,7 @@ add_custom_command(
     COMMENT "Copy tool executable to root directory"
 )
 
-
 # Copy DLLs 
-
-function(copy_files_post_build TARGET_NAME FILE_LIST)
-    foreach(FILE_PATH IN LISTS ${FILE_LIST})
-        get_filename_component(FILE_NAME "${FILE_PATH}" NAME)
-        if(NOT EXISTS "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${FILE_NAME}"
-           AND NOT FILE_NAME STREQUAL "vulkan-1.dll" 
-           AND NOT FILE_NAME STREQUAL "vulkan-1.dll.pdb"
-        )
-            add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    "${FILE_PATH}"
-                    "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${FILE_NAME}"
-                COMMENT "Copy ${FILE_NAME}"
-            )
-        endif()
-    endforeach()
-endfunction()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(SHADERC_DLL_IN   "${VULKAN_BIN_DIR}/shaderc_shared${DEBUG_SUFFIX}.dll")
