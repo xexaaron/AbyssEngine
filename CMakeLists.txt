@@ -235,8 +235,6 @@ set(ENGINE_CPP_SOURCES
     Source/Private/Core/Log.cpp
     Source/Private/Core/Object.cpp
     Source/Private/Core/Resource.cpp
-    Source/Private/Core/Serialize.cpp
-    Source/Private/Core/Thread.cpp
     Source/Private/Core/Time.cpp
     Source/Private/Platform/Platform.cpp
     Source/Private/Platform/Platform.cpp
@@ -284,6 +282,8 @@ set(ENGINE_CPP_SOURCES
     Source/Private/Utility/Random.cpp
     Source/Private/Utility/TagParser.cpp
     Source/Private/Utility/Profiler.cpp
+    Source/Private/Utility/Serialize.cpp
+    Source/Private/Utility/Thread.cpp
     ${STB_IMPL}
 )
 
@@ -296,8 +296,6 @@ set(ENGINE_CPP_HEADERS
     Source/Public/Core/Log.h
     Source/Public/Core/Object.h
     Source/Public/Core/Resource.h
-    Source/Public/Core/Serialize.h
-    Source/Public/Core/Thread.h
     Source/Public/Core/Time.h
     Source/Public/Platform/imgui/imconfig.h
     Source/Public/Platform/imgui/imconsole.h
@@ -346,6 +344,8 @@ set(ENGINE_CPP_HEADERS
     Source/Public/Utility/Random.h
     Source/Public/Utility/TagParser.h
     Source/Public/Utility/Profiler.h
+    Source/Public/Utility/Serialize.h
+    Source/Public/Utility/Thread.h
 )
 
 set(EDITOR_CPP_SOURCES

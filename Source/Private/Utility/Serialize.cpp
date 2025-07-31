@@ -1,8 +1,8 @@
-#include "Core/Serialize.h"
+#include "Utility/Serialize.h"
 #include "Utility/File.h"
 #include <fstream>
 
-namespace aby {
+namespace aby::util {
     Serializer::Serializer(const SerializeOpts& opts) : m_Opts(opts), m_Offset(0) {
         set_mode(opts.mode);
     }

@@ -5,7 +5,7 @@
 namespace aby {
 
     Resource::Resource() : 
-        m_Type(EResource::NONE), m_Handle(0) {}
+        m_Type(EResource::NONE), m_Handle(null) {}
     
     Resource::Resource(EResource type, Handle handle) : 
         m_Type(type), m_Handle(handle) {}

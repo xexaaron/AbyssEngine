@@ -3,7 +3,7 @@
 #include "Core/Log.h"
 #include <cstring>
 
-namespace aby {
+namespace aby::util {
 
 	enum class ESerializeMode {
 		READ,

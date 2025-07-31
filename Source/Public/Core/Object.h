@@ -1,9 +1,10 @@
 #pragma once
 
 #include "Core/Common.h"
-#include "Core/Serialize.h"
 #include "Core/Event.h"
 #include "Core/Time.h"
+#include "Core/Log.h"
+#include "Utility/Random.h"
 #include <span>
 
 namespace aby {
@@ -41,19 +42,7 @@ namespace aby {
 		* @param app Pointer to the application
 		*/
 		virtual void on_destroy(App* app) {}
-		/**
-		* Called before the object is destroyed.
-		* @param serializer Serializer containing one derived Object instance of data.
-		*/
-		virtual void on_serialize(Serializer& serializer) {}
-		/**
-		* Called before the object is created.
-		* @param serializer Serializer to write one derived Object instance to.
-		* @return true:  If deserialization occurred.
-		* @return false: If deserialization did not occur.
-		*/
-		virtual bool on_deserialize(Serializer& serializer);
-
+	
 		util::UUID uuid() const;
 
 		template <typename T> requires (std::is_base_of_v<Object, T>)

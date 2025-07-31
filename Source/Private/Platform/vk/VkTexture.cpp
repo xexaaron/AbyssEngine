@@ -70,7 +70,7 @@ namespace aby::vk {
         m_ImGuiID(VK_NULL_HANDLE),
         m_Ctx(ctx),
         m_Handler(nullptr),
-        m_Handle(-1)
+        m_Handle(Resource::null)
     {
         init();
     }
@@ -87,7 +87,7 @@ namespace aby::vk {
         m_ImGuiID(VK_NULL_HANDLE),
         m_Ctx(ctx),
         m_Handler(nullptr),
-        m_Handle(-1)
+        m_Handle(Resource::null)
     {
         init();
     }

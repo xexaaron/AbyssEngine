@@ -77,11 +77,11 @@ namespace aby {
         return m_Fonts;
     }
     
-    LoadThread& Context::load_thread() {
+    util::LoadThread& Context::load_thread() {
         return m_LoadThread;
     }
     
-    const LoadThread& Context::load_thread() const {
+    const util::LoadThread& Context::load_thread() const {
         return m_LoadThread;
     }
 

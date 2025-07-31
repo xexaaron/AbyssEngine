@@ -13,9 +13,4 @@ namespace aby {
 		return m_ID;
 	}
 
-	bool Object::on_deserialize(Serializer& serializer) {
-		return false;
-	}
-
-
 }

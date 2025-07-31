@@ -70,7 +70,7 @@ namespace aby {
 
         print_top();
         std::cout << std::format("│ {} │ {} │ {} │\n",
-            print_header_col("Test", max_label_len, color_string),
+            print_header_col("Test", static_cast<int>(max_label_len), color_string),
             print_header_col("Result", result_width, color_cyan),
             print_header_col("Time (ns)", time_width, color_number)
         );

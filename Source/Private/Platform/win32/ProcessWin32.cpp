@@ -54,7 +54,7 @@ namespace aby::sys::win32 {
         CloseHandle(m_Handles.out.write); // Close parent's stdout write-end
         
         bRunning.store(true);
-        m_Thread  = create_unique<Thread>([this]() { return this->loop(); }, split(cmd)[0]);
+        m_Thread  = create_unique<util::Thread>([this]() { return this->loop(); }, split(cmd)[0]);
         m_Handles.proc = pi.hProcess;
         return true;
     }

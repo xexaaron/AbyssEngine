@@ -6,7 +6,7 @@
 #include <thread>
 #include <condition_variable>
 
-namespace aby {
+namespace aby::util {
 
     class Thread {
     public:

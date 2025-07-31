@@ -308,7 +308,6 @@ namespace aby::editor {
 
 	}
 
-
 	void EditorUI::draw_dockspace() {
 		static bool dockspaceOpen = true;
 		static bool opt_fullscreen_persistant = true;

@@ -1,5 +1,5 @@
 #include "Platform/imgui/imtheme.h"
-#include "Core/Serialize.h"
+#include "Utility/Serialize.h"
 
 namespace aby::imgui {
     
@@ -11,8 +11,8 @@ namespace aby::imgui {
         m_Name(name)
     {
         ABY_ASSERT(name.size() <= 128, "Name cannot be longer than 128 characters");
-        SerializeOpts opts{ dir / (m_Name + ".imtheme"), ESerializeMode::READ };
-        Serializer s(opts);
+        util::SerializeOpts opts{ dir / (m_Name + ".imtheme"), util::ESerializeMode::READ};
+        util::Serializer s(opts);
         s.read(m_Style.Alpha);
         s.read(m_Style.DisabledAlpha);
         s.read(m_Style.WindowPadding.x);
@@ -107,8 +107,8 @@ namespace aby::imgui {
             std::filesystem::create_directory(dir);
         }
 
-        SerializeOpts opts{ dir / (m_Name + ".imtheme"), ESerializeMode::WRITE };
-        Serializer s(opts);
+        util::SerializeOpts opts{ dir / (m_Name + ".imtheme"), util::ESerializeMode::WRITE };
+        util::Serializer s(opts);
         s.write(m_Style.Alpha);
         s.write(m_Style.DisabledAlpha);
         s.write(m_Style.WindowPadding.x);

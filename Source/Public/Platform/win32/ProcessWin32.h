@@ -4,7 +4,7 @@
 
 #include "Platform/Process.h"
 #include "Platform/win32/PlatformWin32.h"
-#include "Core/Thread.h"
+#include "Utility/Thread.h"
 #include <queue>
 
 namespace aby::sys::win32 {
@@ -40,7 +40,7 @@ namespace aby::sys::win32 {
 	private:
 		ProcessHandles			m_Handles;
 		std::queue<std::string> m_Writes;
-		Unique<Thread>			m_Thread;
+		Unique<util::Thread>	m_Thread;
 		std::atomic<bool>		bRunning;
 	};
 }

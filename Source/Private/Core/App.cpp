@@ -190,7 +190,7 @@ namespace aby {
         ss << watchdog.string() << " "
            << App::exe().filename().replace_extension("").string() << " " // monitor this app
            << App::exe().string();                                        // run this app
-        Thread restart([cmd = ss.str()]() {
+        util::Thread restart([cmd = ss.str()]() {
             std::system(cmd.c_str());
         });
         restart.set_name("Restart Thread");

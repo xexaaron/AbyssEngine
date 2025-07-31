@@ -1,4 +1,4 @@
-#include "Core/Thread.h"
+#include "Utility/Thread.h"
 
 #include "Core/App.h"
 #include "Platform/Platform.h"
@@ -7,7 +7,7 @@
 //#define ASYNC_RESOURCE_LOADING
 
 
-namespace aby {
+namespace aby::util {
 
     Thread::~Thread() {
         if (m_Thread.joinable()) {

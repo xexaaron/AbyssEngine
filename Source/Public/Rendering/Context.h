@@ -1,8 +1,8 @@
 #pragma once
 #include "Core/Common.h"
-#include "Core/Window.h"
 #include "Core/Resource.h"
-#include "Core/Thread.h"
+#include "Utility/Thread.h"
+#include "Rendering/Window.h"
 #include "Rendering/Font.h"
 #include "Rendering/Texture.h"
 #include "Rendering/Shader.h"
@@ -32,8 +32,8 @@ namespace aby {
         const ResourceClass<Texture>& textures() const;
         ResourceClass<Font>&          fonts();
         const ResourceClass<Font>&    fonts() const;
-        LoadThread&                   load_thread();
-        const LoadThread&             load_thread() const;
+        util::LoadThread&             load_thread();
+        const util::LoadThread&       load_thread() const;
     protected:
         Context(App* app, Window* window);
     protected:
@@ -43,7 +43,7 @@ namespace aby {
         ResourceClass<Shader>  m_Shaders;
         ResourceClass<Texture> m_Textures;
         ResourceClass<Font>    m_Fonts;
-        LoadThread             m_LoadThread;
+        util::LoadThread       m_LoadThread;
     };
 
 }

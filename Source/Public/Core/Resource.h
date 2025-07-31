@@ -42,6 +42,7 @@ namespace aby {
     class Resource {
     public:
         using Handle = u32;
+        static constexpr size_t null = SIZE_MAX;
     public:
         Resource();
         Resource(EResource type, Handle handle);

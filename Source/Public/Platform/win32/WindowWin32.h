@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/Window.h"
+#include "Rendering/Window.h"
 #include <Windows.h>
 #include <shobjidl.h>
 #include <propvarutil.h>

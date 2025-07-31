@@ -1,6 +1,6 @@
 #ifdef _WIN32
 #include "Platform/win32/WindowWin32.h"
-#include "Core/Thread.h"
+#include "Utility/Thread.h"
 #include "Core/Log.h" 
 
 #include <glfw/glfw3.h>
@@ -121,9 +121,9 @@ namespace aby::sys::win32 {
         ss << "" << watchdog.string() << " "
             << "--id " << exe_path.filename().replace_extension("").string() << " "
             << "--cmd " << exe_path.string() << "";
-        Thread restart([cmd = ss.str()]() {
+        util::Thread restart([cmd = ss.str()]() {
             std::system(cmd.c_str());
-            });
+        });
         restart.set_name("Restart Thread");
         ABY_LOG("System: {}", ss.str());
         restart.detach();
