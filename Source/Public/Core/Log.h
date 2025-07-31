@@ -116,71 +116,6 @@ namespace aby {
 
 } 
 
-namespace std {
-    template <>
-    struct formatter<source_location> {
-        template<class ParseContext>
-        constexpr typename ParseContext::iterator parse(ParseContext& ctx) {
-            return ctx.begin();
-        }
-        
-        template <typename FmtContext>
-        typename FmtContext::iterator format(const source_location& loc, FmtContext& ctx) const {
-            return format_to(ctx.out(), "{}:{} {}", loc.file_name(), loc.line(), loc.function_name());
-        }
-    };
-
-    template <>
-    struct formatter<filesystem::path> {
-        template<class ParseContext>
-        constexpr typename ParseContext::iterator parse(ParseContext& ctx) {
-            return ctx.begin();
-        }
-
-        template <typename FmtContext>
-        typename FmtContext::iterator format(const filesystem::path& path, FmtContext& ctx) const {
-            return format_to(ctx.out(), "<fp>\"{}\"</fp>", path.generic_string());
-        }
-    };
-
-    template <>
-    struct formatter<aby::util::UUID> {
-        template<class ParseContext>
-        constexpr typename ParseContext::iterator parse(ParseContext& ctx) {
-            return ctx.begin();
-        }
-
-        template <typename FmtContext>
-        typename FmtContext::iterator format(const aby::util::UUID& uuid, FmtContext& ctx) const {
-            return format_to(ctx.out(), "{}", uuid.operator u64());
-        }
-    };
-
-    template <glm::length_t L, typename T, glm::qualifier Q>
-    struct formatter<glm::vec<L, T, Q>>  {
-        template <typename ParseContext>
-        constexpr typename ParseContext::iterator parse(ParseContext& ctx) {
-            return ctx.begin();
-        }
-
-        template <typename FmtContext>
-        typename FmtContext::iterator format(const glm::vec<L, T, Q>& v, FmtContext& ctx) const {
-            std::string out = "(";
-            for (glm::length_t i = 0; i < L; ++i) {
-                out += std::to_string(v[i]);
-                if (i < L - 1) {
-                    out += ", ";
-                }
-            }
-            out += ")";
-            return format_to(ctx.out(), "{}", out);
-        }
-
-
-    };
-
-}
-
 namespace aby {
     inline std::ostream& operator<<(std::ostream& os, const glm::vec2& v) {
         os << "(" << v.x << ", " << v.y << ")";
@@ -228,4 +163,68 @@ namespace aby {
     }
 }
 
+namespace std {
+    template <>
+    struct formatter<source_location> {
+        template<class ParseContext>
+        constexpr typename ParseContext::iterator parse(ParseContext& ctx) {
+            return ctx.begin();
+        }
+
+        template <typename FmtContext>
+        typename FmtContext::iterator format(const source_location& loc, FmtContext& ctx) const {
+            return format_to(ctx.out(), "{}:{} {}", loc.file_name(), loc.line(), loc.function_name());
+        }
+    };
+
+    template <>
+    struct formatter<filesystem::path> {
+        template<class ParseContext>
+        constexpr typename ParseContext::iterator parse(ParseContext& ctx) {
+            return ctx.begin();
+        }
+
+        template <typename FmtContext>
+        typename FmtContext::iterator format(const filesystem::path& path, FmtContext& ctx) const {
+            return format_to(ctx.out(), "<fp>\"{}\"</fp>", path.generic_string());
+        }
+    };
+
+    template <>
+    struct formatter<aby::util::UUID> {
+        template<class ParseContext>
+        constexpr typename ParseContext::iterator parse(ParseContext& ctx) {
+            return ctx.begin();
+        }
+
+        template <typename FmtContext>
+        typename FmtContext::iterator format(const aby::util::UUID& uuid, FmtContext& ctx) const {
+            return format_to(ctx.out(), "{}", uuid.operator u64());
+        }
+    };
+
+    template <glm::length_t L, typename T, glm::qualifier Q>
+    struct formatter<glm::vec<L, T, Q>> {
+        template <typename ParseContext>
+        constexpr typename ParseContext::iterator parse(ParseContext& ctx) {
+            return ctx.begin();
+        }
+
+        template <typename FmtContext>
+        typename FmtContext::iterator format(const glm::vec<L, T, Q>& v, FmtContext& ctx) const {
+            std::string out = "(";
+            for (glm::length_t i = 0; i < L; ++i) {
+                out += std::to_string(v[i]);
+                if (i < L - 1) {
+                    out += ", ";
+                }
+            }
+            out += ")";
+            return format_to(ctx.out(), "{}", out);
+        }
+
+
+    };
+
+}
 

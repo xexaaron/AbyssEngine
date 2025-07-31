@@ -19,6 +19,11 @@ namespace aby::vk {
         void imgui_new_frame() override;
         void imgui_end_frame() override;
 
+        void set_dbg_obj_name(VkImage image, const char* name);
+        void set_dbg_obj_name(VkBuffer buffer, const char* name);
+        void set_dbg_obj_name(VkImageView view, const char* name);
+        void set_dbg_obj_name(VkDescriptorSet set, const char* name);
+
         Instance&      inst();
         Debugger&      debugger();
         DeviceManager& devices();

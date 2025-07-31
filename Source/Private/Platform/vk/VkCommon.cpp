@@ -5,7 +5,7 @@
 
 namespace aby::vk::helper {
 
-    std::string to_string(VkResult result) {
+    auto to_string(VkResult result) -> std::string {
         switch (result) {
             case VK_SUCCESS:                                 return "VK_SUCCESS";
             case VK_NOT_READY:                               return "VK_NOT_READY";
@@ -55,7 +55,7 @@ namespace aby::vk::helper {
         }
     }
      
-    std::string to_string(VkPhysicalDeviceType type) {
+    auto to_string(VkPhysicalDeviceType type) -> std::string {
         switch (type) {
             case VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_CPU:
                 return "cpu";
@@ -71,13 +71,13 @@ namespace aby::vk::helper {
                 return "VkPhysicalDeviceType out of range";
         }
     }
-    std::vector<VkExtensionProperties> get_extensions() {
+    auto get_extensions() -> std::vector<VkExtensionProperties> {
         std::vector<VkExtensionProperties> extensions;
         VK_ENUMERATE(extensions, vkEnumerateInstanceExtensionProperties, nullptr);
         return extensions;
     }
 
-    std::vector<const char*> are_ext_avail(const std::vector<const char*>& req_exts) {
+    auto are_ext_avail(const std::vector<const char*>& req_exts) -> std::vector<const char*> {
         std::vector<VkExtensionProperties> extensions = get_extensions();
         std::vector<const char*> missing_exts;
 
@@ -96,7 +96,7 @@ namespace aby::vk::helper {
         return missing_exts;
     }
 
-    std::vector<VkLayerProperties> get_layers() {
+    auto get_layers() -> std::vector<VkLayerProperties> {
         u32 layer_count = 0;
         VK_CHECK(vkEnumerateInstanceLayerProperties(&layer_count, nullptr));
         std::vector<VkLayerProperties> layers(layer_count);
@@ -104,7 +104,7 @@ namespace aby::vk::helper {
         return layers;
     }
 
-    std::vector<const char*> are_layers_avail(const std::vector<const char*>& req_layers) {
+    auto are_layers_avail(const std::vector<const char*>& req_layers) -> std::vector<const char*> {
         auto layers = get_layers();
         std::vector<const char*> missing_layers;
         for (std::size_t i = 0; i < req_layers.size(); i++) {
@@ -122,7 +122,7 @@ namespace aby::vk::helper {
         return missing_layers;
     }
 
-    u32 find_mem_type(u32 filter, VkMemoryPropertyFlags properties, VkPhysicalDevice physical) {
+    auto find_mem_type(u32 filter, VkMemoryPropertyFlags properties, VkPhysicalDevice physical) -> u32 {
         VkPhysicalDeviceMemoryProperties memProperties;
         vkGetPhysicalDeviceMemoryProperties(physical, &memProperties);
 
@@ -135,7 +135,7 @@ namespace aby::vk::helper {
         throw std::runtime_error("Failed to find a suitable memory type!");
     }
 
-    void transition_image_layout(
+    auto transition_image_layout(
         VkCommandBuffer       cmd,
         VkImage               image,
         VkImageLayout*        oldLayout,
@@ -144,7 +144,7 @@ namespace aby::vk::helper {
         VkAccessFlags2        dstAccessMask,
         VkPipelineStageFlags2 srcStage,
         VkPipelineStageFlags2 dstStage
-    ) {
+    ) -> void {
         // Initialize the VkImageMemoryBarrier2 structure
         VkImageMemoryBarrier2 image_barrier{
             .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
@@ -192,7 +192,7 @@ namespace aby::vk::helper {
         *oldLayout = newLayout;
     }
 
-    void transition_image_layout(
+    auto transition_image_layout(
         VkCommandBuffer       cmd,
         VkImage               image,
         VkImageLayout         oldLayout,
@@ -201,17 +201,17 @@ namespace aby::vk::helper {
         VkAccessFlags2        dstAccessMask,
         VkPipelineStageFlags2 srcStage,
         VkPipelineStageFlags2 dstStage
-    ) 
+    ) -> void
     {
         transition_image_layout(cmd, image, &oldLayout, newLayout, srcAccessMask, dstAccessMask, srcStage, dstStage);
     }
 
-    void create_img(
+    auto create_img(
         uint32_t width, uint32_t height, 
         VkFormat format, VkImageTiling tiling, 
         VkImageUsageFlags usage, VkMemoryPropertyFlags properties, 
         VkImage& image, VkDeviceMemory& imageMemory, 
-        VkDevice device, VkPhysicalDevice physicalDevice)
+        VkDevice device, VkPhysicalDevice physicalDevice) -> void
     {
         // Step 1: Create the Vulkan Image
         VkImageCreateInfo imageCreateInfo = {};
@@ -249,7 +249,7 @@ namespace aby::vk::helper {
         vkBindImageMemory(device, image, imageMemory, 0);
     }
 
-    void copy_buffer_to_img(VkCommandBuffer cmd, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
+    auto copy_buffer_to_img(VkCommandBuffer cmd, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) -> void {
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
         region.bufferRowLength = 0; // Tightly packed
@@ -271,7 +271,7 @@ namespace aby::vk::helper {
         );
     }
 
-    void create_img_view(VkDevice device, VkImage image, VkFormat format, VkImageView& view) {
+    auto create_img_view(VkDevice device, VkImage image, VkFormat format, VkImageView& view) -> void {
         VkImageViewCreateInfo viewInfo{};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         viewInfo.image = image;
@@ -285,7 +285,7 @@ namespace aby::vk::helper {
         VK_CHECK(vkCreateImageView(device, &viewInfo, IAllocator::get(), &view));
     }
 
-    VkCommandBuffer begin_single_time_commands(VkDevice device, VkCommandPool commandPool) {
+    auto begin_single_time_commands(VkDevice device, VkCommandPool commandPool) -> VkCommandBuffer {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -303,7 +303,7 @@ namespace aby::vk::helper {
         return commandBuffer;
     }
 
-    void end_single_time_commands(VkCommandBuffer commandBuffer, VkDevice device, VkCommandPool commandPool, VkQueue queue) {
+    auto end_single_time_commands(VkCommandBuffer commandBuffer, VkDevice device, VkCommandPool commandPool, VkQueue queue) -> void {
         vkEndCommandBuffer(commandBuffer);
 
         VkSubmitInfo submitInfo{};
@@ -316,6 +316,44 @@ namespace aby::vk::helper {
 
         vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
     }
+
+    auto set_debug_name(VkDevice device, uint64_t handle, VkObjectType type, const char* name) -> void {
+#ifndef NDEBUG
+        if (strlen(name) == 0) return;
+        VkDebugUtilsObjectNameInfoEXT info{
+            .sType        = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+            .objectType   = type,
+            .objectHandle = handle,
+            .pObjectName  = name,
+#endif
+        };
+        SetDebugUtilsObjectNameEXT(device, &info);
+    }
+
+    auto set_debug_name(VkDevice device, VkImage image, const char* name) -> void {
+#ifndef NDEBUG
+        set_debug_name(device, (uint64_t)image, VK_OBJECT_TYPE_IMAGE, name);
+#endif
+    }
+
+    auto set_debug_name(VkDevice device, VkBuffer buffer, const char* name) -> void {
+#ifndef NDEBUG
+        set_debug_name(device, (uint64_t)buffer, VK_OBJECT_TYPE_BUFFER, name);
+#endif
+    }
+    
+    auto set_debug_name(VkDevice device, VkDescriptorSet set, const char* name) -> void {
+#ifndef NDEBUG
+        set_debug_name(device, (uint64_t)set, VK_OBJECT_TYPE_DESCRIPTOR_SET, name);
+#endif
+    }
+
+    auto set_debug_name(VkDevice device, VkImageView view, const char* name) -> void {
+#ifndef NDEBUG
+        set_debug_name(device, (uint64_t)view, VK_OBJECT_TYPE_IMAGE_VIEW, name);
+#endif
+    }
+
 }
 
 
@@ -332,6 +370,7 @@ namespace aby::vk::pfn {
     VK_DEF_PROC(vkDestroySwapchainKHR);
     VK_DEF_PROC(vkAcquireNextImageKHR);
     VK_DEF_PROC(vkQueuePresentKHR);
+    VK_DEF_PROC(vkSetDebugUtilsObjectNameEXT);
 
     bool load_functions(VkInstance instance) {
         VK_LOAD_INST_PROC(instance, vkCreateDebugUtilsMessengerEXT);
@@ -352,6 +391,7 @@ namespace aby::vk::pfn {
         VK_LOAD_DEV_PROC(device, vkGetSwapchainImagesKHR);
         VK_LOAD_DEV_PROC(device, vkAcquireNextImageKHR);
         VK_LOAD_DEV_PROC(device, vkQueuePresentKHR);
+        VK_LOAD_DEV_PROC(device, vkSetDebugUtilsObjectNameEXT);
         return true;
     }
   
@@ -405,4 +445,9 @@ namespace aby::vk {
     VkResult QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo) {
         return pfn::vkQueuePresentKHR(queue, pPresentInfo);
     }
+
+    void SetDebugUtilsObjectNameEXT(VkDevice device, VkDebugUtilsObjectNameInfoEXT* info) {
+        pfn::vkSetDebugUtilsObjectNameEXT(device, info);
+    }
+
 }

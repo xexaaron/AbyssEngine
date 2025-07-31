@@ -32,7 +32,7 @@ namespace aby::web {
         CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override;
         CefRefPtr<CefLoadHandler> GetLoadHandler() override;
         CefRefPtr<CefRenderHandler> GetRenderHandler() override;
-        Ref<Texture> GetDrawBuffer();
+        Ref<BufferedTexture> GetDrawBuffer();
         void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
         const CefRect& GetViewport() const; 
         CefRefPtr<CefBrowser> GetBrowser();
@@ -56,7 +56,7 @@ namespace aby::web {
         bool bIsClosing;
         const bool bIsAlloyStyle;
         CefRect m_Viewport;
-        Ref<Texture> m_Buffer;
+        Ref<BufferedTexture> m_Buffer;
         Resource m_Texture;
     private:
         IMPLEMENT_REFCOUNTING(WebHandler);

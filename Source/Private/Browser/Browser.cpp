@@ -16,7 +16,6 @@
 
 namespace aby::web {
     
-
     std::string GetDataURI(const std::string& data, const std::string& mime_type) {
         return "data:" + mime_type + ";base64," + CefURIEncode(CefBase64Encode(data.data(), data.size()), false).ToString();
     }
@@ -26,9 +25,9 @@ namespace aby::web {
         bIsAlloyStyle(is_alloy_style), 
         bIsClosing(false),
         m_Buffer(nullptr),
-        m_Texture(Texture::create(&m_App->ctx(), { 1, 1 }, { std::byte(0xFF), std::byte(0xFF), std::byte(0xFF), std::byte(0xFF) }, 4, ETextureFormat::BGRA)),
         m_Viewport(0, 0, 800, 600)
     {
+
     }
 
     WebHandler::~WebHandler() {}
@@ -63,8 +62,15 @@ namespace aby::web {
         m_BrowserList.push_back(browser);
         browser->GetHost()->SetFocus(true);
 
-    
-        m_Buffer = m_App->ctx().textures().at(m_Texture);
+        m_Buffer = BufferedTexture::create(
+            &m_App->ctx(),
+            { 1, 1 },
+            { std::byte(0xFF), std::byte(0xFF), std::byte(0xFF), std::byte(0xFF) },
+            4, 
+            ETextureFormat::BGRA,
+            2
+        );
+        m_Buffer->set_dbg_name("Cef Browser Texture");
     }
     
     bool WebHandler::DoClose(CefRefPtr<CefBrowser> browser) {
@@ -119,10 +125,8 @@ namespace aby::web {
     }
 
     void WebHandler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) {
-        UNREFERENCED_PARAMETER(dirtyRects); // Using imgui so dirtyRects does not mean anything to us everything is redrawn per frame.
-        if (m_Buffer) {
-            m_Buffer->write({ width, height }, buffer);
-        }
+        UNREFERENCED_PARAMETER(dirtyRects); 
+        m_Buffer->write({ width, height }, buffer);
     }
     
     CefRefPtr<CefDisplayHandler> WebHandler::GetDisplayHandler() {
@@ -143,7 +147,7 @@ namespace aby::web {
         return this;
     }
     
-    Ref<Texture> WebHandler::GetDrawBuffer() {
+    Ref<BufferedTexture> WebHandler::GetDrawBuffer() {
         return m_Buffer;
     }
 
@@ -178,7 +182,7 @@ namespace aby::web {
             return;
         }
 
-        auto main_browser = m_BrowserList.front();
+        auto& main_browser = m_BrowserList.front();
 
         if (auto browser_view = CefBrowserView::GetForBrowser(main_browser)) {
             // Show the window using the Views framework.

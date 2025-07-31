@@ -41,6 +41,7 @@ namespace aby::editor {
 
 }
 
+
 namespace aby::editor {
 
 	EditorUI::EditorUI(App* app) :
@@ -429,4 +430,11 @@ namespace aby::editor {
 		ImGui::EndMenuBar();
 	}
 
+}
+
+namespace aby {
+	App& main(const std::vector<std::string>& args) {
+        static editor::Editor editor;
+        return editor.app();
+    }
 }

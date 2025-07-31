@@ -90,6 +90,10 @@ namespace aby {
         */
         void write(const glm::u32vec2& size, const void* data);
         /**
+        * @brief Set debug name to be used by validation errors and render tools.
+        */
+        virtual void set_dbg_name(const std::string& name) = 0;
+        /**
         * Sync the cpu buffer with the gpu buffer marking texture as non dirty when finished.
         */
         virtual void sync() = 0;
@@ -137,18 +141,24 @@ namespace aby {
     protected:
         ETextureFormat  m_AbyFormat;
         ETextureState   m_State;
+
     private:
         std::vector<std::byte> m_Data;
     };
 
     class BufferedTexture {
     public:
-        Ref<BufferedTexture> create(Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels, ETextureFormat format = ETextureFormat::RGBA);
-        Ref<BufferedTexture> create(Context* ctx, const glm::u32vec2& size, const void* data, u32 channels, ETextureFormat format = ETextureFormat::RGBA);
+        static Ref<BufferedTexture> create(Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels, ETextureFormat format = ETextureFormat::RGBA, std::size_t buffers = 0);
+        static Ref<BufferedTexture> create(Context* ctx, const glm::u32vec2& size, const void* data, u32 channels, ETextureFormat format = ETextureFormat::RGBA, std::size_t buffers = 0);
         virtual ~BufferedTexture() = default;
 
         virtual void write(const glm::u32vec2& size, const std::vector<std::byte>& data) = 0;
         virtual void write(const glm::u32vec2& size, const void* data) = 0;
+        /**
+        * @brief Set debug name to be used by validation errors and render tools.
+        */
+        virtual void set_dbg_name(const std::string& name) = 0;
+        virtual void set_max_buffers(std::size_t frames) = 0;
 
         virtual glm::u32vec2 size() const = 0;
         virtual u32 channels() const = 0;

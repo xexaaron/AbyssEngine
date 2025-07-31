@@ -45,3 +45,20 @@ function(make_source_groups)
         make_source_group(${folder})
     endforeach()
 endfunction()
+
+function(copy_files_post_build TARGET_NAME FILE_LIST)
+    foreach(FILE_PATH IN LISTS ${FILE_LIST})
+        get_filename_component(FILE_NAME "${FILE_PATH}" NAME)
+        if(NOT EXISTS "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${FILE_NAME}"
+           AND NOT FILE_NAME STREQUAL "vulkan-1.dll" 
+           AND NOT FILE_NAME STREQUAL "vulkan-1.dll.pdb"
+        )
+            add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${FILE_PATH}"
+                    "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${FILE_NAME}"
+                COMMENT "Copy ${FILE_NAME}"
+            )
+        endif()
+    endforeach()
+endfunction()

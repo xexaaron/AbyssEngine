@@ -283,20 +283,20 @@ namespace aby {
 
 namespace aby {
 
-    Ref<BufferedTexture> BufferedTexture::create(Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels, ETextureFormat format) {
+    Ref<BufferedTexture> BufferedTexture::create(Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels, ETextureFormat format, std::size_t buffers) {
         switch (ctx->backend()) {
             case EBackend::VULKAN: {
-                return create_ref<vk::BufferedTexture>(static_cast<vk::Context*>(ctx), size, data, channels, format);
+                return create_ref<vk::BufferedTexture>(static_cast<vk::Context*>(ctx), size, data, channels, format, buffers);
             }
             default:
                 ABY_ASSERT(false, "Not implemented case!");
         }
     }
 
-    Ref<BufferedTexture> BufferedTexture::create(Context* ctx, const glm::u32vec2& size, const void* data, u32 channels, ETextureFormat format) {
+    Ref<BufferedTexture> BufferedTexture::create(Context* ctx, const glm::u32vec2& size, const void* data, u32 channels, ETextureFormat format, std::size_t buffers) {
         switch (ctx->backend()) {
             case EBackend::VULKAN: {
-                return create_ref<vk::BufferedTexture>(static_cast<vk::Context*>(ctx), size, data, channels, format);
+                return create_ref<vk::BufferedTexture>(static_cast<vk::Context*>(ctx), size, data, channels, format, buffers);
             }
             default:
                 ABY_ASSERT(false, "Not implemented case!");

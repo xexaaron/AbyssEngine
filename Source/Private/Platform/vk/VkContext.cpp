@@ -202,4 +202,21 @@ namespace aby::vk {
     Surface& Context::surface() {
         return m_Surface;
     }
+
+    void Context::set_dbg_obj_name(VkImage image, const char* name) {
+        helper::set_debug_name(m_Devices.logical(), image, name);
+    }
+   
+    void Context::set_dbg_obj_name(VkBuffer buffer, const char* name) {
+        helper::set_debug_name(m_Devices.logical(), buffer, name);
+    }
+
+    void Context::set_dbg_obj_name(VkImageView view, const char* name) {
+        helper::set_debug_name(m_Devices.logical(), view, name);
+    }
+
+    void Context::set_dbg_obj_name(VkDescriptorSet set, const char* name) {
+        helper::set_debug_name(m_Devices.logical(), set, name);
+    }
+
 }

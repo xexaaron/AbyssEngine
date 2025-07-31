@@ -3,10 +3,11 @@
 #include "Platform/vk/VkAllocator.h"
 #include "Platform/vk/VkRenderer.h"
 #include "Core/App.h"
+#include "Utility/Profiler.h"
 
 // Texture
 namespace aby::vk {
-    
+
     Texture::Texture(vk::Context* ctx) :
         aby::Texture(),
         m_Logical(ctx->devices().logical()),
@@ -39,7 +40,7 @@ namespace aby::vk {
     {
         init();
     }
-    
+
     Texture::Texture(vk::Context* ctx, const fs::path& path) :
         aby::Texture(path),
         m_Logical(ctx->devices().logical()),
@@ -109,7 +110,7 @@ namespace aby::vk {
     {
 
     }
-     
+
     Texture::Texture(Texture&& other) noexcept :
         aby::Texture(std::move(other)),
         m_Logical(std::move(other.m_Logical)),
@@ -140,20 +141,20 @@ namespace aby::vk {
 
         if (m_Format == VK_FORMAT_UNDEFINED) {
             switch (c) {
-                case 4:
-                    m_Format = VK_FORMAT_R8G8B8A8_SRGB;
-                    break;
-                case 3:
-                    m_Format = VK_FORMAT_R8G8B8_SRGB;
-                    break;
-                case 2:
-                    m_Format = VK_FORMAT_R8G8_SRGB;
-                    break;
-                case 1:
-                    m_Format = VK_FORMAT_R8_SRGB;
-                    break;
-                default:
-                    break;
+            case 4:
+                m_Format = VK_FORMAT_R8G8B8A8_SRGB;
+                break;
+            case 3:
+                m_Format = VK_FORMAT_R8G8B8_SRGB;
+                break;
+            case 2:
+                m_Format = VK_FORMAT_R8G8_SRGB;
+                break;
+            case 1:
+                m_Format = VK_FORMAT_R8_SRGB;
+                break;
+            default:
+                break;
             }
         }
 
@@ -226,16 +227,24 @@ namespace aby::vk {
     Texture::~Texture() {
         destroy();
     }
-    
+
+    void Texture::set_dbg_name(const std::string& name) {
+#ifndef NDEBUG
+        m_DbgName = name;
+        m_Ctx->set_dbg_obj_name(m_Image, m_DbgName.c_str());
+        m_Ctx->set_dbg_obj_name(m_View, m_DbgName.c_str());
+#endif
+    }
+
     void Texture::destroy() {
         if (m_Sampler)     vkDestroySampler(m_Logical, m_Sampler, IAllocator::get());
         if (m_View)        vkDestroyImageView(m_Logical, m_View, IAllocator::get());
         if (m_Image)       vkDestroyImage(m_Logical, m_Image, IAllocator::get());
         if (m_ImageMemory) vkFreeMemory(m_Logical, m_ImageMemory, IAllocator::get());
 
-        m_Sampler = VK_NULL_HANDLE;
-        m_View = VK_NULL_HANDLE;
-        m_Image = VK_NULL_HANDLE;
+        m_Sampler     = VK_NULL_HANDLE;
+        m_View        = VK_NULL_HANDLE;
+        m_Image       = VK_NULL_HANDLE;
         m_ImageMemory = VK_NULL_HANDLE;
     }
     
@@ -256,8 +265,8 @@ namespace aby::vk {
 
     
     void Texture::upload() {
-        auto view    = data();
-        auto dim     = size();
+        auto  view    = data();
+        auto& dim     = size();
         auto& devices = m_Ctx->devices();
 
         ABY_ASSERT(!view.empty(), "No data to upload");
@@ -374,18 +383,18 @@ namespace aby::vk {
         VK_CHECK(vkCreateDescriptorSetLayout(logical, &layout_info, vk::Allocator::get(), &s_ImGuiLayout));
     }
 
-    BufferedTexture::BufferedTexture(vk::Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels, ETextureFormat format) : 
-        m_Ctx(ctx)
+    BufferedTexture::BufferedTexture(vk::Context* ctx, const glm::u32vec2& size, const std::vector<std::byte>& data, u32 channels, ETextureFormat format, std::size_t buffers) : 
+        m_Ctx(ctx),
+        m_CmdPool(ctx->devices().create_cmd_pool())
     {
-        init(size, format);
-        write(size, data);
+        init(size, format, data.data(), buffers);
     }
 
-    BufferedTexture::BufferedTexture(vk::Context* ctx, const glm::u32vec2& size, const void* data, u32 channels, ETextureFormat format) : 
-        m_Ctx(ctx)
+    BufferedTexture::BufferedTexture(vk::Context* ctx, const glm::u32vec2& size, const void* data, u32 channels, ETextureFormat format, std::size_t buffers) :
+        m_Ctx(ctx),
+        m_CmdPool(ctx->devices().create_cmd_pool())
     {
-        init(size, format);
-        write(size, data);
+        init(size, format, data, buffers);
     }
 
     BufferedTexture::~BufferedTexture() {
@@ -396,19 +405,19 @@ namespace aby::vk {
             vkDestroySampler(m_Ctx->devices().logical(), m_Sampler, nullptr);
     }
 
-    void BufferedTexture::init(const glm::u32vec2& size, ETextureFormat format) {
-        std::size_t frames = static_cast<vk::Renderer&>(m_Ctx->app()->renderer()).swapchain().frames_in_flight();
+    void BufferedTexture::init(const glm::u32vec2& size, ETextureFormat format, const void* data, std::size_t buffers) {
+        std::size_t frames = buffers == 0 ? static_cast<vk::Renderer&>(m_Ctx->app()->renderer()).swapchain().frames_in_flight() : buffers;
         m_Texs.resize(frames);
-
+        create_imgui_layout(m_Ctx);
+        create_sampler();
         auto fmt = aby_fmt_to_vk_fmt(format);
         for (auto& tex : m_Texs) {
             tex.size = size;
             tex.fmt = fmt;
-            tex.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            tex.layout = VK_IMAGE_LAYOUT_UNDEFINED;
             init(tex);
+            upload(tex, data);
         }
-        create_imgui_layout(m_Ctx);
-        create_sampler();
     }
 
     void BufferedTexture::write(const glm::u32vec2& size, const std::vector<std::byte>& data) {
@@ -416,20 +425,56 @@ namespace aby::vk {
     }
 
     void BufferedTexture::write(const glm::u32vec2& size, const void* data) {
+        PROFILE_SCOPE("Write");
         m_Idx = (m_Idx + 1) % m_Texs.size();
-        PerBuffer& target = m_Texs[m_Idx];
-
+        PerTex& target = m_Texs[m_Idx];
         if (target.size != size) {
+            PROFILE_SCOPE("Recreate");
             destroy(target);
             target.size = size;
             target.fmt = curr().fmt;
             init(target);
         }
-
-        upload(target, data);
+        {
+            PROFILE_SCOPE("Upload");
+            upload(target, data);
+        }
     }
 
-    void BufferedTexture::init(PerBuffer& buffer) {
+
+    void BufferedTexture::set_dbg_name(const std::string& name) {
+#ifndef NDEBUG
+        m_DbgName = name;
+#endif
+    }
+
+    void BufferedTexture::set_max_buffers(std::size_t frames) {
+        ABY_ASSERT(frames > 1 && frames <= MAX_FRAMES_IN_FLIGHT, "max buffers out of range");
+        if (m_Texs.size() > frames) {
+            auto diff = m_Texs.size() - frames;
+            for (std::size_t i = 0; i < diff; i++) {
+                destroy(m_Texs.back());
+                m_Texs.pop_back();
+            }
+        }
+        else if (m_Texs.size() < frames) {
+            auto diff = frames - m_Texs.size();
+            int chans = channels();
+            std::vector<std::byte> dummy(chans, std::byte{ 0xFF });
+            for (std::size_t i = 0; i < diff; i++) {
+                PerTex tex = {};
+                tex.size = { 1, 1 };
+                tex.fmt = m_Texs.empty() ? VK_FORMAT_R8G8B8A8_UNORM : m_Texs.back().fmt;
+                tex.layout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+                init(tex);
+                upload(tex, dummy.data());
+            }
+        }
+    }
+
+
+    void BufferedTexture::init(PerTex& buffer) {
         VkDevice device = m_Ctx->devices().logical();
 
         // Create VkImage
@@ -446,7 +491,8 @@ namespace aby::vk {
             .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
             .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
         };
-        vkCreateImage(device, &image_info, nullptr, &buffer.img);
+        VK_CHECK(vkCreateImage(device, &image_info, nullptr, &buffer.img));
+        m_Ctx->set_dbg_obj_name(buffer.img, m_DbgName.c_str());
 
         // Allocate memory
         VkMemoryRequirements mem_reqs;
@@ -456,8 +502,8 @@ namespace aby::vk {
             .allocationSize = mem_reqs.size,
             .memoryTypeIndex = vk::helper::find_mem_type(mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_Ctx->devices().physical()),
         };
-        vkAllocateMemory(device, &alloc_info, nullptr, &buffer.mem);
-        vkBindImageMemory(device, buffer.img, buffer.mem, 0);
+        VK_CHECK(vkAllocateMemory(device, &alloc_info, nullptr, &buffer.mem));
+        VK_CHECK(vkBindImageMemory(device, buffer.img, buffer.mem, 0));
 
         // Create image view
         VkImageViewCreateInfo view_info = {
@@ -471,18 +517,39 @@ namespace aby::vk {
                 .layerCount = 1,
             },
         };
-        vkCreateImageView(device, &view_info, nullptr, &buffer.view);
+
+
+
+        VK_CHECK(vkCreateImageView(device, &view_info, nullptr, &buffer.view));
+
+        if (curr().layout == VK_IMAGE_LAYOUT_UNDEFINED) {
+            VkCommandBuffer cmd = helper::begin_single_time_commands(device, m_CmdPool->operator const VkCommandPool());
+
+            helper::transition_image_layout(
+                cmd,
+                curr().img,
+                &curr().layout,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                VK_ACCESS_NONE,
+                VK_ACCESS_SHADER_READ_BIT,
+                VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+            );
+
+            helper::end_single_time_commands(cmd, device, m_CmdPool->operator const VkCommandPool(), m_Ctx->devices().graphics().Queue);
+        }
+
+        m_Ctx->set_dbg_obj_name(buffer.view, m_DbgName.c_str());
     }
 
-    void BufferedTexture::destroy(PerBuffer& buffer) {
+    void BufferedTexture::destroy(PerTex& buffer) {
         VkDevice device = m_Ctx->devices().logical();
         if (buffer.view) vkDestroyImageView(device, buffer.view, nullptr);
         if (buffer.img)  vkDestroyImage(device, buffer.img, nullptr);
         if (buffer.mem)  vkFreeMemory(device, buffer.mem, nullptr);
-        buffer = {};
     }
 
-    void BufferedTexture::upload(PerBuffer& buffer, const void* src_data) {
+    void BufferedTexture::upload(PerTex& buffer, const void* src_data) {
         auto device = m_Ctx->devices().logical();
         const VkDeviceSize size_bytes = buffer.size.x * buffer.size.y * channels();
         vk::Buffer staging(src_data, size_bytes, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_Ctx->devices());
@@ -532,6 +599,7 @@ namespace aby::vk {
               .pSetLayouts = &s_ImGuiLayout,
             };
             VK_CHECK(vkAllocateDescriptorSets(m_Ctx->devices().logical(), &alloc_info, &buffer.set));
+            m_Ctx->set_dbg_obj_name(buffer.set, m_DbgName.c_str());
         }
 
         VkDescriptorImageInfo img_info{
@@ -539,7 +607,7 @@ namespace aby::vk {
             .imageView   = buffer.view,
             .imageLayout = buffer.layout,
         };
-
+        
         VkWriteDescriptorSet write{
             .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
             .dstSet = buffer.set,
@@ -553,25 +621,25 @@ namespace aby::vk {
 
     void BufferedTexture::create_sampler() {
         VkSamplerCreateInfo info = {
-            .sType          = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-            .magFilter      = VK_FILTER_LINEAR,
-            .minFilter      = VK_FILTER_LINEAR,
-            .mipmapMode     = VK_SAMPLER_MIPMAP_MODE_LINEAR,
-            .addressModeU   = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-            .addressModeV   = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-            .addressModeW   = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-            .maxAnisotropy  = 1.f,
-            .maxLod         = 1.f,
+            .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+            .magFilter = VK_FILTER_LINEAR,
+            .minFilter = VK_FILTER_LINEAR,
+            .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+            .addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+            .addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+            .addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+            .maxAnisotropy = 1.f,
+            .maxLod = 1.f,
         };
         VK_CHECK(vkCreateSampler(m_Ctx->devices().logical(), &info, nullptr, &m_Sampler));
     }
 
-    BufferedTexture::PerBuffer& BufferedTexture::curr() {
+    PerTex& BufferedTexture::curr() {
         ABY_ASSERT(m_Idx < m_Texs.size(), "Out of bounds");
         return m_Texs[m_Idx];
     }
 
-    const BufferedTexture::PerBuffer& BufferedTexture::curr() const {
+    const PerTex& BufferedTexture::curr() const {
         ABY_ASSERT(m_Idx < m_Texs.size(), "Out of bounds");
         return m_Texs[m_Idx];
     }

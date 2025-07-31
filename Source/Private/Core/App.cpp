@@ -1,7 +1,9 @@
 #include "Core/App.h"
 #include "Core/Log.h"
+
 #include "Platform/vk/VkRenderer.h"
 #include "Platform/Platform.h"
+#include "Utility/Profiler.h"
 
 namespace aby {
     
@@ -32,6 +34,7 @@ namespace aby {
         m_Ctx(Context::create(this, m_Window.get())),
         m_Renderer(Renderer::create(m_Ctx))
     {
+        util::Profiler::get().set_app(this);
         m_Window->register_event(this, &App::on_event);
         fs::path object_cache = cache() / "Objects";
         if (!fs::exists(object_cache)) {
@@ -47,19 +50,22 @@ namespace aby {
     }
 
     void App::run() {
-        m_Ctx->load_thread().sync();
+        {
+            PROFILE_SCOPE("Initialization");
+            m_Ctx->load_thread().sync();
 
-        auto object_cache = cache() / "Objects";
-        for (auto& obj : m_Objects) {
-            obj->on_create(this, false);
+            auto object_cache = cache() / "Objects";
+            for (auto& obj : m_Objects) {
+                obj->on_create(this, false);
+            }
+
+            m_Window->initialize();
+            m_Ctx->imgui_init();
         }
-
-        m_Window->initialize();
-        m_Ctx->imgui_init();
-
         auto last_time   = std::chrono::high_resolution_clock::now();
         float delta_time = 0.0f;
         while (m_Window->is_open()) {
+            PROFILE_SCOPE("Frame Loop");
             auto current_time = std::chrono::high_resolution_clock::now();
             delta_time        = std::chrono::duration<float>(current_time - last_time).count();
             last_time         = current_time;
@@ -85,12 +91,14 @@ namespace aby {
             Logger::flush();
 
         }
+        {
+            PROFILE_SCOPE("Deinitialization");
+            // Become a "background task" so we can clean up resources but look like we exited fast.
+            m_Window->become_bg_task();
 
-        // Become a "background task" so we can clean up resources but look like we exited fast.
-        m_Window->become_bg_task();
-
-        for (auto& obj : m_Objects) {
-            obj->on_destroy(this);
+            for (auto& obj : m_Objects) {
+                obj->on_destroy(this);
+            }
         }
     }
  

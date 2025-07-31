@@ -58,59 +58,27 @@ namespace aby::vk {
     constexpr static u32     MAX_BINDLESS_RESOURCES   = 16536;
     constexpr static u32     BINDLESS_TEXTURE_BINDING = 10;
 
-
     namespace helper {
-        std::string to_string(VkResult result);
-        std::string to_string(VkPhysicalDeviceType type);
-        /**
-        * Check if extensions are available on this device/platform.
-        * @param req_exts Extensions required by the application.
-        * @return Success: Empty Vector, 
-        * @return Failure: Missing Extension(s) list. 
-        */
-        std::vector<const char*> are_ext_avail(const std::vector<const char*>& req_exts);
-        std::vector<VkExtensionProperties> get_extensions();
-        /**
-        * Check if the layers are available on this device/platform.
-        * @param req_layers Layers required by the application.
-        * @return Success: Empty Vector,
-        * @return Failure: Missing Layers(s) list.
-        */
-        std::vector<const char*> are_layers_avail(const std::vector<const char*>& req_layers);
-        std::vector<VkLayerProperties> get_layers();
+        auto to_string(VkResult result) -> std::string;
+        auto to_string(VkPhysicalDeviceType type) -> std::string;
+        auto get_extensions() -> std::vector<VkExtensionProperties>;
+        auto get_layers() -> std::vector<VkLayerProperties>;
+        auto are_ext_avail(const std::vector<const char*>& req_exts) -> std::vector<const char*>;
+        auto are_layers_avail(const std::vector<const char*>& req_layers) -> std::vector<const char*>;
+        auto find_mem_type(u32 filter, VkMemoryPropertyFlags properties, VkPhysicalDevice physical) -> u32;
+        auto transition_image_layout(VkCommandBuffer cmd, VkImage image, VkImageLayout* oldLayout, VkImageLayout newLayout, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage) -> void;
+        auto transition_image_layout(VkCommandBuffer cmd, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage) -> void;
+        auto copy_buffer_to_img(VkCommandBuffer cmd, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) -> void;
+        auto create_img(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory, VkDevice device, VkPhysicalDevice physicalDevice) -> void;
+        auto create_img_view(VkDevice device, VkImage image, VkFormat format, VkImageView& view) -> void;
+        auto begin_single_time_commands(VkDevice device, VkCommandPool commandPool) -> VkCommandBuffer;
+        auto end_single_time_commands(VkCommandBuffer commandBuffer, VkDevice device, VkCommandPool commandPool, VkQueue queue) -> void;
+        auto set_debug_name(VkDevice device, uint64_t handle, VkObjectType type, const char* name) -> void;
+        auto set_debug_name(VkDevice device, VkImage image, const char* name) -> void;
+        auto set_debug_name(VkDevice device, VkBuffer buffer, const char* name) -> void;
+        auto set_debug_name(VkDevice device, VkDescriptorSet set, const char* name) -> void;
+        auto set_debug_name(VkDevice device, VkImageView view, const char* name) -> void;
 
-        u32 find_mem_type(u32 filter, VkMemoryPropertyFlags properties, VkPhysicalDevice physical);
-        void transition_image_layout(
-            VkCommandBuffer       cmd,
-            VkImage               image,
-            VkImageLayout*        oldLayout,
-            VkImageLayout         newLayout,
-            VkAccessFlags2        srcAccessMask,
-            VkAccessFlags2        dstAccessMask,
-            VkPipelineStageFlags2 srcStage,
-            VkPipelineStageFlags2 dstStage
-        );
-        void transition_image_layout(
-            VkCommandBuffer       cmd,
-            VkImage               image,
-            VkImageLayout         oldLayout,
-            VkImageLayout         newLayout,
-            VkAccessFlags2        srcAccessMask,
-            VkAccessFlags2        dstAccessMask,
-            VkPipelineStageFlags2 srcStage,
-            VkPipelineStageFlags2 dstStage
-        );
-        void create_img(
-            uint32_t width, uint32_t height,
-            VkFormat format, VkImageTiling tiling,
-            VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
-            VkImage& image, VkDeviceMemory& imageMemory,
-            VkDevice device, VkPhysicalDevice physicalDevice
-        );
-        void copy_buffer_to_img(VkCommandBuffer cmd, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-        void create_img_view(VkDevice device, VkImage image, VkFormat format, VkImageView& view);
-        VkCommandBuffer begin_single_time_commands(VkDevice device, VkCommandPool commandPool);
-        void end_single_time_commands(VkCommandBuffer commandBuffer, VkDevice device, VkCommandPool commandPool, VkQueue queue);
     }
 
     namespace pfn {
@@ -130,6 +98,6 @@ namespace aby::vk {
     VkResult AcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* pImageIndex);
     VkResult QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo);
     PFN_vkVoidFunction GetDeviceProcAddr(VkDevice device, const char* pName);
-
+    void SetDebugUtilsObjectNameEXT(VkDevice device, VkDebugUtilsObjectNameInfoEXT* info);
 
 }

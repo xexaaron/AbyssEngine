@@ -129,7 +129,9 @@ extern "C" __declspec(dllimport) void __stdcall DebugBreak();
 #define EXPAND_VEC4(v) v.x, v.y, v.z, v.w
 #define EXPAND_COLOR(c) c.r, c.g, c.b, c.a
 #define BIT(x) (1U << x)
-#define CONCAT(x, y) x##y
+#define CONCAT_IMPL(x, y) x##y
+#define CONCAT(x, y) CONCAT_IMPL(x, y)
+#define STRINGIFY(x) #x
 #define DECLARE_ENUM_OP_EQ(e, op) constexpr e& operator op##=(e& lhs, e rhs) { lhs = static_cast<e>(std::to_underlying(lhs) op std::to_underlying(rhs)); return lhs; }
 #define DECLARE_ENUM_OP(e, op) constexpr e operator op(e lhs, e rhs) { return static_cast<e>(std::to_underlying(lhs) op std::to_underlying(rhs)); }
 
