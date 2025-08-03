@@ -344,7 +344,7 @@ make_source_groups(
 source_group("Private" FILES "Source/main.cpp")
 source_group("Private/Platform/stb" FILES "Vendor/stb/stb.cpp")
 set(COMMON_INCLUDE_DIRS "Source/Public" ${GLFW_INCLUDE_DIR} ${STB_INCLUDE_DIR} ${GLM_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${IMGUI_DIR} ${ABY_FT_PP_INCLUDE_DIR})
-set(RESOURCE_DIR "${CMAKE_SOURCE_DIR}/Source/Resources")
+set(RESOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources")
 
 # Setup subprojects
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
