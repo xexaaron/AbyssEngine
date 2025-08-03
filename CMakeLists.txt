@@ -236,18 +236,22 @@ set(ENGINE_CPP_SOURCES
     Source/Private/Core/Object.cpp
     Source/Private/Core/Resource.cpp
     Source/Private/Core/Time.cpp
+    Source/Private/Core/Plugin.cpp
     Source/Private/Platform/Platform.cpp
     Source/Private/Platform/Platform.cpp
     Source/Private/Platform/Process.cpp
+    Source/Private/Platform/SharedLibrary.cpp
     Source/Private/Platform/imgui/imconsole.cpp
     Source/Private/Platform/imgui/imtheme.cpp
     Source/Private/Platform/imgui/imwidget.cpp
     Source/Private/Platform/posix/PlatformPosix.cpp
     Source/Private/Platform/posix/ProcessPosix.cpp
     Source/Private/Platform/posix/WindowPosix.cpp
+    # Source/Private/Platform/win32/SharedLibraryPosix.cpp
     Source/Private/Platform/win32/PlatformWin32.cpp
     Source/Private/Platform/win32/ProcessWin32.cpp
     Source/Private/Platform/win32/WindowWin32.cpp
+    Source/Private/Platform/win32/SharedLibraryWin32.cpp
     Source/Private/Platform/vk/VkAllocator.cpp
     Source/Private/Platform/vk/VkBuffer.cpp
     Source/Private/Platform/vk/VkCmdBuff.cpp
@@ -297,18 +301,22 @@ set(ENGINE_CPP_HEADERS
     Source/Public/Core/Object.h
     Source/Public/Core/Resource.h
     Source/Public/Core/Time.h
+    Source/Public/Core/Plugin.h
     Source/Public/Platform/imgui/imconfig.h
     Source/Public/Platform/imgui/imconsole.h
     Source/Public/Platform/imgui/imtheme.h
     Source/Public/Platform/imgui/imwidget.h
     Source/Public/Platform/Platform.h
     Source/Public/Platform/Process.h
+    Source/Public/Platform/SharedLibrary.h
     Source/Public/Platform/posix/PlatformPosix.h
     Source/Public/Platform/posix/ProcessPosix.h
     Source/Public/Platform/posix/WindowPosix.h
+  #  Source/Public/Platform/posix/SharedLibraryPosix.h
     Source/Public/Platform/win32/PlatformWin32.h
     Source/Public/Platform/win32/ProcessWin32.h
     Source/Public/Platform/win32/WindowWin32.h
+    Source/Public/Platform/win32/SharedLibraryWin32.h
     Source/Public/Platform/vk/VkAllocator.h
     Source/Public/Platform/vk/VkBuffer.h
     Source/Public/Platform/vk/VkCmdBuff.h
@@ -425,6 +433,13 @@ target_link_libraries(${EDITOR} PRIVATE ${ENGINE})
 add_dependencies(${EDITOR} ${ENGINE})
 source_group("Public" FILES ${EDITOR_CPP_HEADERS})
 source_group("Private" FILES ${EDITOR_CPP_SOURCES})
+
+## Plugin Test
+add_library(PlugTest SHARED "Source/Plugins/Plug.cpp")
+target_link_libraries(PlugTest PUBLIC ${ENGINE})
+target_include_directories(PlugTest PUBLIC Source/Public ${COMMON_INCLUDE_DIRS})
+target_link_options(PlugTest PRIVATE ${LINK_OPTS})
+target_compile_options(PlugTest PRIVATE ${COMPILE_OPTS})
 
 # Copy Resources
 add_custom_command(

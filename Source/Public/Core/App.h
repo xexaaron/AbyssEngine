@@ -2,12 +2,12 @@
 
 #include "Core/Common.h"
 #include "Core/Object.h"
+#include "Core/Plugin.h"
 #include "Rendering/Context.h"
 #include "Rendering/Renderer.h"
 #include <filesystem>
 
 namespace aby {
-
 
 	class App {
 	public:
@@ -21,7 +21,16 @@ namespace aby {
 		void set_name(const std::string& name);
 		void add_object(Ref<Object> obj);
 		void remove_object(Ref<Object> obj);
-
+        void register_plugin(const fs::path& plugin);
+        void remove_plugin(const std::string& plugin_name);
+		void register_event(const std::function<void(Event&)>& event);
+        template <typename T>
+        void register_event(T* obj, void(T::* event)(Event&)) {
+            m_Window->register_event([obj, event](Event& e) {
+                return (obj->*event)(e);
+            });
+        }
+		
 		Window*			window();
 		Window*			window() const;
 		Context&		ctx();	
@@ -48,6 +57,7 @@ namespace aby {
 		Ref<Context>    m_Ctx;
 		Ref<Renderer>   m_Renderer;
 		std::vector<Ref<Object>> m_Objects;
+		std::vector<LoadedPlugin> m_Plugins;
 	};
 
 }

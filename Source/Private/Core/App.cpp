@@ -5,6 +5,7 @@
 #include "Platform/Platform.h"
 #include "Utility/Profiler.h"
 
+
 namespace aby {
     
     fs::path App::m_ExePath = "";
@@ -59,6 +60,10 @@ namespace aby {
                 obj->on_create(this, false);
             }
 
+            for (auto& plugin : m_Plugins) {
+                plugin.plugin->on_load(this);
+            }
+
             m_Window->initialize();
             m_Ctx->imgui_init();
         }
@@ -77,7 +82,11 @@ namespace aby {
             m_Ctx->imgui_new_frame();
 
             for (auto& obj : m_Objects) {
-                obj->on_tick(this, Time(delta_time));
+                obj->on_tick(this, delta_time);
+            }
+
+            for (auto& plugin : m_Plugins) {
+                plugin.plugin->on_tick(this, delta_time);
             }
 
             m_Window->swap_buffers();
@@ -98,6 +107,10 @@ namespace aby {
 
             for (auto& obj : m_Objects) {
                 obj->on_destroy(this);
+            }
+
+            for (auto& plugin : m_Plugins) {
+                plugin.plugin->on_unload(this);
             }
         }
     }
@@ -158,12 +171,36 @@ namespace aby {
             m_Objects.erase(it, m_Objects.end());
         }
     }
+
+    void App::register_plugin(const fs::path& plugin) {
+        auto plug = Plugin::load(plugin);
+        if (!plug) return;
+        m_Plugins.push_back(std::move(plug));
+    }
+
+    void App::remove_plugin(const std::string& plugin_name) {
+        auto it = std::remove_if(m_Plugins.begin(), m_Plugins.end(),
+            [&](const LoadedPlugin& plugin) {
+                return plugin.plugin->name() == plugin_name;
+            }
+        );
+        m_Plugins.erase(it, m_Plugins.end());
+    }
+
+    void App::register_event(const std::function<void(Event&)>& event) {
+        m_Window->register_event(event);
+    }
+
+
     void App::on_event(Event& event) {
     #if 0
         ABY_LOG("{}", event.to_string());
     #endif
         for (auto& obj : m_Objects) {
             obj->on_event(this, event);
+        }
+        for (auto& plugin : m_Plugins) {
+            plugin.plugin->on_event(this, event);
         }
     }
 

@@ -20,7 +20,7 @@ namespace aby::vk {
         m_ImGuiID(VK_NULL_HANDLE),
         m_Ctx(ctx),
         m_Handler(nullptr),
-        m_Handle(-1)
+        m_Handle(Resource::null)
     {
     }
 
@@ -36,7 +36,7 @@ namespace aby::vk {
         m_ImGuiID(VK_NULL_HANDLE),
         m_Ctx(ctx),
         m_Handler(nullptr),
-        m_Handle(-1)
+        m_Handle(Resource::null)
     {
         init();
     }
@@ -53,7 +53,7 @@ namespace aby::vk {
         m_ImGuiID(VK_NULL_HANDLE),
         m_Ctx(ctx),
         m_Handler(nullptr),
-        m_Handle(-1)
+        m_Handle(Resource::null)
     {
         init();
     }
@@ -362,6 +362,7 @@ namespace aby::vk {
         default:
             ABY_ASSERT(false, "Case not implemented!");
         }
+        return VK_FORMAT_UNDEFINED;
     }
 
     void BufferedTexture::create_imgui_layout(vk::Context* ctx) {
@@ -686,6 +687,7 @@ namespace aby::vk {
             default:
                 ABY_ASSERT(false, "Case not implemented!");
         }
+        return VK_FORMAT_UNDEFINED;
     }
     
     ETextureFormat BufferedTexture::format() const {
@@ -703,6 +705,7 @@ namespace aby::vk {
         default:
             ABY_ASSERT(false, "Case not implemented!");
         }
+        return ETextureFormat::NONE;
     }
 
 }

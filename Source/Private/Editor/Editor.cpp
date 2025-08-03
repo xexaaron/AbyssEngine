@@ -13,6 +13,7 @@ namespace aby::editor {
         }
 
 		m_App.add_object(create_ref<EditorUI>(&m_App));
+		m_App.register_plugin(m_App.bin() / "PlugTest.dll");
     }
 
     aby::App& Editor::app() {
@@ -68,13 +69,13 @@ namespace aby::editor {
 		Logger::add_callback([&](const LogMsg& msg) {
 			m_Console.add_msg(msg);
 		});
-		m_Browser.on_create(app, false);
+		// m_Browser.on_create(app, false);
 	}
 
     void EditorUI::on_tick(App* app, Time deltatime) {
 		draw_dockspace();
 		draw_settings();
-		m_Browser.on_tick(app, deltatime);
+		// m_Browser.on_tick(app, deltatime);
 
 		if (ImGui::Begin("Viewport")) {
 
@@ -88,11 +89,11 @@ namespace aby::editor {
     }
 
 	void EditorUI::on_event(App* app, Event& event) {
-		m_Browser.on_event(app, event);
+		// m_Browser.on_event(app, event);
 	}
 
 	void EditorUI::on_destroy(App* app) {
-		m_Browser.on_destroy(app);
+		// m_Browser.on_destroy(app);
 	}
 
 	void EditorUI::draw_settings() {

@@ -13,6 +13,7 @@ namespace aby {
     * The byte color format of the texture.
     */
     enum class ETextureFormat {
+        NONE,
         R,
         RG,
         RGB,

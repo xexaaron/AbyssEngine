@@ -291,6 +291,7 @@ namespace aby {
             default:
                 ABY_ASSERT(false, "Not implemented case!");
         }
+        return nullptr;
     }
 
     Ref<BufferedTexture> BufferedTexture::create(Context* ctx, const glm::u32vec2& size, const void* data, u32 channels, ETextureFormat format, std::size_t buffers) {
@@ -301,6 +302,7 @@ namespace aby {
             default:
                 ABY_ASSERT(false, "Not implemented case!");
         }
+        return nullptr;
     }
 
 }
