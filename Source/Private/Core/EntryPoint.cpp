@@ -16,9 +16,6 @@
 #include <cstdlib>
 #endif
 
-#include <cef_command_line.h>
-#include <cef_app.h>
-
 #endif
 
 namespace aby {
@@ -69,12 +66,11 @@ namespace aby {
     }
 
     struct ScopedArgs {
-        ScopedArgs(HINSTANCE inst) : argc(0), argv(nullptr), cef(inst) { aby::sys::get_args(argc, argv); }
+        ScopedArgs(HINSTANCE inst) : argc(0), argv(nullptr) { aby::sys::get_args(argc, argv); }
         ~ScopedArgs() { aby::sys::free_args(argc, argv); }
 
         int argc;
         char** argv;
-        CefMainArgs cef;
     };
 
 #endif
@@ -87,15 +83,7 @@ int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hprevinstance, LPSTR lpcmdline
     bool console_attached = aby::create_console();
     aby::setup_debug_state();
 
-    void* sandbox_info = nullptr;
-#if defined(CEF_USE_SANDBOX)
-    CefScopedSandboxInfo scoped_sandbox;
-    sandbox_info = scoped_sandbox.sandbox_info();
-#endif
-
     aby::ScopedArgs args(hinstance);
-    int ec = CefExecuteProcess(args.cef, nullptr, sandbox_info);
-    if (ec >= 0) return ec; // Subprocess finished.
     
     aby::App& app = aby::main(aby::setup(args.argc, args.argv));
     app.run();

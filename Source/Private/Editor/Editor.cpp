@@ -54,8 +54,7 @@ namespace aby::editor {
 			.show_settings = false, 
 			.show_console  = false,
 		},
-		m_Console("Console", false),
-		m_Browser(app->window())
+		m_Console("Console", false)
 	{
 
 	}
@@ -69,13 +68,11 @@ namespace aby::editor {
 		Logger::add_callback([&](const LogMsg& msg) {
 			m_Console.add_msg(msg);
 		});
-		// m_Browser.on_create(app, false);
 	}
 
     void EditorUI::on_tick(App* app, Time deltatime) {
 		draw_dockspace();
 		draw_settings();
-		// m_Browser.on_tick(app, deltatime);
 
 		if (ImGui::Begin("Viewport")) {
 
@@ -85,15 +82,12 @@ namespace aby::editor {
 
 		ImGui::End();
 
-		//ImGui::ShowStyleEditor();
     }
 
 	void EditorUI::on_event(App* app, Event& event) {
-		// m_Browser.on_event(app, event);
 	}
 
 	void EditorUI::on_destroy(App* app) {
-		// m_Browser.on_destroy(app);
 	}
 
 	void EditorUI::draw_settings() {
@@ -195,7 +189,7 @@ namespace aby::editor {
 		bool rebuild = false;
 		
 		char name_buff[128];
-		strncpy(name_buff, m_Settings.current_theme.name().c_str(), sizeof(name_buff));
+		strncpy_s(name_buff, m_Settings.current_theme.name().c_str(), sizeof(name_buff));
 		ImGui::SeparatorText("Name");
 		if (ImGui::InputText("##Name", name_buff, sizeof(name_buff))) {
 			m_Settings.current_theme.name() = std::string(name_buff);

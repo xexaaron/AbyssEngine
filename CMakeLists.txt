@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28.3)
 project(Abyss)
 
-include(${CMAKE_SOURCE_DIR}/tools/cmake/Functions.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake/Functions.cmake)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
@@ -193,42 +193,7 @@ target_compile_definitions(ImGui PUBLIC IMGUI_USER_CONFIG="Platform/imgui/imconf
 target_compile_options(ImGui PUBLIC ${COMPILE_OPTS})
 set_target_properties(ImGui PROPERTIES FOLDER "Dependencies/ImGui")
 
-# Setup CEF
-
-if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(CEF_OS "windows")
-elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(CEF_OS "linux")
-else()
-    message(FATAL_ERROR "Unsupported OS: ${CMAKE_SYSTEM_NAME}")
-endif()
-
-string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" CEF_ARCH)
-if (CEF_ARCH MATCHES "^(amd64|x86_64)$")
-    set(CEF_ARCH "x86_64")
-elseif (CEF_ARCH MATCHES "^(aarch64|arm64)$")
-    set(CEF_ARCH "arm64")
-else()
-    message(FATAL_ERROR "Unsupported arch: ${CMAKE_SYSTEM_PROCESSOR}")
-endif()
-
-set(CEF_PLATFORM "${CEF_OS}-${CEF_ARCH}")
-set(CEF_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/Vendor/cef/${CEF_PLATFORM}")
-set(CEF_INCLUDE_DIR ${CEF_ROOT}/include)
-set(CEF_INTERNAL_INCLUDE_DIR ${CEF_ROOT})
-set(CEF_LIB_DIR ${CEF_ROOT}/${CMAKE_BUILD_TYPE})
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CEF_ROOT}/cmake")
-find_package(CEF REQUIRED)
-add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH})
-set_target_properties(libcef_dll_wrapper PROPERTIES FOLDER "Dependencies/cef")
-if (MSVC)
-    target_compile_options(libcef_dll_wrapper PRIVATE /MDd)
-    target_link_options(libcef_dll_wrapper PRIVATE /MDd)
-endif()
-# List Sources
-
 set(ENGINE_CPP_SOURCES
-    Source/Private/Browser/Browser.cpp
     Source/Private/Core/App.cpp
     Source/Private/Core/EntryPoint.cpp
     Source/Private/Core/Event.cpp
@@ -292,7 +257,6 @@ set(ENGINE_CPP_SOURCES
 )
 
 set(ENGINE_CPP_HEADERS
-    Source/Public/Browser/Browser.h
     Source/Public/Core/App.h
     Source/Public/Core/Common.h
     Source/Public/Core/EntryPoint.h
@@ -403,8 +367,6 @@ target_include_directories(${ENGINE} PUBLIC
     ${FREETYPE_INCLUDE_DIRS} 
     ${GCH_SMALL_VEC_INCLUDE_DIR} 
     ${ABYSS_FREETYPE_INCLUDE_DIR}
-    ${CEF_INCLUDE_DIR}
-    ${CEF_INTERNAL_INCLUDE_DIR}
 )
 set_target_properties(${ENGINE} PROPERTIES FOLDER "Abyss")
 target_link_libraries(${ENGINE} PRIVATE
@@ -416,8 +378,6 @@ target_link_libraries(${ENGINE} PRIVATE
     AbyssFTLib
     glfw
     ImGui
-    ${CEF_LIB_DIR}/libcef.lib
-    libcef_dll_wrapper
 )
 add_dependencies(${ENGINE} AbyssFTLib glfw tool)
 
@@ -471,22 +431,6 @@ add_custom_command(
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(SHADERC_DLL_IN   "${VULKAN_BIN_DIR}/shaderc_shared${DEBUG_SUFFIX}.dll")
     set(SHADERC_DLL_OUT  "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/shaderc_shared${DEBUG_SUFFIX}.dll")
-    
-    file(GLOB CEF_DLLS "${CEF_LIB_DIR}/*.dll")
-    file(GLOB CEF_PDBS "${CEF_LIB_DIR}/*.pdb")
-    file(GLOB CEF_DATA "${CEF_LIB_DIR}/*.bin")
-    file(GLOB CEF_JSON "${CEF_LIB_DIR}/*.json")
-
-    copy_files_post_build(${EDITOR} CEF_DLLS)
-    copy_files_post_build(${EDITOR} CEF_PDBS)
-    copy_files_post_build(${EDITOR} CEF_DATA)
-    copy_files_post_build(${EDITOR} CEF_JSON)
-
-    add_custom_command(TARGET ${EDITOR} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CEF_ROOT}/Resources ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}
-        COMMENT "Copy CEF resources"
-    )
-
     add_custom_command(TARGET ${EDITOR} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E echo "Checking and copying DLLs..."
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SHADERC_DLL_IN} ${SHADERC_DLL_OUT}
