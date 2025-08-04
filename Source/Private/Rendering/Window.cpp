@@ -1,5 +1,7 @@
 #include "Rendering/Window.h"
 #include "Core/Log.h"
+#include "Core/App.h"
+#include "Rendering/Texture.h"
 #include <glfw/glfw3.h>
 #include <imgui/imgui.h>
 
@@ -91,7 +93,7 @@ namespace aby {
         m_Data.callback(wr_event);
     }
 
-    void Window::poll_events() const {
+    void Window::poll_events() {
         glfwPollEvents();
     }
 

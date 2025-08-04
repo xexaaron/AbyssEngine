@@ -239,6 +239,7 @@ set(ENGINE_CPP_SOURCES
     Source/Private/Platform/vk/VkTexture.cpp
     Source/Private/Rendering/Camera.cpp
     Source/Private/Rendering/Context.cpp
+    Source/Private/Rendering/Dockspace.cpp
     Source/Private/Rendering/Font.cpp
     Source/Private/Rendering/Renderer.cpp
     Source/Private/Rendering/Shader.cpp
@@ -303,6 +304,7 @@ set(ENGINE_CPP_HEADERS
     Source/Public/Platform/vk/VkTexture.h
     Source/Public/Rendering/Camera.h
     Source/Public/Rendering/Context.h
+    Source/Public/Rendering/Dockspace.h
     Source/Public/Rendering/Font.h
     Source/Public/Rendering/Renderer.h
     Source/Public/Rendering/Shader.h

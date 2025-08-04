@@ -36,6 +36,7 @@ namespace aby {
 }
 
 namespace aby {
+    class App;
 
     class Window {
     public:
@@ -49,7 +50,7 @@ namespace aby {
         * Allows time to set up callbacks through register_event
         */
         void initialize();
-        void poll_events() const;
+        void poll_events();
         void swap_buffers() const;
         void close(); 
         void hide();

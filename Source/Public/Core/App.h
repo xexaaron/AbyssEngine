@@ -50,6 +50,10 @@ namespace aby {
 		void on_event(Event& event);
 	private:
 		friend std::vector<std::string> setup(int argc, char** argv);
+#ifdef _WIN32
+		friend void set_console_attached(App* app, bool attached_from_parent);
+		bool bConsoleAttached;
+#endif
 	private:
 		static fs::path m_ExePath;
 		AppInfo         m_Info;

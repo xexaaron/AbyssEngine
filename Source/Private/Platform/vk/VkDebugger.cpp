@@ -119,6 +119,10 @@ namespace aby::vk {
     }
 
     VkBool32 Debugger::msg_callback(VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagsEXT type, const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void* user_data) {
+        if (!callback_data || !callback_data->pMessage) {
+            ABY_ERR("Validation callback received null message.");
+            return VK_SUCCESS;
+        }
         switch (type) {
             case VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT:
             case VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT: {

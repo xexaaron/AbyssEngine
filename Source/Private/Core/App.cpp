@@ -3,8 +3,12 @@
 
 #include "Platform/vk/VkRenderer.h"
 #include "Platform/Platform.h"
+#include "Rendering/Dockspace.h"
 #include "Utility/Profiler.h"
 
+#ifdef _WIN32
+    #include <Windows.h>
+#endif
 
 namespace aby {
     
@@ -43,18 +47,28 @@ namespace aby {
         }
         LogCfg log_cfg = {};
         Logger::set_cfg(log_cfg);
+        add_object(create_ref<Dockspace>());
     }
 
     App::~App() {
         m_Renderer->destroy();
         m_Ctx->destroy();
+#ifdef _WIN32
+        std::cout.flush();
+        std::cerr.flush();
+        fclose(stdout);
+        fclose(stderr);
+        if (!bConsoleAttached) {
+            FreeConsole();
+        }
+#endif
     }
 
     void App::run() {
         {
             PROFILE_SCOPE("Initialization");
             m_Ctx->load_thread().sync();
-
+            
             auto object_cache = cache() / "Objects";
             for (auto& obj : m_Objects) {
                 obj->on_create(this, false);

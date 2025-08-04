@@ -46,16 +46,8 @@ namespace aby {
         return console_attached;
     }
 
-    void destroy_console(bool console_attached) {
-#ifndef NDEBUG
-        std::cout.flush();
-        std::cerr.flush();
-        fclose(stdout);
-        fclose(stderr);
-        if (!console_attached) {
-            FreeConsole();
-        }
-#endif // NDEBUG
+    void set_console_attached(App* app, bool attached_from_parent) {
+        app->bConsoleAttached = attached_from_parent;
     }
 
     void setup_debug_state() {
@@ -82,13 +74,13 @@ namespace aby {
 int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hprevinstance, LPSTR lpcmdline, int nshowcmd) {
     bool console_attached = aby::create_console();
     aby::setup_debug_state();
-
-    aby::ScopedArgs args(hinstance);
-    
-    aby::App& app = aby::main(aby::setup(args.argc, args.argv));
-    app.run();
-
-    aby::destroy_console(console_attached);
+    { // Ensure app is destroyed before the console is freed.
+        aby::ScopedArgs args(hinstance);
+        aby::App& app = aby::main(aby::setup(args.argc, args.argv));
+        aby::set_console_attached(&app, console_attached);
+        app.run();
+    }
+    // Console destroyed in app destructor due to static variable dtor issues with app.
     return 0;
 }
 
