@@ -86,7 +86,20 @@ namespace aby {
 			if (ImGui::MenuItem("Exit", "alt+f4")) {
 				app->quit();
 			}
+
 			ImGui::EndMenu();
+		}
+
+		for (auto& menu : m_Menus) {
+			if (ImGui::BeginMenu(menu.name.c_str())) {
+				for (auto item : menu.items) {
+					if (ImGui::MenuItem(item.name.c_str(), item.shortcut.c_str())) {
+						item.action();
+					}
+				}
+				ImGui::EndMenu();
+			}
+			
 		}
 
 		// === Buttons ===

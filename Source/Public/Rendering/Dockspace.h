@@ -9,11 +9,18 @@ namespace aby {
         Resource exit;
     };
 
+    struct MenuItem {
+        std::string name;
+        std::string shortcut;
+        std::function<void()> action;
+    }
 
     struct Menu {
         std::string name;
-        std::function<void()> action;
+        std::vector<MenuItem> items;
     };
+
+
 
     class Dockspace final : public Object {
     public:
