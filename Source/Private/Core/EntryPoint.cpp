@@ -3,6 +3,7 @@
 #include "Platform/Platform.h"
 #include <vector>
 #include <iostream>
+#include <csignal>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -29,8 +30,19 @@ namespace aby {
     }
     
 #ifdef _WIN32
+
+    volatile std::sig_atomic_t signal_status;
+    std::function<void()> sigint_cleanup;
+
+    extern "C" void sigint(int signal) {
+        signal_status = signal;
+        sigint_cleanup();
+    }
+
+
     bool create_console() {
         bool console_attached = AttachConsole(ATTACH_PARENT_PROCESS);
+        std::signal(SIGINT, sigint);
         if (console_attached) {
             ABY_ASSERT(freopen("CONOUT$", "w", stdout) != nullptr);
             ABY_ASSERT(freopen("CONOUT$", "w", stderr) != nullptr);
@@ -69,18 +81,31 @@ namespace aby {
 }
 
 
+
 #ifdef _WIN32
 
 int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hprevinstance, LPSTR lpcmdline, int nshowcmd) {
     bool console_attached = aby::create_console();
     aby::setup_debug_state();
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    if (FAILED(hr)) {
+        MessageBoxA(nullptr, "Failed to initialize COM", "Error", MB_OK | MB_ICONERROR);
+        return -1;
+    }
+
     { // Ensure app is destroyed before the console is freed.
         aby::ScopedArgs args(hinstance);
         aby::App& app = aby::main(aby::setup(args.argc, args.argv));
         aby::set_console_attached(&app, console_attached);
+        aby::sigint_cleanup = [&]() -> void {
+            app.quit();
+            std::exit(0);
+        };
         app.run();
-    }
-    // Console destroyed in app destructor due to static variable dtor issues with app.
+    } // Console destroyed in app destructor due to static variable dtor issues with app.
+
+    CoUninitialize();
+
     return 0;
 }
 

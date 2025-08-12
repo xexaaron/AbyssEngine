@@ -21,7 +21,6 @@ namespace aby::sys::win32 {
         aby::Window(info),
         m_OgProc(nullptr)
     {
-        ABY_ASSERT(SUCCEEDED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE)));
         set_dark_mode();
         setup_window_menu();
         set_window_proc();
@@ -31,7 +30,6 @@ namespace aby::sys::win32 {
 
     Window::~Window() {
         delete_jump_list();
-        CoUninitialize();
     }
 
     void Window::begin_drag() {
