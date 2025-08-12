@@ -21,6 +21,7 @@ namespace aby::sys::win32 {
         aby::Window(info),
         m_OgProc(nullptr)
     {
+        ABY_ASSERT(SUCCEEDED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE)));
         set_dark_mode();
         setup_window_menu();
         set_window_proc();
@@ -30,6 +31,7 @@ namespace aby::sys::win32 {
 
     Window::~Window() {
         delete_jump_list();
+        CoUninitialize();
     }
 
     void Window::begin_drag() {
@@ -285,7 +287,7 @@ namespace aby::sys::win32 {
     }
 
     void Window::create_jump_list() {
-        ABY_ASSERT(SUCCEEDED(CoInitialize(NULL)));
+     
         ICustomDestinationList* pcdl;
         HRESULT hr = CoCreateInstance(CLSID_DestinationList, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pcdl));
         if (SUCCEEDED(hr))
@@ -317,7 +319,6 @@ namespace aby::sys::win32 {
             hr = pcdl->DeleteList(NULL);
             pcdl->Release();
         }
-        CoUninitialize();
     }
 
     std::string Window::get_exe_ansi() const {

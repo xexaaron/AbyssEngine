@@ -1,9 +1,11 @@
 #include "Platform/win32/PlatformWin32.h"
 #include "Core/Log.h"
+#include "Core/App.h"
 
 #ifdef _WIN32
 
 #include <processthreadsapi.h>
+#include <ShlObj_core.h>
 
 #ifdef _MSVC_VER
 	#include <io.h> // _isatty, _fileno
@@ -224,6 +226,58 @@ namespace aby::sys::win32 {
 
         return message;
     }
+
+	auto open_file_dialog(App* app, const fs::path& start_dir, int filter) -> fs::path {
+        std::wstring result;
+        IFileDialog* pfd = nullptr;
+        
+        HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd));
+        if (SUCCEEDED(hr))
+        {
+            DWORD dwOptions;
+            if (SUCCEEDED(pfd->GetOptions(&dwOptions)))
+            {
+                if (filter == 2) {// EFileType::FOLDER
+                    dwOptions |= FOS_PICKFOLDERS;
+                    pfd->SetTitle(L"Select Folder");
+                    pfd->SetFileNameLabel(L"Folder");
+                } else {
+                    dwOptions |= FOS_FILEMUSTEXIST;
+                    pfd->SetTitle(L"Select File");
+                    pfd->SetFileNameLabel(L"File");
+                }
+                pfd->SetOptions(dwOptions);
+            }
+            
+            if (!start_dir.empty()) {
+                IShellItem* start = nullptr;
+                hr = SHCreateItemFromParsingName(start_dir.c_str(), NULL, IID_PPV_ARGS(&start));
+                pfd->SetDefaultFolder(start);
+            }
+
+            // Show the dialog
+            hr = pfd->Show(static_cast<HWND>(app->window()->native()));
+            if (SUCCEEDED(hr))
+            {
+                IShellItem* pItem;
+                hr = pfd->GetResult(&pItem);
+                if (SUCCEEDED(hr))
+                {
+                    PWSTR pszFilePath = nullptr;
+                    hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+
+                    if (SUCCEEDED(hr))
+                    {
+                        result = pszFilePath;
+                        CoTaskMemFree(pszFilePath);
+                    }
+                    pItem->Release();
+                }
+            }
+            pfd->Release();
+        }
+        return result;
+    } 
 
 }
 

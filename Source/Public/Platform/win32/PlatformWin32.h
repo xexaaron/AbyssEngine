@@ -14,6 +14,10 @@
     } \
 } while(0)
 
+namespace aby {
+    class App;
+}
+
 namespace aby::sys::win32 {
 
     auto to_string(const std::wstring& wstring) -> std::string;
@@ -26,6 +30,7 @@ namespace aby::sys::win32 {
     auto free_args(int argc, char** argv) -> void;
     auto glfw_to_platform_keycode(int glfw_key) -> int;
     auto get_last_err() -> std::string;
+	auto open_file_dialog(App* app, const fs::path& start_dir, int filter) -> fs::path; 
 
 }
 
