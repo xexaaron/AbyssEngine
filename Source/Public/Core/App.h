@@ -31,12 +31,14 @@ namespace aby {
             });
         }
 		
-		Window*			window();
-		Window*			window() const;
-		Context&		ctx();	
-		const Context&  ctx() const;
-		Renderer&		renderer();
-		const Renderer& renderer() const;
+		Dockspace&		 dockspace();
+		const Dockspace& dockspace() const;
+		Window*			 window();
+		Window*			 window() const;
+		Context&		 ctx();	
+		const Context&   ctx() const;
+		Renderer&		 renderer();
+		const Renderer&  renderer() const;
 		std::span<Ref<Object>> objects();
 		std::span<const Ref<Object>> objects() const;
 		const AppInfo& info() const;
@@ -60,6 +62,7 @@ namespace aby {
 		Unique<Window>  m_Window;
 		Ref<Context>    m_Ctx;
 		Ref<Renderer>   m_Renderer;
+		Ref<Dockspace>  m_Dockspace;
 		std::vector<Ref<Object>> m_Objects;
 		std::vector<LoadedPlugin> m_Plugins;
 	};

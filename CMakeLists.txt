@@ -396,13 +396,6 @@ add_dependencies(${EDITOR} ${ENGINE})
 source_group("Public" FILES ${EDITOR_CPP_HEADERS})
 source_group("Private" FILES ${EDITOR_CPP_SOURCES})
 
-## Plugin Test
-add_library(PlugTest SHARED "Source/Plugins/Plug.cpp")
-target_link_libraries(PlugTest PUBLIC ${ENGINE})
-target_include_directories(PlugTest PUBLIC Source/Public ${COMMON_INCLUDE_DIRS})
-target_link_options(PlugTest PRIVATE ${LINK_OPTS})
-target_compile_options(PlugTest PRIVATE ${COMPILE_OPTS})
-
 # Copy Resources
 add_custom_command(
     TARGET ${ENGINE} POST_BUILD

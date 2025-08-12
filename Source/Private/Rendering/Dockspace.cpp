@@ -127,5 +127,20 @@ namespace aby {
 
     }
 
+	void Dockspace::add_menu(const Menu& menu) {
+		m_Menus.push_back(menu);
+	}
+	
+	void Dockspace::remove_menu(const std::string& menu_name) {
+		auto it = std::remove_if(m_Menus.begin(), m_Menus.end(), [&menu_name](const Menu& menu){
+			return menu_name == menu.name;
+		})
+		if (it != m_Menus.end()) {
+			m_Menus.erase(it);
+		} else {
+			ABY_WARN("Tried to remove menu but it does not exist: {}", menu_name);
+		}
+	}	
+
 
 }

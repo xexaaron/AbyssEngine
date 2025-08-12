@@ -109,7 +109,6 @@ namespace aby {
         glfwShowWindow(m_Window);
     }
 
-
     void Window::close() {
         glfwSetWindowShouldClose(m_Window, GLFW_TRUE);
     }
@@ -212,7 +211,73 @@ namespace aby {
         const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
         return { static_cast<float>(mode->width), static_cast<float>(mode->height) };
     }
+ 
+    void Window::register_event(const std::function<void(Event&)>& event) {
+        m_Callbacks.push_back(event);
+    }
 
+    glm::fvec2 Window::mouse_pos() const {
+        double x, y;
+        glfwGetCursorPos(m_Window, &x, &y);
+        return { static_cast<float>(x), static_cast<float>(y) };
+    }
+
+    glm::fvec2 Window::dpi() const {
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        ABY_ASSERT(monitor, "Failed to get primary monitor");
+
+        float xscale, yscale;
+        glfwGetMonitorContentScale(monitor, &xscale, &yscale);
+
+        int widthMM, heightMM;
+        glfwGetMonitorPhysicalSize(monitor, &widthMM, &heightMM);
+
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        ABY_ASSERT(mode, "Failed to get video mode");
+        
+        return {
+            (static_cast<float>(mode->width)  / (static_cast<float>(widthMM) / 25.4f))  * xscale,
+            (static_cast<float>(mode->height) / (static_cast<float>(heightMM) / 25.4f)) * yscale
+        };
+
+    }
+
+    void Window::set_cursor(ECursor cursor) {
+        if (cursor == m_Data.cursor) {
+            return;
+        }
+        
+        GLFWcursor* gcursor = nullptr;
+        switch (cursor) {
+            case ECursor::ARROW:
+                gcursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+                break;
+            case ECursor::IBEAM:
+                gcursor = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+                break;
+            case ECursor::CROSSHAIR:
+                gcursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
+                break;
+            case ECursor::HAND:
+                gcursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+                break;
+            case ECursor::HRESIZE:
+                gcursor = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
+                break;
+            case ECursor::VRESIZE:
+                gcursor = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
+                break;
+            default:
+                gcursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+                break;
+        }
+
+        if (gcursor) {
+            glfwSetCursor(m_Window, gcursor);
+            m_Data.cursor = cursor;
+        }
+    }
+    
     void Window::setup_callbacks() {
         glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* win, int w, int h) {
             WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
@@ -322,14 +387,14 @@ namespace aby {
         glfwSetWindowMaximizeCallback(m_Window, [](GLFWwindow* win, int maximized) {
             WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
             if (maximized == GLFW_TRUE) {
-                data.flags |= EWindowFlags::MAXIMIZED;
+                data.flags |=  EWindowFlags::MAXIMIZED;
                 data.flags &= ~EWindowFlags::MINIMIZED;
             }
             else {
                 data.flags &= ~EWindowFlags::MAXIMIZED;
                 data.flags &= ~EWindowFlags::MINIMIZED;
             }
-
+            
             // Force size synchronization
             int width, height;
             glfwGetWindowSize(win, &width, &height);
@@ -342,72 +407,5 @@ namespace aby {
             data.callback(wr_event);
         });
     }
- 
-    void Window::register_event(const std::function<void(Event&)>& event) {
-        m_Callbacks.push_back(event);
-    }
-
-    glm::fvec2 Window::mouse_pos() const {
-        double x, y;
-        glfwGetCursorPos(m_Window, &x, &y);
-        return { static_cast<float>(x), static_cast<float>(y) };
-    }
-
-    glm::fvec2 Window::dpi() const {
-        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-        ABY_ASSERT(monitor, "Failed to get primary monitor");
-
-        float xscale, yscale;
-        glfwGetMonitorContentScale(monitor, &xscale, &yscale);
-
-        int widthMM, heightMM;
-        glfwGetMonitorPhysicalSize(monitor, &widthMM, &heightMM);
-
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-        ABY_ASSERT(mode, "Failed to get video mode");
-        
-        return {
-            (static_cast<float>(mode->width)  / (static_cast<float>(widthMM) / 25.4f))  * xscale,
-            (static_cast<float>(mode->height) / (static_cast<float>(heightMM) / 25.4f)) * yscale
-        };
-
-    }
-
-    void Window::set_cursor(ECursor cursor) {
-        if (cursor == m_Data.cursor) {
-            return;
-        }
-        
-        GLFWcursor* gcursor = nullptr;
-        switch (cursor) {
-            case ECursor::ARROW:
-                gcursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-                break;
-            case ECursor::IBEAM:
-                gcursor = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
-                break;
-            case ECursor::CROSSHAIR:
-                gcursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
-                break;
-            case ECursor::HAND:
-                gcursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
-                break;
-            case ECursor::HRESIZE:
-                gcursor = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
-                break;
-            case ECursor::VRESIZE:
-                gcursor = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
-                break;
-            default:
-                gcursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-                break;
-        }
-
-        if (gcursor) {
-            glfwSetCursor(m_Window, gcursor);
-            m_Data.cursor = cursor;
-        }
-    }
-
 }
 

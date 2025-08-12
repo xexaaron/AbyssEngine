@@ -47,7 +47,8 @@ namespace aby {
         }
         LogCfg log_cfg = {};
         Logger::set_cfg(log_cfg);
-        add_object(create_ref<Dockspace>());
+        m_Dockspace = create_ref<Dockspace>();
+        add_object(m_Dockspace);
     }
 
     App::~App() {
@@ -88,6 +89,7 @@ namespace aby {
             auto current_time = std::chrono::high_resolution_clock::now();
             delta_time        = std::chrono::duration<float>(current_time - last_time).count();
             last_time         = current_time;
+            m_LastDeltatime   = delta_time;
 
             if (m_Window->is_minimized()) continue;
             
@@ -247,6 +249,14 @@ namespace aby {
         restart.set_name("Restart Thread");
         restart.detach();
         this->quit();
+    }
+
+    Dockspace& App::dockspace() {
+        return m_Dockspace;
+    }
+    
+    const Dockspace& App::dockspace() const {
+        return m_Dockspace;
     }
 
 }
