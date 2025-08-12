@@ -3,7 +3,6 @@
 
 #include "Platform/vk/VkRenderer.h"
 #include "Platform/Platform.h"
-#include "Rendering/Dockspace.h"
 #include "Utility/Profiler.h"
 
 #ifdef _WIN32
@@ -89,7 +88,6 @@ namespace aby {
             auto current_time = std::chrono::high_resolution_clock::now();
             delta_time        = std::chrono::duration<float>(current_time - last_time).count();
             last_time         = current_time;
-            m_LastDeltatime   = delta_time;
 
             if (m_Window->is_minimized()) continue;
             
@@ -251,11 +249,11 @@ namespace aby {
         this->quit();
     }
 
-    Dockspace& App::dockspace() {
+    Ref<Dockspace> App::dockspace() {
         return m_Dockspace;
     }
     
-    const Dockspace& App::dockspace() const {
+    const Ref<Dockspace> App::dockspace() const {
         return m_Dockspace;
     }
 

@@ -5,6 +5,7 @@
 #include "Core/Plugin.h"
 #include "Rendering/Context.h"
 #include "Rendering/Renderer.h"
+#include "Rendering/Dockspace.h"
 #include <filesystem>
 
 namespace aby {
@@ -31,8 +32,8 @@ namespace aby {
             });
         }
 		
-		Dockspace&		 dockspace();
-		const Dockspace& dockspace() const;
+		Ref<Dockspace>   dockspace();
+		const Ref<Dockspace> dockspace() const;
 		Window*			 window();
 		Window*			 window() const;
 		Context&		 ctx();	

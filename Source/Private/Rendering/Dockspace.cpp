@@ -1,4 +1,5 @@
 #include "Rendering/Dockspace.h"
+#include "Core/App.h"
 
 namespace aby {
 
@@ -145,9 +146,9 @@ namespace aby {
 	}
 	
 	void Dockspace::remove_menu(const std::string& menu_name) {
-		auto it = std::remove_if(m_Menus.begin(), m_Menus.end(), [&menu_name](const Menu& menu){
+		auto it = std::remove_if(m_Menus.begin(), m_Menus.end(), [&menu_name](const Menu& menu) {
 			return menu_name == menu.name;
-		})
+		});
 		if (it != m_Menus.end()) {
 			m_Menus.erase(it);
 		} else {

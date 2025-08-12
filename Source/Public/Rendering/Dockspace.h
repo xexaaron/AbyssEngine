@@ -1,7 +1,11 @@
 #pragma once
-#include "Core/App.h"
-#include "Utility/Delegate.h"
+#include "Core/Common.h"
+#include "Core/Object.h"
+#include "Core/Resource.h"
+
 namespace aby {
+
+    class App;
 
     struct Icons {
         Resource minimize;
@@ -13,7 +17,7 @@ namespace aby {
         std::string name;
         std::string shortcut;
         std::function<void()> action;
-    }
+    };
 
     struct Menu {
         std::string name;

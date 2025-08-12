@@ -61,7 +61,7 @@ namespace aby::sys {
         return PLATFORM_NAMESPACE::get_last_err();
     }
 
-	auto open_file_dialog(App* app, const fs::path& start_dir = "", EFileType filter = EFileType::ANY) -> fs::path {
+	auto open_file_dialog(App* app, const fs::path& start_dir, EFileType filter) -> fs::path {
         return PLATFORM_NAMESPACE::open_file_dialog(app, start_dir, static_cast<int>(filter));
     } 
 
