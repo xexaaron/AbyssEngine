@@ -215,5 +215,61 @@ namespace aby::imgui {
 		}
 	}
 
+	bool ImageTreeNode(const void* id, const std::string& label, ImTextureID img, ImVec2 icon_size = { 20.f, 20.f }, ImGuiTreeNodeFlags flags = 0)
+	{
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+		if (window->SkipItems)
+			return false;
+
+		ImGuiContext& g = *GImGui;
+		const ImGuiStyle& style = g.Style;
+
+		// Generate ID
+		ImGuiID node_id = window->GetID(id);
+
+		// Figure out row size
+		ImVec2 label_size = ImGui::CalcTextSize(label.c_str());
+		float row_height = ImMax(icon_size.y, label_size.y) + style.FramePadding.y * 2.0f;
+		ImVec2 pos = ImGui::GetCursorScreenPos();
+
+		// Setup bounding box for the whole row
+		ImRect total_bb(pos, ImVec2(pos.x + window->WorkRect.Max.x, pos.y + row_height));
+		ImGui::ItemSize(total_bb);
+		if (!ImGui::ItemAdd(total_bb, node_id))
+			return false;
+
+		// Check open/close state
+		bool is_open = ImGui::TreeNodeGetOpen(node_id);
+
+		// Arrow
+		if ((flags & ImGuiTreeNodeFlags_Leaf) == 0) {
+			ImGui::RenderArrow(window->DrawList,
+				ImVec2(pos.x + style.FramePadding.x, pos.y + style.FramePadding.y),
+				ImGui::GetColorU32(ImGuiCol_Text),
+				is_open ? ImGuiDir_Down : ImGuiDir_Right);
+		}
+
+		// Cursor after arrow
+		float arrow_offset = (flags & ImGuiTreeNodeFlags_Leaf) ? 0.0f : ImGui::GetTreeNodeToLabelSpacing();
+		ImGui::SetCursorScreenPos(ImVec2(pos.x + arrow_offset, pos.y + style.FramePadding.y));
+
+		// Icon
+		ImGui::Image(img, icon_size);
+
+		// Label
+		ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
+		ImGui::SetCursorScreenPos(ImVec2(ImGui::GetCursorScreenPos().x, pos.y + style.FramePadding.y));
+		ImGui::TextUnformatted(label.c_str());
+
+		// Click toggling
+		if (ImGui::IsItemClicked())
+		{
+			is_open = !is_open;
+			ImGui::TreeNodeSetOpen(node_id, is_open);
+		}
+
+		return is_open;
+	}
+
 
 }

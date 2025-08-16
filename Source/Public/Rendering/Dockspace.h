@@ -7,12 +7,6 @@ namespace aby {
 
     class App;
 
-    struct Icons {
-        Resource minimize;
-        Resource maximize;
-        Resource exit;
-    };
-
     struct MenuItem {
         std::string name;
         std::string shortcut;
@@ -24,8 +18,6 @@ namespace aby {
         std::vector<MenuItem> items;
     };
 
-
-
     class Dockspace final : public Object {
     public:
         void on_create(App* app, bool deserialized);
@@ -35,11 +27,16 @@ namespace aby {
     
         void add_menu(const Menu& menu);
         void remove_menu(const std::string& menu_name);
+        void activate_menu_item(const std::string& menu, const std::string& item);
     private:
         void draw_dockspace(App* app);
         void draw_menubar(App* app);
     private:
-        Icons m_Icons;
+        struct Icons {
+            Resource minimize;
+            Resource maximize;
+            Resource exit;
+        } m_Icons;
         std::vector<Menu> m_Menus;
     };
 

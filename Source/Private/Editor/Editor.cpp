@@ -59,7 +59,7 @@ namespace aby::editor {
 	}
 
     void EditorUI::on_tick(App* app, Time deltatime) {
-		if (ImGui::Begin("Viewport")) {
+        if (ImGui::Begin("Viewport")) {
 
 		}
 		

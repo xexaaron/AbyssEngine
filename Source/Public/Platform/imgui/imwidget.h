@@ -23,5 +23,5 @@ namespace aby::imgui {
 	void UnderlinePreviousText(ImGuiCol col = ImGuiCol_TextDisabled);
 	void TextWithTags(const std::string& text, bool wrapped = false);
 	void TextLink(const std::string& text, std::string url = "");
-
+	bool ImageTreeNode(const void* id, const std::string& label, ImTextureID img, ImVec2 icon_size = {20.f, 20.f}, ImGuiTreeNodeFlags flags = 0);
 }
