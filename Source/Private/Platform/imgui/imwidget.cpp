@@ -215,7 +215,7 @@ namespace aby::imgui {
 		}
 	}
 
-	bool ImageTreeNode(const void* id, const std::string& label, ImTextureID img, ImVec2 icon_size = { 20.f, 20.f }, ImGuiTreeNodeFlags flags = 0)
+	bool ImageTreeNode(const void* id, const std::string& label, ImTextureID img, ImVec2 icon_size, ImGuiTreeNodeFlags flags)
 	{
 		ImGuiWindow* window = ImGui::GetCurrentWindow();
 		if (window->SkipItems)
