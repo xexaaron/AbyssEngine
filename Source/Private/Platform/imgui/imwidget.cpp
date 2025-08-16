@@ -259,11 +259,8 @@ namespace aby::imgui {
 		// Label
 		ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
 		ImGui::SetCursorScreenPos(ImVec2(ImGui::GetCursorScreenPos().x, pos.y + style.FramePadding.y));
-		ImGui::TextUnformatted(label.c_str());
-
-		// Click toggling
-		if (ImGui::IsItemClicked())
-		{
+		
+		if (ImGui::Selectable(label.c_str())) {
 			is_open = !is_open;
 			ImGui::TreeNodeSetOpen(node_id, is_open);
 		}
