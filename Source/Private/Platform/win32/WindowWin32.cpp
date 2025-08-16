@@ -135,18 +135,25 @@ namespace aby::sys::win32 {
 
         switch (msg) {
             case WM_NCCALCSIZE: {
-                // Remove the window's standard sizing border
-                if (wparam == TRUE && lparam != NULL) {
-                    NCCALCSIZE_PARAMS* pParams = reinterpret_cast<NCCALCSIZE_PARAMS*>(lparam);
+                if (!(wparam == TRUE && lparam != NULL)) break;
+                NCCALCSIZE_PARAMS* pParams = reinterpret_cast<NCCALCSIZE_PARAMS*>(lparam);
+                if (IsZoomed(hwnd)) {
+                    const int pad = 8;
+                    pParams->rgrc[0].top += pad - 1;
+                    pParams->rgrc[0].right -= pad;
+                    pParams->rgrc[0].bottom -= pad;
+                    pParams->rgrc[0].left += pad;
+                }
+                else {
                     pParams->rgrc[0].top += 1;
                     pParams->rgrc[0].right -= 2;
                     pParams->rgrc[0].bottom -= 2;
                     pParams->rgrc[0].left += 2;
                 }
                 return 0;
+                return 0;
             }
             case WM_NCPAINT: {
-                // Prevent the non-client area from being painted
                 return 0;
             }
             case WM_NCHITTEST: {
